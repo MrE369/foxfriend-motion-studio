@@ -1,0 +1,76 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Foxfriend Motion Studio</title><style>
+*{box-sizing:border-box}body{margin:0;background:#101925;color:#f3f6fa;font:15px system-ui}header{padding:14px 16px;background:#1c2a3a}h1{font-size:20px;margin:0 0 5px}small{color:#b6c7d6}
+main{display:grid;grid-template-columns:minmax(0,1fr) 320px;min-height:calc(100dvh - 80px)}#view{height:70dvh;min-height:380px;position:relative;background:#243246}
+aside{padding:14px;background:#172332;overflow:auto}label{display:block;margin:12px 0 5px;font-weight:600}select,input[type=file],button{width:100%;padding:10px;border-radius:8px;border:1px solid #506174;background:#293b4d;color:white}button{cursor:pointer;margin:5px 0}input[type=range]{width:100%}.axis{display:flex;gap:8px;align-items:center}.axis input{flex:1;min-width:0}.nudge{width:46px;min-width:46px;padding:10px 3px;font-size:15px;font-weight:700;touch-action:manipulation}.axis{gap:5px}.axis output{width:40px;min-width:40px}.axis output{width:48px;text-align:right}p{line-height:1.45}.note{font-size:13px;color:#b9c9d7}#status{font-size:13px;color:#b9e5ca}#view canvas{display:block}#labels{position:absolute;top:10px;left:10px;background:#12202ccc;padding:8px;border-radius:7px;font-size:12px;pointer-events:none}
+.timeline{display:flex;gap:7px;overflow-x:auto;padding:8px 0;min-height:58px}.framebtn{width:auto;min-width:62px;flex:0 0 auto;padding:12px 8px;border:2px solid #506174}.framebtn.active{border-color:#65d8bc;background:#225b57}.frameactions{display:grid;grid-template-columns:1fr 1fr;gap:7px}.frameactions button{margin:0}.framehint{font-size:13px;color:#b9c9d7}@media(max-width:700px){main{display:flex;flex-direction:column}#view{height:52dvh;min-height:300px}aside{overflow:visible}}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script></head><body>
+<header><h1>🦊 Foxfriend Motion Studio</h1><small>v0.3 editable keyframes test • local GLB • persistent poses • keyframe playback</small></header>
+<main><div id="view"><div id="labels">Drag to rotate view • pinch to zoom<br>Colored lines show the skeleton</div></div>
+<aside>
+<label>1. Load Character GLB</label><input id="file" type="file" accept=".glb,.gltf">
+<div id="status">Waiting for a GLB file.</div>
+<label>2. Joint to inspect</label><select id="bone"></select>
+<label>3. Rotate a single axis</label>
+<div class="axis"><b>X</b><button type="button" class="nudge" data-axis="x" data-step="-1" aria-label="X minus one degree">−1°</button><input id="x" type="range" min="-90" max="90" step="1" value="0"><button type="button" class="nudge" data-axis="x" data-step="1" aria-label="X plus one degree">+1°</button><output id="ox">0°</output></div>
+<div class="axis"><b>Y</b><button type="button" class="nudge" data-axis="y" data-step="-1" aria-label="Y minus one degree">−1°</button><input id="y" type="range" min="-90" max="90" step="1" value="0"><button type="button" class="nudge" data-axis="y" data-step="1" aria-label="Y plus one degree">+1°</button><output id="oy">0°</output></div>
+<div class="axis"><b>Z</b><button type="button" class="nudge" data-axis="z" data-step="-1" aria-label="Z minus one degree">−1°</button><input id="z" type="range" min="-90" max="90" step="1" value="0"><button type="button" class="nudge" data-axis="z" data-step="1" aria-label="Z plus one degree">+1°</button><output id="oz">0°</output></div>
+<button id="reset">Reset selected joint</button><button id="all">Reset all joints to rest pose</button>
+<button id="minus">Test −20° on X</button><button id="plus">Test +20° on X</button>
+<button id="capture">Capture pose (append)</button><label>4. Keyframe timeline</label><div id="timeline" class="timeline" aria-label="Keyframe timeline"></div><div id="frames" class="note">0 poses</div><div class="frameactions"><button id="replace">Replace selected pose</button><button id="insert">Insert pose after</button><button id="delete">Delete selected pose</button><button id="deselect">Deselect pose</button></div><p class="framehint">Tap a numbered pose to load it. Adjust joints, then tap Replace to save your edits to that pose. Your other poses stay unchanged.</p><button id="play">▶ Play / Stop</button><button id="undo">Undo</button><button id="save">Save project JSON</button><label>Open project JSON</label><input id="open" type="file" accept=".json"><button id="report">Download bone report (.txt)</button>
+<p class="note">Start with <b>LeftLeg</b> (left knee), then <b>LeftArm</b> and <b>RightArm</b>. Move one slider at a time and observe whether the joint bends forward, backward, sideways, or raises overhead. Joint changes now persist when switching bones.</p>
+<p class="note">This lab deliberately <b>does not play the walk animation</b>: animation playback would override your test rotations. The model is shown in its rig's rest pose. This diagnoses bone axes rather than claiming to fix them.</p>
+<div id="detail" class="note"></div>
+</aside></main>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const view=document.querySelector('#view'), status=document.querySelector('#status'), boneSel=document.querySelector('#bone'), detail=document.querySelector('#detail');
+const scene=new THREE.Scene();scene.background=new THREE.Color('#243246');
+const camera=new THREE.PerspectiveCamera(35,1,.01,100);camera.position.set(2.8,1.7,4.5);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));view.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,1,0);
+scene.add(new THREE.HemisphereLight(0xffffff,0x607083,2.5));const sun=new THREE.DirectionalLight(0xffffff,2.5);sun.position.set(2,5,3);scene.add(sun);
+scene.add(new THREE.GridHelper(10,20,0x688091,0x465669));
+let model=null, skeleton=null, bones=[], selected=null, initial=new Map(), modified=new Map(), fileName='', frames=[], history=[], playing=false, playStart=0, selectedFrame=-1;
+const $=id=>document.getElementById(id);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(view);resize();
+function stopPlayback(){if(playing){playing=false;status.textContent='Stopped'}}
+function renderTimeline(){const tl=$('timeline');tl.replaceChildren();frames.forEach((f,i)=>{const b=document.createElement('button');b.type='button';b.className='framebtn'+(selectedFrame===i?' active':'');b.textContent='Pose '+(i+1);b.setAttribute('aria-pressed',String(selectedFrame===i));b.onclick=()=>{stopPlayback();selectedFrame=i;restore(frames[i]);renderTimeline();status.textContent='Viewing pose '+(i+1)+' — adjust, then Replace to save changes'};tl.appendChild(b)});$('frames').textContent=frames.length+' poses • '+(selectedFrame>=0?'selected '+(selectedFrame+1):'none selected')}
+function validPose(p){return Array.isArray(p)&&p.length===bones.length&&p.every(q=>Array.isArray(q)&&q.length===4&&q.every(Number.isFinite))}
+function resetBone(b){if(!b)return;b.quaternion.copy(initial.get(b.uuid));modified.delete(b.name)}
+function choose(){selected=bones.find(b=>b.uuid===boneSel.value)||null;syncSliders();updateDetail()}
+function updateDetail(){detail.textContent=selected?`Selected: ${selected.name} • Parent: ${selected.parent?.name||'none'} • Rest quaternion: ${initial.get(selected.uuid).toArray().map(n=>n.toFixed(3)).join(', ')}`:''}
+function snapshot(){return bones.map(b=>b.quaternion.toArray())}function restore(p){bones.forEach((b,i)=>b.quaternion.fromArray(p[i]));syncSliders()}function syncSliders(){if(!selected)return;const q=initial.get(selected.uuid).clone().invert().multiply(selected.quaternion);const e=new THREE.Euler().setFromQuaternion(q,'XYZ');['x','y','z'].forEach(a=>{const deg=Math.round(THREE.MathUtils.radToDeg(e[a]));$(a).value=deg;$('o'+a).textContent=deg+'°'})}function apply(){if(!selected)return;const deg=['x','y','z'].map(a=>Number($(a).value));['x','y','z'].forEach((a,i)=>$('o'+a).textContent=deg[i]+'°');const e=new THREE.Euler(...deg.map(THREE.MathUtils.degToRad),'XYZ');selected.quaternion.copy(initial.get(selected.uuid)).multiply(new THREE.Quaternion().setFromEuler(e));modified.set(selected.name,deg);updateDetail()}
+['x','y','z'].forEach(a=>{ $(a).addEventListener('pointerdown',()=>history.push(snapshot()));$(a).addEventListener('change',()=>{});$(a).addEventListener('input',apply)});
+document.querySelectorAll('.nudge').forEach(btn=>btn.addEventListener('click',()=>{if(!selected||playing)return;history.push(snapshot());const slider=$(btn.dataset.axis);slider.value=Math.max(Number(slider.min),Math.min(Number(slider.max),Number(slider.value)+Number(btn.dataset.step)));apply()}));
+$('reset').onclick=()=>{history.push(snapshot());if(selected)resetBone(selected);['x','y','z'].forEach(a=>{$(a).value=0;$('o'+a).textContent='0°'})};
+$('all').onclick=()=>{history.push(snapshot());bones.forEach(resetBone);['x','y','z'].forEach(a=>{$(a).value=0;$('o'+a).textContent='0°'})};
+for(const [id,angle] of [['minus',-20],['plus',20]])$(id).onclick=()=>{$('x').value=angle;$('y').value=0;$('z').value=0;apply()};
+$('file').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;fileName=file.name;status.textContent='Loading '+fileName+'…';
+try{const url=URL.createObjectURL(file);const gltf=await new GLTFLoader().loadAsync(url);URL.revokeObjectURL(url);
+if(model)scene.remove(model);if(skeleton)scene.remove(skeleton);model=gltf.scene;scene.add(model);
+bones=[];initial.clear();modified.clear();frames=[];history=[];playing=false;selectedFrame=-1;renderTimeline();model.traverse(o=>{if(o.isBone){bones.push(o);initial.set(o.uuid,o.quaternion.clone())}});
+if(!bones.length)throw Error('No bones found in this GLB');
+skeleton=new THREE.SkeletonHelper(model);skeleton.material.depthTest=false;skeleton.material.transparent=true;skeleton.material.opacity=.7;scene.add(skeleton);
+boneSel.innerHTML='';for(const b of bones){const opt=document.createElement('option');opt.value=b.uuid;opt.textContent=b.name;boneSel.appendChild(opt)}
+const wanted=bones.find(b=>/LeftLeg$/i.test(b.name))||bones[0];boneSel.value=wanted.uuid;selected=null;choose();
+const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
+controls.target.copy(center);const d=Math.max(size.x,size.y,size.z)*1.65;camera.position.copy(center).add(new THREE.Vector3(d*.75,d*.25,d));camera.near=.01;camera.far=1000;camera.updateProjectionMatrix();controls.update();
+status.textContent=`Loaded ${fileName} • ${bones.length} bones • animation paused`;
+}catch(err){status.textContent='Error: '+err.message;console.error(err)}});
+boneSel.addEventListener('change',choose);
+$('capture').onclick=()=>{if(!bones.length)return;stopPlayback();frames.push(snapshot());selectedFrame=frames.length-1;renderTimeline();status.textContent='Captured pose '+(selectedFrame+1)};
+$('replace').onclick=()=>{if(selectedFrame<0||!bones.length){status.textContent='Select a pose to replace';return}stopPlayback();frames[selectedFrame]=snapshot();renderTimeline();status.textContent='Replaced pose '+(selectedFrame+1)};
+$('insert').onclick=()=>{if(!bones.length)return;stopPlayback();const at=selectedFrame<0?frames.length:selectedFrame+1;frames.splice(at,0,snapshot());selectedFrame=at;renderTimeline();status.textContent='Inserted pose '+(at+1)};
+$('delete').onclick=()=>{if(selectedFrame<0){status.textContent='Select a pose to delete';return}stopPlayback();const removed=selectedFrame+1;frames.splice(selectedFrame,1);selectedFrame=-1;renderTimeline();status.textContent='Deleted pose '+removed};
+$('deselect').onclick=()=>{selectedFrame=-1;renderTimeline();status.textContent='Pose selection cleared'};
+$('undo').onclick=()=>{stopPlayback();if(history.length)restore(history.pop())};
+$('play').onclick=()=>{if(frames.length<2){status.textContent='Capture two poses first';return}playing=!playing;playStart=performance.now();status.textContent=playing?'Playing':'Stopped'};
+$('save').onclick=()=>{if(!bones.length)return;const data={format:'foxfriend-v1',fileName,bones:bones.map(b=>b.name),frames,current:snapshot()};const url=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='foxfriend-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+$('open').onchange=async e=>{try{const file=e.target.files?.[0];if(!file)return;const d=JSON.parse(await file.text());if(d.format!=='foxfriend-v1'||JSON.stringify(d.bones)!==JSON.stringify(bones.map(b=>b.name)))throw Error('Load the matching GLB first');if(!Array.isArray(d.frames)||!d.frames.every(validPose)||!validPose(d.current))throw Error('Invalid pose data');stopPlayback();frames=d.frames;selectedFrame=-1;restore(d.current);renderTimeline();status.textContent='Project restored — '+frames.length+' poses'}catch(err){status.textContent=err.message}};
+$('report').onclick=()=>{const lines=[`Foxfriend bone diagnostic`, `File: ${fileName}`,`Bone count: ${bones.length}`,'','All bone rest quaternions:'];bones.forEach(b=>lines.push(`${b.name} | parent ${b.parent?.name||'-'} | q ${initial.get(b.uuid).toArray().map(n=>n.toFixed(6)).join(',')}`));lines.push('','Current test angles:');modified.forEach((v,k)=>lines.push(`${k}: X=${v[0]}, Y=${v[1]}, Z=${v[2]}`));const blob=new Blob([lines.join('\n')],{type:'text/plain'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Foxfriend_Bone_Report.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+renderTimeline();function animate(){requestAnimationFrame(animate);if(playing&&frames.length>=2){const t=((performance.now()-playStart)/1500)%(frames.length-1),i=Math.floor(t),alpha=t-i;bones.forEach((b,j)=>b.quaternion.fromArray(frames[i][j]).slerp(new THREE.Quaternion().fromArray(frames[i+1][j]),alpha))}controls.update();renderer.render(scene,camera)}animate();
+</script></body></html>

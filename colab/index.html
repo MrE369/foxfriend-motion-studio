@@ -1,0 +1,475 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Better Together 3D CoLab · Unified Studio v0.10</title><style>
+*{box-sizing:border-box}body{margin:0;background:#101925;color:#eff7fc;font:15px system-ui}header{padding:11px 15px;background:#1b2a3b}h1{font-size:20px;margin:0 0 4px}small,.hint{color:#bacddd}.hint{font-size:13px;line-height:1.45;margin:6px 0 10px}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#view{height:calc(100dvh - 76px);min-height:350px;position:relative;background:#263648;overflow:hidden}#touch{position:absolute;inset:0;touch-action:none;pointer-events:none;z-index:2}#hud{position:absolute;top:8px;left:8px;pointer-events:none;background:#101925d9;border-radius:8px;padding:8px;font-size:12px;z-index:3}aside{background:#182536;padding:14px;max-height:calc(100dvh - 76px);overflow:auto}label{display:block;margin:12px 0 5px;font-weight:650}button,input,select,textarea{font:inherit;background:#2b4256;border:1px solid #71899b;color:#fff;border-radius:9px;min-height:43px;padding:10px;width:100%}button{cursor:pointer;margin:3px 0}.row{display:flex;gap:7px}.row>*{flex:1;min-width:0}.active{background:#186e67;border-color:#83f1d1}#status{background:#254052;color:#b8f0d1;border-radius:8px;padding:9px;margin:8px 0}#stats{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:#c8daea;background:#101a26;padding:9px;border-radius:8px}textarea{min-height:70px}.axiscontrol{display:grid;grid-template-columns:32px 1fr 90px 1fr;align-items:center;gap:7px;margin:6px 0}.axiscontrol output{text-align:center;font-variant-numeric:tabular-nums}.warn{color:#ffda91}#picked{font-size:13px;overflow-wrap:anywhere;background:#22394c;padding:9px;border-radius:8px}a{color:#a9ddfb}details{margin:8px 0}summary{cursor:pointer;font-weight:bold}@media(max-width:760px){main{display:flex;flex-direction:column}#view{position:sticky;top:0;z-index:9;height:41dvh;min-height:235px;box-shadow:0 8px 18px #0009}aside{overflow:visible;max-height:none}}
+#hitMarker{position:absolute;z-index:4;display:none;pointer-events:none;left:0;top:0;transform:translate(-50%,-50%);border:3px solid #121b25;background:#ffe16b;color:#101925;min-width:28px;height:28px;border-radius:50%;box-shadow:0 0 0 3px white,0 0 12px #000c;font-size:13px;line-height:22px;text-align:center;font-weight:900}#slots button[aria-pressed="true"]{outline:3px solid #ffffff;outline-offset:-6px}#importResult{display:none;margin-top:9px;padding:12px;border:2px solid #72f9a3;border-radius:9px;background:#123f39;color:#d6ffeb;line-height:1.5;font-size:15px;overflow-wrap:anywhere}
+#importResult.error{border-color:#ff9d59;background:#4b3029;color:#ffe4d8}
+#viewNotice{position:absolute;bottom:12px;right:12px;max-width:min(72%,280px);z-index:6;display:none;background:#123f39ef;border:1px solid #72f9a3;border-radius:9px;padding:8px 11px;color:white;font-size:13px;pointer-events:auto;line-height:1.3;box-shadow:0 3px 12px #0008;cursor:pointer}
+#viewNotice.error{background:#4b3029ef;border-color:#ff9d59}
+#autoConnected{width:24px;min-height:24px;height:24px;vertical-align:middle;accent-color:#49d9ff;margin-right:8px}
+
+[hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#101925"><link rel="icon" type="image/png" href="./icon-192.png"></head><body><header><h1>Better Together 3D CoLab <small>· Unified Studio v0.10</small></h1><small>One model · Four workspaces · Local first · Original GLB untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div></div><aside>
+<label>1 · Load any GLB</label><input id="file" type="file" accept=".glb,model/gltf-binary"><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
+<nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
+<button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
+<button type="button" id="tabButtonPaint" role="tab" aria-selected="false" aria-controls="tabPaint" data-tab="paint">🖌<span>Paint</span></button>
+<button type="button" id="tabButtonAnimate" role="tab" aria-selected="false" aria-controls="tabAnimate" data-tab="animate">▶<span>Animate</span></button>
+<button type="button" id="tabButtonReview" role="tab" aria-selected="false" aria-controls="tabReview" data-tab="review">◫<span>Review</span></button>
+</nav><p class="hint" id="workspaceHint">Six-color geometry selections and agent handoffs · B3.3 preserved</p><section id="tabInspect" class="workspace" role="tabpanel" aria-labelledby="tabButtonInspect"><label>2 · Surface selection</label><div class="row"><button id="nav" class="active">✋ Navigate</button><button id="select">◈ Select</button></div><div class="row"><button id="one">Triangle</button><button id="connected">Connected part</button><button id="mesh">Whole mesh</button></div><div class="row"><button id="clear">Clear selection</button><button id="frame">Frame selection</button></div><div id="picked">Tap a visible surface in Select mode.</div><label style="font-weight:500;display:flex;align-items:center;gap:4px"><input id="autoConnected" type="checkbox" checked> Auto-select connected part when tapping</label><p class="hint">Uncheck for individual triangles. A numbered, color-coded marker shows the exact surface tap even if a tiny triangle is hard to see. Use Connected part to expand the active region again.</p>
+<label>3 · Six independent color selections</label><div id="slots" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div><label for="regionName">Active region name</label><input id="regionName" maxlength="100"><button id="clearAllRegions">Clear ALL six regions</button><p class="hint">Choose a color, tap geometry and expand to Connected part. Select another color to keep both regions visible. You can name each region. This is for inspection, not yet expression editing. B2.1/B3.1: tapping auto-expands connected geometry, and each color slot remembers its hit.</p><label>4 · Selection visibility</label><div class="row"><button id="showAll" class="active">Show all</button><button id="isolate">Isolate selected</button></div><div class="row"><button id="hideSelected">Hide selected</button><button id="contextOnly">Context + selected</button></div>
+<label for="isolateAlpha">Surrounding geometry visibility <output id="isolateAlphaValue">20%</output></label><input id="isolateAlpha" type="range" min="0" max="100" step="5" value="20">
+<p class="hint">Isolate shows selected triangles, optionally with faded surroundings. Hide selected shows all other triangles. Restore all to select another surface. Selection and original geometry remain intact.</p>
+<label>5 · Selection appearance</label><label for="context">Unselected geometry transparency <output id="contextValue">0%</output></label><input id="context" type="range" min="0" max="85" value="0" step="5"><div class="row"><button id="solid" class="active">Solid</button><button id="wire">Wireframe</button><button id="xray">X-ray</button></div><div class="row"><button id="front">Front</button><button id="back">Back</button><button id="left">Left</button></div><div class="row"><button id="right">Right</button><button id="top">Top</button><button id="bottom">Bottom</button></div><button id="resetView">Reset camera</button>
+<label>7 · Agent handoff</label><label for="label">Selection label</label><input id="label" placeholder="e.g. suspected upper eyelid"><label for="note">Instructions / observations</label><textarea id="note" placeholder="What is this surface? Is there geometry behind it?"></textarea><button id="export">⬇ Export selection JSON</button><label for="import">Restore selection JSON</label><label style="font-weight:400"><input id="mergeImport" type="checkbox" style="width:auto;min-height:0;margin-right:8px">Add to current selection instead of replacing (matching GLB only)</label><input id="import" type="file" accept=".json,application/json"><div id="importResult" role="status" aria-live="polite"></div><p class="hint">Handoff records a SHA-256 fingerprint of the original GLB, a mesh path, triangle indices, UVs when present, and 3D hit location. Import refuses a different file fingerprint. Original model data is never rewritten.</p>
+<details><summary>Scope and limitations</summary><p class="hint">Milestone A includes universal inspection, triangle selection, connected-component selection using shared geometric edges, mesh selection, display modes, camera presets, and JSON save/restore. Large selections may be slow on phones. Connected parts are determined by matching position edges within a small tolerance, so near-coincident seams may connect or stay separate depending on geometry. This test hides or isolates selected source triangles in the viewer without editing GLB geometry; previews are rebuilt as lightweight meshes and may not follow animated/skinned deformation. Painting and geometry edits remain future milestones.</p></details>
+</section><section id="tabPaint" class="workspace" role="tabpanel" aria-labelledby="tabButtonPaint" hidden><h2>Character Paint Studio <small>· integrated test</small></h2>
+<p class="hint">Same loaded model and camera. Select a UV-mapped single-material mesh, then paint on it. Original geometry stays untouched. Overlapping UVs and seams are not yet corrected. Painting is experimental in this unified build.</p>
+<label for="paintTarget">Paint target (UV mapped mesh)</label><select id="paintTarget"><option value="">Load a model</option></select>
+<div class="row"><button id="paintNavigate" class="active">✋ Navigate</button><button id="paintStart">🖌 Paint</button></div>
+<label for="paintColor">Brush color</label><input type="color" id="paintColor" value="#e78b9c">
+<label for="paintSize">Size: <output id="paintSizeValue">20</output> px</label><input id="paintSize" type="range" min="1" max="110" value="20">
+<label for="paintOpacity">Opacity: <output id="paintOpacityValue">100%</output></label><input id="paintOpacity" type="range" min="5" max="100" value="100">
+<label for="paintResolution">Texture resolution</label><select id="paintResolution"><option value="1024">1024 × 1024 (phone-friendly)</option><option value="2048">2048 × 2048 (more detail)</option></select>
+<div class="row"><button id="paintUndo">↶ Undo stroke</button><button id="paintClear">Reset paint</button></div>
+<label>Painted UV texture</label><canvas id="paintPreview" width="1024" height="1024"></canvas>
+<div class="row"><button id="paintPNG">⬇ PNG</button><button id="paintGLB">⬇ Textured GLB</button></div>
+<button id="paintJSON">⬇ Paint Project JSON</button><label for="paintImport">Restore Paint Project JSON</label><input id="paintImport" type="file" accept=".json,application/json">
+<p class="hint" id="paintStatus">Painting requires UV coordinates. Paint JSON includes sampled 3D hit positions; textured GLB is a new export, never an overwrite. A brush stroke can affect overlapping UV islands.</p>
+</section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
+<p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
+<div id="motionRigControls"><label for="animBone">Joint</label><select id="animBone"><option>Load a rigged model</option></select><div id="animAxes"></div>
+<div class="row"><button id="animReset">Reset joint</button><button id="animResetAll">Reset pose</button></div>
+<button id="animCapture">Capture keyframe</button><div id="animFrames" class="framebuttons"></div>
+<div class="row"><button id="animReplace">Replace keyframe</button><button id="animDelete">Delete keyframe</button></div>
+</div>
+<div class="row"><button id="animPlay">▶ Play</button><button id="animPause">⏸ Pause</button></div>
+<label for="animTimeline">Motion timeline · <output id="animTime">0.00 / 0.00 s</output></label><input id="animTimeline" type="range" min="0" max="1000" value="0" disabled>
+<div class="row"><button id="animPrev">◀ Step</button><button id="animNext">Step ▶</button></div>
+<label for="animClip">Embedded GLB animation clips (if present)</label><select id="animClip"><option value="">Captured keyframes</option></select>
+<button id="animFreeze">Freeze and inspect pose</button>
+<div class="row"><button id="animSave">⬇ Pose JSON</button><label class="smallFileLabel">↥ Restore<input id="animImport" type="file" accept=".json,application/json"></label></div>
+<p class="hint" id="animStatus">Load a rigged GLB to enable posing. Animated GLBs with clips can be previewed without manual keyframe capture.</p>
+</section><section id="tabReview" class="workspace" role="tabpanel" aria-labelledby="tabButtonReview" hidden><h2>Repair Review <small>· experimental</small></h2>
+<p class="hint">Existing six-region movement-preview controls remain intact. They show detached geometry proposals, not a repaired or watertight mesh.</p><label>6 · Non-destructive region movement preview</label>
+<p class="hint">Choose one of the six color regions, then move its selected triangles in model-local X/Y/Z. Original geometry is never changed. This is a visual proposal, NOT a stitched mesh repair or a final facial expression.</p>
+<div class="row"><button id="previewOriginal" class="active">Original</button><button id="previewAdjusted">Proposed preview</button></div>
+<label for="moveStep">Movement step (model units)</label><select id="moveStep"><option value="0.00025">Very fine · 0.00025</option><option value="0.001" selected>Fine · 0.001</option><option value="0.005">Medium · 0.005</option><option value="0.01">Large · 0.01</option></select>
+<div class="axiscontrol"><strong>X</strong><button id="moveXm">−</button><output id="moveX">0</output><button id="moveXp">+</button></div>
+<div class="axiscontrol"><strong>Y</strong><button id="moveYm">−</button><output id="moveY">0</output><button id="moveYp">+</button></div>
+<div class="axiscontrol"><strong>Z</strong><button id="moveZm">−</button><output id="moveZ">0</output><button id="moveZp">+</button></div>
+<div class="row"><button id="undoMove">↶ Undo movement</button><button id="resetMove">Reset active</button></div>
+<button id="resetAllMoves">Reset ALL proposed movements</button>
+<div id="moveSafety" class="hint warn">Select a region to check whether it can move cleanly.</div>
+<button id="exportMoves">⬇ Export movement proposal JSON</button>
+<p class="hint">Movement data is a reversible agent handoff with source fingerprint; there is deliberately no edited GLB export. Connected edges may tear if only some triangles move. Use this preview to decide what should change before engineering a smooth deformation.</p>
+<div class="subpanel"><h3>Compare repaired GLB</h3>
+<p class="hint">Open a separate proposed GLB and switch Original / Candidate, at the same camera position. This never changes the original model.</p>
+<label for="candidateFile">Proposed GLB</label><input id="candidateFile" type="file" accept=".glb,model/gltf-binary">
+<div class="row"><button id="candidateOriginal" class="active">Original</button><button id="candidateView">Candidate</button></div>
+<button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></div></section></aside></main><script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+const $=id=>document.getElementById(id),view=$('view'),scene=new THREE.Scene();scene.background=new THREE.Color('#263648');
+const camera=new THREE.PerspectiveCamera(35,1,.001,1e5),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.domElement.style.touchAction='none';view.append(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;scene.add(new THREE.HemisphereLight(0xffffff,0x74869c,2.5));for(const [x,y,z,k] of [[3,5,6,2.1],[-4,2,-3,1.1]]){let l=new THREE.DirectionalLight(0xffffff,k);l.position.set(x,y,z);scene.add(l)}
+const overlay=$('touch'),ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),markGroup=new THREE.Group();scene.add(markGroup);
+let root=null,originalName='',fingerprint='',meshes=[],mode='nav',viewStyle='solid',baseMaterials=new Map(),triSelections=new Map(),lastHit=null,defaultCamera=null,adjCache=new Map(),modelBounds=null,glbFileSize=0,visibilityMode="all",previewGroup=new THREE.Group();scene.add(previewGroup);
+const status=s=>$('status').textContent=s;
+let importNoticeTimer=null;
+function dismissImportNotice(){
+ if(importNoticeTimer!==null){clearTimeout(importNoticeTimer);importNoticeTimer=null}
+ $('viewNotice').style.display='none';
+}
+$('viewNotice').addEventListener('click',dismissImportNotice);
+function importFeedback(message,isError=false){
+ // Detailed result stays under the JSON input, not on top of the model.
+ const detail=$('importResult');
+ detail.textContent=message;
+ detail.style.display='block';
+ detail.classList.toggle('error',isError);
+ status(message);
+ dismissImportNotice();
+ // A short toast confirms the result and disappears on its own.
+ const popup=$('viewNotice');
+ const success=message.match(/(?:Restored|Merged) JSON successfully: (\d+) colored region\(s\), (\d+) assigned triangle\(s\)/);
+ popup.textContent=success ? `✓ ${success[1]} regions · ${success[2]} triangles restored` :
+   isError ? 'Import not completed — see details below' : 'Reading selection file…';
+ popup.classList.toggle('error',isError);
+ popup.style.display='block';
+ importNoticeTimer=setTimeout(()=>{popup.style.display='none';importNoticeTimer=null},isError?4000:2500);
+}
+
+const PALETTE=['#ff4fc9','#4bd9ff','#ffe16b','#72f9a3','#b99aff','#ff9c65'];
+const regions=PALETTE.map((color,i)=>({color,name:'Region '+(i+1),parts:new Map(),offset:[0,0,0],hit:null}));let regionIndex=0;const moveGroup=new THREE.Group();scene.add(moveGroup);let showProposal=false;const moveHistory=[];
+function syncRegion(){regions[regionIndex].parts=triSelections}
+function chooseRegion(i){syncRegion();regions[regionIndex].hit=lastHit;regionIndex=i;triSelections=regions[i].parts;lastHit=regions[i].hit;$('regionName').value=regions[i].name;renderMarks();updateMoveUI();status('Active: '+regions[i].name)}
+function renderRegions(){const box=$('slots');box.replaceChildren();regions.forEach((r,i)=>{const b=document.createElement('button');b.style.border='3px solid '+r.color;b.style.background=i===regionIndex?'#486177':'#263b4f';b.style.minHeight='58px';b.style.fontSize='13px';b.textContent=(i+1)+' · '+r.name+' ('+[...r.parts.values()].reduce((n,a)=>n+a.size,0)+')';b.setAttribute('aria-pressed',i===regionIndex?'true':'false');b.onclick=()=>chooseRegion(i);box.append(b)})}
+$('regionName').value=regions[0].name;$('regionName').oninput=()=>{regions[regionIndex].name=$('regionName').value;renderRegions()};
+$('clearAllRegions').onclick=()=>{if(!confirm('Clear all six selections?'))return;regions.forEach(r=>{r.parts.clear();r.hit=null});triSelections=regions[regionIndex].parts;lastHit=null;visibilityMode='all';renderMarks()};renderRegions();
+function combined(){const union=new Map();for(const r of regions)for(const [m,ids] of r.parts){if(!union.has(m))union.set(m,new Set());for(const id of ids)union.get(m).add(id)}return union}
+const hitMarker=$('hitMarker');
+function activeSeed(){
+  const slot=regions[regionIndex];
+  const h=slot.hit;
+  if(h && slot.parts.get(h.mesh)?.has(h.triangle))return h;
+  for(const [mesh, ids] of slot.parts){for(const triangle of ids){
+    if(!Number.isInteger(triangle)||triangle<0||triangle>=triCount(mesh))continue;
+    mesh.updateMatrixWorld(true);
+    const points=triVerts(mesh,triangle);
+    const center=points[0].add(points[1]).add(points[2]).multiplyScalar(1/3).applyMatrix4(mesh.matrixWorld);
+    return {mesh,triangle,point:center.toArray(),normal:null,uv:null};
+  }}
+  return null;
+}
+function updatePickMarker(){
+  const seed=activeSeed();if(!seed||!root){hitMarker.style.display='none';return}
+  const v=new THREE.Vector3(...seed.point).project(camera);
+  if(v.z<-1||v.z>1){hitMarker.style.display='none';return}
+  const rect=view.getBoundingClientRect();
+  hitMarker.style.left=((v.x+1)*rect.width/2)+'px';
+  hitMarker.style.top=((1-v.y)*rect.height/2)+'px';
+  hitMarker.style.background=regions[regionIndex].color;
+  hitMarker.style.display='block';hitMarker.textContent=String(regionIndex+1);
+}
+
+
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();overlay.width=w;overlay.height=h}new ResizeObserver(resize).observe(view);resize();
+function download(name,json){const blob=new Blob([JSON.stringify(json,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)}
+function triCount(m){return m.geometry.index?Math.floor(m.geometry.index.count/3):Math.floor(m.geometry.attributes.position.count/3)}
+function idx(m,tri,vertex){const g=m.geometry;return g.index?g.index.getX(3*tri+vertex):3*tri+vertex}
+function triVerts(m,t){let a=m.geometry.attributes.position;return [0,1,2].map(k=>new THREE.Vector3().fromBufferAttribute(a,idx(m,t,k)))}
+function meshId(m){return String(meshes.indexOf(m))} // deterministic pre-order mesh enumeration for the identical source GLB
+function clearMarks(){markGroup.children.forEach(m=>m.geometry?.dispose());markGroup.clear()}
+function selections(){return [...combined()].filter(([,v])=>v.size).map(([mesh,ids])=>({mesh,triangles:[...ids].sort((a,b)=>a-b)}))}
+function renderMarks(){clearMarks();root?.updateMatrixWorld(true);let total=0;
+regions.forEach((r,ri)=>{for(const [m,ids] of r.parts){const positions=[];for(const id of ids){if(id<0||id>=triCount(m))continue;for(const v of triVerts(m,id)){v.applyMatrix4(m.matrixWorld);positions.push(v.x,v.y,v.z)}}if(!positions.length)continue;total+=ids.size;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.computeVertexNormals();let mat=new THREE.MeshBasicMaterial({color:r.color,side:THREE.DoubleSide,transparent:true,opacity:.8,depthTest:viewStyle!=='xray',depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4});const fill=new THREE.Mesh(g,mat);fill.renderOrder=80+ri*2;fill.userData.regionIndex=ri;markGroup.add(fill);const edges=new THREE.LineSegments(new THREE.EdgesGeometry(g,20),new THREE.LineBasicMaterial({color:r.color,depthTest:false}));edges.renderOrder=81+ri*2;edges.userData.regionIndex=ri;markGroup.add(edges)}});
+$('picked').textContent=total+' assigned triangles across six regions ('+selections().reduce((n,r)=>n+r.triangles.length,0)+' unique)' +(lastHit?' · last hit: mesh '+meshId(lastHit.mesh)+', triangle '+lastHit.triangle:'');renderRegions();applyStyle();renderVisibility();updateMovePreview()}
+function materialCopies(){baseMaterials.clear();for(const m of meshes){const original=Array.isArray(m.material)?m.material:[m.material];baseMaterials.set(m,original.map(x=>x.clone()));m.material=original.map(x=>x.clone());if(!Array.isArray(m.userData?.originalMaterialWasArray)&&original.length===1)m.material=m.material[0]}}
+function applyStyle(){const alpha=Number($('context').value)/100;$('contextValue').textContent=Math.round(alpha*100)+'%';for(const m of meshes){const arr=baseMaterials.get(m)||[];const materials=arr.map(base=>{const mat=base.clone();mat.side=THREE.DoubleSide;mat.wireframe=viewStyle==='wire';if(viewStyle==='xray'){mat.transparent=true;mat.opacity=.16;mat.depthWrite=false;mat.depthTest=false}else if(alpha>0&&selections().length){mat.transparent=true;mat.opacity=Math.max(.06,1-alpha);mat.depthWrite=false}else{mat.opacity=base.opacity;mat.transparent=base.transparent;mat.depthWrite=base.depthWrite}return mat});const old=Array.isArray(m.material)?m.material:[m.material];old.forEach(t=>t?.dispose());m.material=materials.length===1?materials[0]:materials}for(const child of markGroup.children){if(child.isMesh){child.material.depthTest=viewStyle!=='xray';child.material.needsUpdate=true}}}
+// Milestone B: non-destructive filtered render geometry for inspection.
+// Copies selected or excluded triangles to a temporary WORLD-SPACE preview mesh;
+// never changes the source geometry, indices, materials, or GLB on disk.
+function clearPreviews(){for(const o of [...previewGroup.children]){o.geometry?.dispose();o.material?.dispose();previewGroup.remove(o)}for(const m of meshes)m.visible=true}
+function previewTriangles(m,indices,color,opacity){if(!indices.length)return;const pos=m.geometry.attributes.position,arr=new Float32Array(indices.length*9);let j=0;for(const t of indices)for(let k=0;k<3;k++){const v=new THREE.Vector3().fromBufferAttribute(pos,idx(m,t,k)).applyMatrix4(m.matrixWorld);arr[j++]=v.x;arr[j++]=v.y;arr[j++]=v.z}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(arr,3));g.computeVertexNormals();const mat=new THREE.MeshPhongMaterial({color,side:THREE.DoubleSide,transparent:opacity<1,opacity,depthWrite:opacity===1,depthTest:viewStyle!=='xray',shininess:30});const node=new THREE.Mesh(g,mat);node.frustumCulled=false;previewGroup.add(node)}
+function renderVisibility(){clearPreviews();if(visibilityMode==='all'||!root)return;const chosen=selections();if(!chosen.length){visibilityMode='all';updateVisibilityButtons();return}root.updateMatrixWorld(true);const fade=Number($('isolateAlpha').value)/100;for(const m of meshes){const picked=combined().get(m)||new Set(),n=triCount(m),yes=[],no=[];for(let i=0;i<n;i++)(picked.has(i)?yes:no).push(i);if(visibilityMode==='hide')previewTriangles(m,no,0xaab6c3,1);else{for(const r of regions){const ids=[...(r.parts.get(m)||[])];if(ids.length)previewTriangles(m,ids,r.color,1)}if(visibilityMode==='context'||fade>0)previewTriangles(m,no,0x9faab5,visibilityMode==='context'?Math.max(.05,fade):fade)}}for(const m of meshes)m.visible=false;markGroup.visible=false;updateVisibilityButtons();}
+function updateVisibilityButtons(){for(const [id,v] of [['showAll','all'],['isolate','isolate'],['hideSelected','hide'],['contextOnly','context']])$(id).classList.toggle('active',visibilityMode===v);$('isolateAlphaValue').textContent=$('isolateAlpha').value+'%';markGroup.visible=visibilityMode==='all'}
+function setVisibility(v){if(!root)return status('Load a GLB first.');if(v!=='all'&&!selections().length)return status('Select one or more triangles first.');visibilityMode=v;if(v!=='all')selectMode(false);renderVisibility();status(v==='all'?'All geometry visible.':'Inspection mode: '+v+'. Original GLB unchanged.')}
+$('showAll').onclick=()=>setVisibility('all');$('isolate').onclick=()=>setVisibility('isolate');$('hideSelected').onclick=()=>setVisibility('hide');$('contextOnly').onclick=()=>setVisibility('context');$('isolateAlpha').oninput=()=>{updateVisibilityButtons();if(visibilityMode!=='all')renderVisibility()};
+function selectMode(on){if(mode==='paint'&&typeof finishPaint==='function')finishPaint();if(on&&visibilityMode!=='all'){visibilityMode='all';renderVisibility()}mode=on?'select':'nav';controls.enabled=!on;overlay.style.pointerEvents=on?'auto':'none';$('select').classList.toggle('active',on);$('nav').classList.toggle('active',!on);status(on?'Select: tap the surface of any visible mesh.':'Navigate: rotate and zoom the model.')}
+$('nav').onclick=()=>selectMode(false);$('select').onclick=()=>root?selectMode(true):status('Load a GLB first.');
+function pick(e){if(!root)return;const r=overlay.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(meshes,true).find(x=>Number.isFinite(x.faceIndex));if(!hit)return status('No visible geometry under that point.');lastHit={mesh:hit.object,triangle:hit.faceIndex,point:hit.point.toArray(),normal:hit.face?.normal?.toArray()??null,uv:hit.uv?.toArray()??null};regions[regionIndex].hit=lastHit;
+let ids=new Set([hit.faceIndex]);
+if($('autoConnected').checked){try{ids=connected(hit.object,hit.faceIndex)}catch(e){status('Connected-part detection failed: '+e.message+'. Kept the tapped triangle.')}}
+triSelections=new Map([[hit.object,ids]]);syncRegion();renderMarks();status('Region '+(regionIndex+1)+': selected '+ids.size+' triangle(s). Tap marker '+(regionIndex+1)+' identifies the picked surface.');}
+overlay.addEventListener('pointerdown',e=>{if(mode!=='select')return;overlay.setPointerCapture(e.pointerId);pick(e);e.preventDefault()});
+function edgeKey(a,b,tol){const vec=v=>[v.x,v.y,v.z].map(x=>Math.round(x/tol)).join(',');const x=vec(a),y=vec(b);return x<y?x+'|'+y:y+'|'+x}
+function connected(m,start){if(start<0||start>=triCount(m))return new Set();let adjacency=adjCache.get(m);if(!adjacency){const n=triCount(m);if(n>1000000)throw Error('Connected selection limit is one million triangles per mesh.');adjacency=Array.from({length:n},()=>[]);const bb=new THREE.Box3().setFromBufferAttribute(m.geometry.attributes.position),tol=Math.max(bb.getSize(new THREE.Vector3()).length()*1e-6,1e-9),edges=new Map();for(let t=0;t<n;t++){const v=triVerts(m,t);for(let k=0;k<3;k++){const key=edgeKey(v[k],v[(k+1)%3],tol),prior=edges.get(key);if(prior)prior.push(t);else edges.set(key,[t])}}for(const owners of edges.values())if(owners.length>1)for(let i=1;i<owners.length;i++){adjacency[owners[0]].push(owners[i]);adjacency[owners[i]].push(owners[0])}adjCache.set(m,adjacency)}const visited=new Set([start]),queue=[start];for(let i=0;i<queue.length;i++)for(const v of adjacency[queue[i]])if(!visited.has(v)){visited.add(v);queue.push(v)}return visited}
+$('one').onclick=()=>{const seed=activeSeed();if(!seed)return status('Select a triangle first.');lastHit=seed;triSelections=new Map([[seed.mesh,new Set([seed.triangle])]]);syncRegion();regions[regionIndex].hit=seed;renderMarks()};
+$('connected').onclick=()=>{const seed=activeSeed();if(!seed)return status('Choose a color slot and tap its surface first.');try{const component=connected(seed.mesh,seed.triangle);triSelections=new Map([[seed.mesh,component]]);syncRegion();regions[regionIndex].hit=seed;lastHit=seed;renderMarks();status('Region '+(regionIndex+1)+' connected part: '+component.size+' triangles.')}catch(e){status('Connected selection failed: '+e.message)}};
+$('mesh').onclick=()=>{const seed=activeSeed();if(!seed)return status('Select a triangle first.');lastHit=seed;const m=seed.mesh;triSelections=new Map([[m,new Set(Array.from({length:triCount(m)},(_,i)=>i))]]);syncRegion();renderMarks()};
+$('clear').onclick=()=>{triSelections.clear();regions[regionIndex].hit=null;lastHit=null;visibilityMode='all';renderMarks()};
+function selectionBounds(){const b=new THREE.Box3();let count=0;for(const {mesh:m,triangles} of selections())for(const t of triangles){for(const v of triVerts(m,t))b.expandByPoint(v.applyMatrix4(m.matrixWorld));count++}return count?b:null}
+function frameBounds(b){if(!b)return status('No selection to frame.');const size=b.getSize(new THREE.Vector3()),center=b.getCenter(new THREE.Vector3()),d=Math.max(size.length(),.01)*1.8;controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(d*.45,d*.3,d));camera.near=Math.max(.00001,d/1e4);camera.far=Math.max(100,d*100);camera.updateProjectionMatrix();controls.update()}
+$('frame').onclick=()=>frameBounds(selectionBounds());
+function preset(axis){if(!modelBounds)return;const b=selectionBounds()||modelBounds,center=b.getCenter(new THREE.Vector3()),d=Math.max(b.getSize(new THREE.Vector3()).length()*1.7,.1);controls.target.copy(center);const dirs={front:[0,0,1],back:[0,0,-1],left:[-1,0,0],right:[1,0,0],top:[0,1,0],bottom:[0,-1,0]};camera.position.copy(center).add(new THREE.Vector3(...dirs[axis]).multiplyScalar(d));camera.up.set(0,0,axis==='top'?-1:axis==='bottom'?1:0);if(axis!=='top'&&axis!=='bottom')camera.up.set(0,1,0);camera.lookAt(center);controls.update()}
+for(const direction of ['front','back','left','right','top','bottom'])$(direction).onclick=()=>preset(direction);
+$('resetView').onclick=()=>{if(!defaultCamera)return;camera.position.fromArray(defaultCamera.position);camera.up.set(0,1,0);controls.target.fromArray(defaultCamera.target);controls.update()};
+$('context').oninput=applyStyle;for(const style of ['solid','wire','xray'])$(style).onclick=()=>{viewStyle=style;for(const v of ['solid','wire','xray'])$(v).classList.toggle('active',v===style);renderMarks()};
+function clearMovePreview(){for(const item of [...moveGroup.children]){item.geometry.dispose();item.material.dispose();moveGroup.remove(item)}}
+function selectedCount(r){return [...r.parts.values()].reduce((n,x)=>n+x.size,0)}
+function borderWarning(r){let shared=0,selectedVertices=0;for(const [m,ids] of r.parts){const counts=new Map();for(let t=0;t<triCount(m);t++){const chosen=ids.has(t);for(let k=0;k<3;k++){const v=idx(m,t,k),old=counts.get(v)||0;counts.set(v,old|(chosen?1:2))}}for(const flag of counts.values()){if(flag&1)selectedVertices++;if(flag===3)shared++}}return {shared,selectedVertices}}
+function updateMoveUI(){const r=regions[regionIndex];for(let k=0;k<3;k++)$( ['moveX','moveY','moveZ'][k]).textContent=r.offset[k].toFixed(5);const n=selectedCount(r);const b=n?borderWarning(r):null;$('moveSafety').textContent=!n?'Active slot is empty. Select a component first.':b.shared?`⚠ ${b.shared} vertex indices are shared between selected and unselected triangles. Moving just this region would tear adjacent surfaces. Preview is only a visual guide.`:`${n} selected triangles; no shared vertex indices detected. This does not guarantee watertight or animation-safe geometry.`;$('previewOriginal').classList.toggle('active',!showProposal);$('previewAdjusted').classList.toggle('active',showProposal)}
+function updateMovePreview(){clearMovePreview();if(!root)return;
+ const any=regions.some(r=>r.offset.some(x=>Math.abs(x)>1e-9)&&selectedCount(r));
+ moveGroup.visible=showProposal&&any;
+ // Preserve every untouched region's visible highlight in the proposed view.
+ // Only a region with a nonzero proposed offset suppresses its original overlay.
+ markGroup.visible=visibilityMode==='all';
+ for(const child of markGroup.children){const r=regions[child.userData.regionIndex];child.visible=!(moveGroup.visible&&r&&selectedCount(r)&&r.offset.some(x=>Math.abs(x)>1e-9))}
+ if(!moveGroup.visible){updateMoveUI();return}root.updateMatrixWorld(true);for(const r of regions){if(!selectedCount(r)||!r.offset.some(x=>Math.abs(x)>1e-9))continue;for(const [m,ids] of r.parts){const nums=[];const delta=new THREE.Vector3(...r.offset);for(const t of ids){if(t<0||t>=triCount(m))continue;for(const v of triVerts(m,t)){v.add(delta).applyMatrix4(m.matrixWorld);nums.push(v.x,v.y,v.z)}}if(!nums.length)continue;const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.Float32BufferAttribute(nums,3));geom.computeVertexNormals();const obj=new THREE.Mesh(geom,new THREE.MeshBasicMaterial({color:r.color,side:THREE.DoubleSide,transparent:true,opacity:.9,depthTest:false,depthWrite:false}));obj.frustumCulled=false;obj.renderOrder=150;moveGroup.add(obj)}}updateMoveUI()}
+function setProposal(v){showProposal=v;updateMovePreview();status(v?'Preview shows moved selected shells over the untouched original.':'Showing original selection positions.')}
+$('previewOriginal').onclick=()=>setProposal(false);$('previewAdjusted').onclick=()=>setProposal(true);
+for(const [axis,k] of [['X',0],['Y',1],['Z',2]])for(const [suffix,sign] of [['m',-1],['p',1]])$('move'+axis+suffix).onclick=()=>{if(!root)return status('Load GLB first');const r=regions[regionIndex];if(!selectedCount(r))return status('Select geometry in this color slot first.');moveHistory.push({regionIndex,offset:r.offset.slice()});r.offset[k]=Math.round((r.offset[k]+sign*Number($('moveStep').value))*1e7)/1e7;showProposal=true;updateMovePreview()};
+$('undoMove').onclick=()=>{const h=moveHistory.pop();if(!h)return status('No movement to undo');regions[h.regionIndex].offset=h.offset;showProposal=true;updateMovePreview()};
+$('resetMove').onclick=()=>{const r=regions[regionIndex];moveHistory.push({regionIndex,offset:r.offset.slice()});r.offset=[0,0,0];updateMovePreview()};
+$('resetAllMoves').onclick=()=>{if(!confirm('Reset all six proposed movements?'))return;regions.forEach(r=>r.offset=[0,0,0]);moveHistory.length=0;setProposal(false)};
+$('exportMoves').onclick=()=>{if(!root)return status('Load GLB first');const payload={schema:'better-together-3d-colab-movement-proposal-v1',source:{filename:originalName,sizeBytes:glbFileSize,sha256:fingerprint},space:'mesh-local',units:'GLB model units',previewOnly:true,regions:regions.map((r,i)=>({slot:i,color:r.color,label:r.name,offset:r.offset.slice(),selection:[...r.parts.entries()].map(([m,ids])=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',triangles:[...ids].sort((a,b)=>a-b)})),sharedVertexCount:borderWarning(r).shared})),camera:cameraData(),note:$('note').value,warning:'Non-destructive preview. The proposal does not stitch or deform adjacent geometry. Triangle IDs require the exact original GLB.'};download(originalName.replace(/\.glb$/i,'')+'_movement_proposal.json',payload);status('Movement proposal JSON exported. Original GLB unchanged.')};
+updateMoveUI();
+function hashBuffer(buffer){return crypto.subtle.digest('SHA-256',buffer).then(arr=>[...new Uint8Array(arr)].map(v=>v.toString(16).padStart(2,'0')).join(''))}
+$('file').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;dismissImportNotice();$('importResult').style.display='none';status('Loading '+f.name+'…');let url;try{const bytes=await f.arrayBuffer();const hash=await hashBuffer(bytes);url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const gltf=await new GLTFLoader().loadAsync(url);const incoming=[];gltf.scene.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)incoming.push(o)});if(!incoming.length)throw Error('GLB contains no renderable triangle meshes.');clearUnifiedBeforeLoad();if(root){clearPreviews();scene.remove(root);for(const m of meshes){const old=Array.isArray(m.material)?m.material:[m.material];old.forEach(a=>a.dispose());(baseMaterials.get(m)||[]).forEach(a=>a.dispose())}}root=gltf.scene;meshes=incoming;originalName=f.name;fingerprint=hash;glbFileSize=f.size;adjCache.clear();regions.forEach(r=>{r.parts.clear();r.offset=[0,0,0]});moveHistory.length=0;showProposal=false;clearMovePreview();regionIndex=0;triSelections=regions[0].parts;$('regionName').value=regions[0].name;lastHit=null;visibilityMode='all';clearMarks();materialCopies();scene.add(root);modelBounds=new THREE.Box3().setFromObject(root);frameBounds(modelBounds);defaultCamera={position:camera.position.toArray(),target:controls.target.toArray()};const n=meshes.reduce((sum,m)=>sum+triCount(m),0),v=meshes.reduce((sum,m)=>sum+m.geometry.attributes.position.count,0),uvCount=meshes.filter(m=>!!m.geometry.attributes.uv).length,bones=[];root.traverse(o=>{if(o.isBone)bones.push(o)});const materialCount=new Set(meshes.flatMap(m=>{const a=Array.isArray(m.material)?m.material:[m.material];return a.map(z=>z.uuid)})).size;$('stats').textContent=`File: ${f.name}\nSHA-256: ${hash.slice(0,16)}…\nMeshes: ${meshes.length} · vertices: ${v.toLocaleString()} · triangles: ${n.toLocaleString()}\nUV-mapped meshes: ${uvCount}/${meshes.length}\nBones: ${bones.length} · embedded animation clips: ${gltf.animations.length}\nMaterials: ${materialCount} (current rendering copies)\nRigging: ${bones.length?'present':'none — inspector still available'}`;$('import').value='';selectMode(false);renderMarks();initializeUnified(gltf);status('Loaded. Tap Select, then tap any visible triangle.')}catch(err){status('Load failed: '+err.message)}finally{if(url)URL.revokeObjectURL(url)}};
+function cameraData(){return {position:camera.position.toArray(),target:controls.target.toArray(),up:camera.up.toArray()}}
+function selectionData(){return selections().map(({mesh:m,triangles})=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',nodePath:(()=>{let p=[],o=m;while(o&&o!==root){p.push(o.name||o.type);o=o.parent}return p.reverse().join('/')})(),triangleIndexing:'Three.js BufferGeometry faceIndex; triangles in source decoded geometry, indexed or non-indexed',triangles,representativeLocalPosition:triangles.length?triVerts(m,triangles[0])[0].toArray():null}))}
+$('export').onclick=()=>{if(!root)return status('Load a model first.');const data={schema:'better-together-3d-colab-geometry-selection-v2',groups:regions.map((r,i)=>({slot:i,color:r.color,label:r.name,selection:[...r.parts].filter(([,v])=>v.size).map(([m,a])=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',triangles:[...a].sort((x,y)=>x-y)}))})),app:'Better Together 3D CoLab',createdAt:new Date().toISOString(),source:{filename:originalName,sizeBytes:glbFileSize,sha256:fingerprint},selection:selectionData(),lastHit:lastHit?{meshIndex:meshes.indexOf(lastHit.mesh),triangleIndex:lastHit.triangle,localPosition:lastHit.mesh.worldToLocal(new THREE.Vector3(...lastHit.point)).toArray(),worldPosition:lastHit.point,localNormal:lastHit.normal,uv:lastHit.uv}:null,view:{camera:cameraData(),style:viewStyle,contextTransparency:Number($('context').value)/100},annotation:{label:$('label').value,note:$('note').value},warning:'Triangle IDs are valid only for this exact GLB hash and its decoded geometry. They may change after re-export or topology changes.'};download(originalName.replace(/\.glb$/i,'')+'_geometry_selection.json',data);status('Selection JSON exported. Share it with the original GLB for analysis.')};
+$('import').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{if(!root)throw Error('Load the original GLB first.');importFeedback('Reading selection JSON: '+f.name+' …');const d=JSON.parse(await f.text());if(!['better-together-3d-colab-geometry-selection-v1','better-together-3d-colab-geometry-selection-v2'].includes(d.schema))throw Error('Unsupported selection schema.');if(d.source?.sha256!==fingerprint||d.source?.sizeBytes!==glbFileSize)throw Error('GLB fingerprint mismatch. No selection was changed.');
+function decode(items){if(!Array.isArray(items)||items.length>meshes.length)throw Error('Malformed selection list.');const map=new Map();for(const item of items){const m=meshes[item.meshIndex];if(!m||m.name!==(item.meshName||'')||map.has(m)||!Array.isArray(item.triangles)||item.triangles.length>triCount(m)||item.triangles.some(t=>!Number.isInteger(t)||t<0||t>=triCount(m)))throw Error('Invalid mesh or triangle in saved selection.');map.set(m,new Set(item.triangles))}return map}
+const isV2=d.schema.endsWith('-v2');if(isV2&&(!Array.isArray(d.groups)||d.groups.length!==6))throw Error('Expected six color regions.');const incoming=isV2?d.groups.map((g,i)=>{if(g.slot!==i||g.color!==PALETTE[i]||typeof g.label!=='string'||g.label.length>100)throw Error('Invalid color region');return {name:g.label,parts:decode(g.selection)}}):[{name:String(d.annotation?.label||'Imported region').slice(0,100),parts:decode(d.selection)}];
+const merging=$('mergeImport').checked;if(!confirm(merging?'Merge selection into current regions?':'Replace current color regions with imported selection?')){importFeedback('Import cancelled. Current selections preserved.');return;}
+if(!merging)regions.forEach((r,i)=>{r.parts.clear();r.name='Region '+(i+1)});
+incoming.forEach((r,i)=>{const destination=regions[isV2?i:regionIndex];if(!merging||isV2)destination.name=r.name;for(const [m,ids] of r.parts){if(!destination.parts.has(m))destination.parts.set(m,new Set());for(const id of ids)destination.parts.get(m).add(id)}});
+triSelections=regions[regionIndex].parts;$('regionName').value=regions[regionIndex].name;regions.forEach(r=>r.hit=null);
+// A freshly restored diagnostic selection should show its original location immediately,
+// not inherit the hidden overlays from a previous movement preview.
+if(!merging){showProposal=false;clearMovePreview();regions.forEach(r=>r.offset=[0,0,0]);moveHistory.length=0;}
+
+visibilityMode='all';const h=d.lastHit;lastHit=h&&meshes[h.meshIndex]&&Number.isInteger(h.triangleIndex)&&h.triangleIndex>=0&&h.triangleIndex<triCount(meshes[h.meshIndex])?{mesh:meshes[h.meshIndex],triangle:h.triangleIndex,point:Array.isArray(h.worldPosition)?h.worldPosition:[0,0,0],normal:h.localNormal??null,uv:h.uv??null}:null;if(!merging){$('label').value=String(d.annotation?.label??'').slice(0,150);$('note').value=String(d.annotation?.note??'').slice(0,20000)}if(!merging&&d.view?.camera&&[d.view.camera.position,d.view.camera.target].every(a=>Array.isArray(a)&&a.length===3&&a.every(Number.isFinite))){camera.position.fromArray(d.view.camera.position);controls.target.fromArray(d.view.camera.target);if(Array.isArray(d.view.camera.up)&&d.view.camera.up.length===3&&d.view.camera.up.every(Number.isFinite))camera.up.fromArray(d.view.camera.up);controls.update()}if(!merging){viewStyle=['solid','wire','xray'].includes(d.view?.style)?d.view.style:'solid';$('context').value=String(Math.round(Math.max(0,Math.min(.85,Number(d.view?.contextTransparency)||0))*100))};for(const v of ['solid','wire','xray'])$(v).classList.toggle('active',v===viewStyle);renderMarks();updateMovePreview();
+const counts=regions.map(r=>[...r.parts.values()].reduce((n,a)=>n+a.size,0));
+const filled=counts.filter(n=>n>0).length;
+importFeedback((merging?'Merged':'Restored')+' JSON successfully: '+filled+' colored region(s), '+counts.reduce((a,b)=>a+b,0)+' assigned triangle(s). GLB fingerprint verified. Colors are visible in the viewer.');
+}catch(err){importFeedback('JSON import was NOT completed: '+err.message,true)}finally{e.target.value=''}};
+// -----------------------------------------------------------------------------
+// Unified CoLab v0.10 workspaces. The inspector remains the baseline scene owner.
+// Separate Paint, Motion, and Review controls share that same loaded GLB and camera.
+// -----------------------------------------------------------------------------
+const WORKSPACES={inspect:'Six-color Geometry Inspector · tested B3.3 foundation',paint:'Direct UV painting · experimental integration',animate:'Rig posing and Motion Check · experimental integration',review:'Non-destructive geometry and GLB comparison'};
+let workspace='inspect';
+function showWorkspace(name){
+  if(!WORKSPACES[name])return;
+  if(mode==='paint')finishPaint();
+  if(mode!=='nav')selectMode(false);
+  if(name!=='review'&&candidateVisible)showCandidate(false);
+  workspace=name;
+  for(const key of Object.keys(WORKSPACES)){
+    $('tab'+key[0].toUpperCase()+key.slice(1)).hidden=key!==name;
+    const b=$('tabButton'+key[0].toUpperCase()+key.slice(1));
+    b.classList.toggle('active',key===name);b.setAttribute('aria-selected',key===name?'true':'false');
+  }
+  $('workspaceHint').textContent=WORKSPACES[name];
+  if(name==='paint')updatePaintUI();
+  if(name==='animate')updateAnimationUI();
+  if(name==='review')updateMoveUI();
+  // Keep the scene and saved selections, but only show colored region overlays
+  // in workspaces where they help. Never obscure the paint or animation view.
+  markGroup.visible=(name==='inspect'||name==='review') && visibilityMode==='all' && !candidateVisible;
+  moveGroup.visible=name==='review' && showProposal && !candidateVisible;
+  hitMarker.style.display=name==='inspect'?hitMarker.style.display:'none';
+  $('paintStart').classList.remove('active');$('paintNavigate').classList.add('active');
+}
+for(const b of document.querySelectorAll('#workspaceTabs [data-tab]'))b.addEventListener('click',()=>showWorkspace(b.dataset.tab));
+// PAINT: independent 2D canvases for each UV-mapped, single-material mesh.
+// The Paint Studio's v0.1.3 stroke and JSON conventions are retained.
+const paintSessions=new Map();
+let paintTarget=null,paintDragging=false,paintLast=null,paintBefore=null,paintStroke=null;
+const paintPrev=$('paintPreview'),paintPrevCtx=paintPrev.getContext('2d');
+function paintMessage(text){$('paintStatus').textContent=text;status(text)}
+function downloadRaw(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000)}
+function paintCanvasPreview(){
+  const p=paintSessions.get(paintTarget);if(!p){paintPrevCtx.clearRect(0,0,paintPrev.width,paintPrev.height);return}
+  paintPrev.width=p.canvas.width;paintPrev.height=p.canvas.height;paintPrevCtx.drawImage(p.canvas,0,0);
+}
+function paintEligible(m){return !!m?.geometry?.attributes?.uv && !Array.isArray(m.material) && (baseMaterials.get(m)?.length===1)}
+function startPaintSession(m,sz){
+  if(!paintEligible(m))throw Error('This mesh needs UV coordinates and one material for paint v0.1.');
+  let p=paintSessions.get(m);if(p)return p;
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=sz;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.fillStyle='white';ctx.fillRect(0,0,sz,sz);
+  const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
+  tex.flipY=true;tex.wrapS=THREE.ClampToEdgeWrapping;tex.wrapT=THREE.ClampToEdgeWrapping;
+  const base=baseMaterials.get(m)[0];const material=base.clone();material.map=tex;material.color.set('#ffffff');material.side=THREE.DoubleSide;
+  // B3.3's solid / X-ray / wire view rebuilds materials from this baseline.
+  baseMaterials.set(m,[material]);applyStyle();
+  p={canvas,ctx,tex,material,undo:[],strokes:[],painted:false};paintSessions.set(m,p);
+  return p;
+}
+function updatePaintUI(){
+ const enabled=!!paintTarget;
+ for(const id of ['paintStart','paintUndo','paintClear','paintPNG','paintGLB','paintJSON','paintImport'])$(id).disabled=!enabled;
+ paintCanvasPreview();
+ const current=paintSessions.get(paintTarget);
+ $('paintResolution').disabled=!!current;
+ if(current)$('paintResolution').value=String(current.canvas.width);
+ $('paintSizeValue').textContent=$('paintSize').value;
+ $('paintOpacityValue').textContent=$('paintOpacity').value+'%';
+}
+function refreshPaintTargets(){
+ const sel=$('paintTarget');sel.replaceChildren();const options=[];
+ for(const m of meshes){const i=meshes.indexOf(m);const o=document.createElement('option');o.value=String(i);o.textContent=`Mesh ${i+1}: ${(m.name||'Unnamed mesh').slice(0,35)} ${paintEligible(m)?'· UV ready':'· view only'}`;sel.append(o);if(paintEligible(m))options.push(i)}
+ if(options.length){sel.value=String(options[0]);paintTarget=meshes[options[0]];$('paintStatus').textContent=`Ready to paint mesh ${options[0]+1}. Select Paint to begin.`}
+ else{paintTarget=null;const o=document.createElement('option');o.value='';o.textContent='No paint-compatible mesh';sel.append(o);paintMessage('This GLB remains inspectable. UV painting needs UVs and a single material per paint target.')}
+ updatePaintUI();
+}
+$('paintTarget').onchange=()=>{if(paintDragging)finishPaint();const m=meshes[Number($('paintTarget').value)];paintTarget=paintEligible(m)?m:null;selectMode(false);updatePaintUI()};
+$('paintSize').oninput=updatePaintUI;$('paintOpacity').oninput=updatePaintUI;
+function setPaintMode(on){
+ if(!root||!paintTarget)return paintMessage('Load a UV-mapped model and select a paint target.');
+ if(on){
+   if(visibilityMode!=='all')setVisibility('all');
+   if(viewStyle!=='solid'){$('solid').click()}
+   try{startPaintSession(paintTarget,Number($('paintResolution').value))}catch(err){return paintMessage(err.message)}
+   selectMode(false);mode='paint';controls.enabled=false;overlay.style.pointerEvents='auto';
+ }else{finishPaint();selectMode(false)}
+ $('paintStart').classList.toggle('active',on);$('paintNavigate').classList.toggle('active',!on);
+ paintMessage(on?'Paint mode active. Draw on the surface.':'Navigation mode. Rotate or zoom your character.');updatePaintUI();
+}
+$('paintStart').onclick=()=>setPaintMode(true);$('paintNavigate').onclick=()=>setPaintMode(false);
+function hitForPaint(e){
+ if(!paintTarget||!root)return null;
+ const r=overlay.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));ray.setFromCamera(pointer,camera);root.updateMatrixWorld(true);
+ return ray.intersectObject(paintTarget,false).find(h=>h.uv && Number.isFinite(h.faceIndex))||null;
+}
+function paintDot(p,x,y){const ctx=p.ctx;ctx.fillStyle=$('paintColor').value;ctx.globalAlpha=Number($('paintOpacity').value)/100;ctx.beginPath();ctx.arc(x,y,Number($('paintSize').value)/2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1}
+function paintSample(h){
+ const p=paintSessions.get(paintTarget);if(!p||!h?.uv)return;
+ const x=h.uv.x*p.canvas.width,y=(1-h.uv.y)*p.canvas.height;
+ const local=h.point.clone();h.object.worldToLocal(local);
+ const sample={meshName:h.object.name||'',triangleIndex:h.faceIndex,uv:[h.uv.x,h.uv.y].map(z=>+z.toFixed(6)),localPosition:local.toArray().map(z=>+z.toFixed(6)),worldPosition:h.point.toArray().map(z=>+z.toFixed(6))};
+ if(paintStroke && paintStroke.samples.length<250000){const prev=paintStroke.samples.at(-1);if(!prev||Math.hypot(prev.uv[0]-sample.uv[0],prev.uv[1]-sample.uv[1])>.0005||prev.triangleIndex!==sample.triangleIndex)paintStroke.samples.push(sample)}
+ if(paintLast){const dx=x-paintLast.x,dy=y-paintLast.y,dist=Math.hypot(dx,dy);if(dist>p.canvas.width*.25)paintDot(p,x,y);else{const count=Math.max(1,Math.min(220,Math.ceil(dist/Math.max(1,Number($('paintSize').value)/4))));for(let i=1;i<=count;i++)paintDot(p,paintLast.x+dx*i/count,paintLast.y+dy*i/count)}}else paintDot(p,x,y);
+ paintLast={x,y};p.tex.needsUpdate=true;p.painted=true;
+}
+overlay.addEventListener('pointerdown',e=>{
+ if(mode!=='paint'||!paintTarget)return;
+ const hit=hitForPaint(e);if(!hit)return;
+ const p=paintSessions.get(paintTarget);if(!p)return;
+ overlay.setPointerCapture(e.pointerId);paintDragging=true;
+ paintBefore=p.ctx.getImageData(0,0,p.canvas.width,p.canvas.height);
+ paintStroke={startedAt:new Date().toISOString(),meshName:paintTarget.name||'',meshIndex:meshes.indexOf(paintTarget),brush:{color:$('paintColor').value,sizePx:Number($('paintSize').value),opacity:Number($('paintOpacity').value)/100},samples:[]};
+ paintLast=null;paintSample(hit);e.preventDefault();
+});
+overlay.addEventListener('pointermove',e=>{if(mode!=='paint'||!paintDragging)return;paintSample(hitForPaint(e));e.preventDefault()});
+function finishPaint(){
+ if(!paintDragging)return;paintDragging=false;paintLast=null;
+ const p=paintSessions.get(paintTarget);
+ if(p&&paintBefore){p.undo.push(paintBefore);if(p.undo.length>8)p.undo.shift();if(paintStroke?.samples.length)p.strokes.push(paintStroke)}
+ paintBefore=null;paintStroke=null;paintCanvasPreview();paintMessage('Stroke saved in this workspace. Export JSON to preserve it outside your current session.');
+}
+overlay.addEventListener('pointerup',finishPaint);overlay.addEventListener('pointercancel',finishPaint);
+$('paintUndo').onclick=()=>{finishPaint();const p=paintSessions.get(paintTarget);if(!p?.undo.length)return paintMessage('No recent stroke to undo.');p.ctx.putImageData(p.undo.pop(),0,0);p.tex.needsUpdate=true;p.strokes.pop();paintCanvasPreview();paintMessage('Paint stroke undone.')};
+$('paintClear').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return;if(!confirm('Clear paint on the selected mesh? Original GLB is unchanged.'))return;p.ctx.fillStyle='white';p.ctx.globalAlpha=1;p.ctx.fillRect(0,0,p.canvas.width,p.canvas.height);p.tex.needsUpdate=true;p.strokes=[];p.undo=[];paintCanvasPreview();paintMessage('Paint on active mesh cleared.')};
+$('paintPNG').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return paintMessage('Paint on the mesh first.');p.canvas.toBlob(b=>b?downloadRaw(b,originalName.replace(/\.glb$/i,'')+'_paint.png'):paintMessage('PNG could not be exported.'),'image/png')};
+$('paintJSON').onclick=()=>{
+ finishPaint();const p=paintSessions.get(paintTarget);if(!p)return paintMessage('Start painting first.');
+ const project={format:'better-together-3d-colab-paint-v0.1.3',app:'Better Together 3D CoLab',createdAt:new Date().toISOString(),modelFile:originalName,source:{sha256:fingerprint,sizeBytes:glbFileSize},meshIndex:meshes.indexOf(paintTarget),meshName:paintTarget.name||'',texture:{width:p.canvas.width,height:p.canvas.height,mimeType:'image/png',dataUrl:p.canvas.toDataURL('image/png')},brush:{color:$('paintColor').value,sizePx:Number($('paintSize').value),opacity:Number($('paintOpacity').value)/100},paintTracking:{strokeCount:p.strokes.length,strokes:p.strokes},notes:'Source geometry is not included. Original model is never overwritten.'};
+ download(originalName.replace(/\.glb$/i,'')+'_colab_paint.json',project);paintMessage('Paint JSON saved with the texture and 3D stroke tracking.');
+};
+function decodePaintPng(dataUrl){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('Saved PNG could not be read.'));img.src=dataUrl})}
+$('paintImport').onchange=async e=>{
+ const f=e.target.files?.[0];if(!f)return;
+ try{
+  if(!root)throw Error('Load the original GLB first.');if(f.size>36000000)throw Error('JSON file too large.');
+  const d=JSON.parse(await f.text());if(!['better-together-3d-colab-paint-v0.1.2','better-together-3d-colab-paint-v0.1.3'].includes(d.format))throw Error('Unsupported paint JSON schema.');
+  if(d.modelFile!==originalName)throw Error('Paint project belongs to a different model filename.');
+  if(d.source&&(d.source.sha256!==fingerprint||d.source.sizeBytes!==glbFileSize))throw Error('GLB fingerprint mismatch. Import cancelled.');
+  if(d.meshIndex!==undefined&&d.meshIndex!==meshes.indexOf(paintTarget))throw Error('Select the original painted mesh before importing.');
+  const tex=d.texture;
+  if(!tex||![1024,2048].includes(tex.width)||tex.width!==tex.height||tex.mimeType!=='image/png'||typeof tex.dataUrl!=='string'||tex.dataUrl.length>33000000||!/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(tex.dataUrl))throw Error('Invalid paint texture.');
+  if(!d.paintTracking||!Array.isArray(d.paintTracking.strokes)||d.paintTracking.strokes.length>5000)throw Error('Invalid saved strokes.');
+  let samples=0;for(const stroke of d.paintTracking.strokes){if(!Array.isArray(stroke.samples))throw Error('Malformed stroke data');samples+=stroke.samples.length;if(samples>250000)throw Error('Too many stroke samples')}
+  const img=await decodePaintPng(tex.dataUrl);if(img.width!==tex.width||img.height!==tex.height)throw Error('Texture dimensions mismatch.');
+  if(!confirm('Replace paint on this mesh with the saved painting?'))return;
+  finishPaint();selectMode(false);
+  let p=paintSessions.get(paintTarget);
+  if(!p)p=startPaintSession(paintTarget,tex.width);
+  if(p.canvas.width!==tex.width){p.canvas.width=p.canvas.height=tex.width;$('paintResolution').value=String(tex.width)}
+  p.ctx.clearRect(0,0,tex.width,tex.height);p.ctx.drawImage(img,0,0);p.tex.needsUpdate=true;p.strokes=d.paintTracking.strokes;p.undo=[];p.painted=true;
+  if(/^#[0-9a-f]{6}$/i.test(d.brush?.color||''))$('paintColor').value=d.brush.color;
+  if(Number.isFinite(d.brush?.sizePx)&&d.brush.sizePx>=1&&d.brush.sizePx<=110)$('paintSize').value=String(d.brush.sizePx);
+  if(Number.isFinite(d.brush?.opacity)&&d.brush.opacity>=.05&&d.brush.opacity<=1)$('paintOpacity').value=String(Math.round(d.brush.opacity*100));
+  updatePaintUI();paintMessage('Paint restored with '+p.strokes.length+' tracked strokes. Undo starts with the next stroke.');
+ }catch(err){paintMessage('Paint import failed: '+err.message)}finally{e.target.value=''}
+};
+$('paintGLB').onclick=async()=>{
+ if(!root)return paintMessage('Load a GLB first.');finishPaint();
+ if(!paintSessions.size)return paintMessage('Paint at least one mesh before exporting.');
+ if(candidateVisible)showCandidate(false);
+ const previous=meshes.map(m=>({m,visible:m.visible,material:m.material}));
+ try{
+  selectMode(false);paintMessage('Exporting a separate textured GLB. Please wait…');
+  for(const item of previous){item.m.visible=true;const bases=baseMaterials.get(item.m);if(bases?.length)item.m.material=bases.length===1?bases[0]:bases}
+  const bytes=await new GLTFExporter().parseAsync(root,{binary:true,onlyVisible:false,maxTextureSize:2048});
+  downloadRaw(new Blob([bytes],{type:'model/gltf-binary'}),originalName.replace(/\.glb$/i,'')+'_painted.glb');paintMessage('Textured GLB exported separately. Reopen it in a viewer to verify textures and UV seams.');
+ }catch(err){paintMessage('GLB export failed: '+err.message)}finally{for(const item of previous){item.m.material=item.material;item.m.visible=item.visible}}
+};
+// MOTION: keyframes and basic skeletal posing built from the working Motion Check grammar.
+let animBones=[],animInitial=[],animFrames=[],animChosen=0,animFrame=-1,animPlaying=false,animTime=0,animStarted=0,animMixer=null,animAction=null,animClips=[];
+const POSE_SEGMENT=1.5;
+function poseData(){return animBones.map(b=>b.quaternion.toArray())}
+function syncJoint(){
+ if(!animBones.length)return;
+ const q=animInitial[animChosen].clone().invert().multiply(animBones[animChosen].quaternion),e=new THREE.Euler().setFromQuaternion(q,'XYZ');
+ for(const a of 'xyz'){let value=Math.round(THREE.MathUtils.radToDeg(e[a]));$('anim'+a).value=value;$('anim'+a+'Val').textContent=value+'°'}
+}
+function restorePose(p){if(!Array.isArray(p)||p.length!==animBones.length)return;animBones.forEach((b,i)=>b.quaternion.fromArray(p[i]));syncJoint()}
+function animateDuration(){return $('animClip').value&&animAction?animAction.getClip().duration:Math.max(0,(animFrames.length-1)*POSE_SEGMENT)}
+function animationAt(t){
+ const duration=animateDuration();animTime=Math.min(duration,Math.max(0,t));
+ if($('animClip').value&&animAction&&animMixer){animMixer.setTime(animTime)}
+ else if(animFrames.length>=2){const segment=Math.min(animFrames.length-2,Math.floor(animTime/POSE_SEGMENT)),alpha=Math.max(0,Math.min(1,(animTime-segment*POSE_SEGMENT)/POSE_SEGMENT));animBones.forEach((b,j)=>b.quaternion.fromArray(animFrames[segment][j]).slerp(new THREE.Quaternion().fromArray(animFrames[segment+1][j]),alpha));syncJoint()}
+ updateAnimationUI();
+}
+function animationPause(){if(animPlaying){animPlaying=false;animationAt(((performance.now()-animStarted)/1000)%Math.max(animateDuration(),.001))}updateAnimationUI()}
+function updateAnimationUI(){
+ const d=animateDuration();$('animTimeline').disabled=d<=0;$('animTimeline').value=d>0?Math.round(1000*animTime/d):0;
+ $('animTime').textContent=animTime.toFixed(2)+' / '+d.toFixed(2)+' s';$('animPlay').textContent=animPlaying?'▶ Playing':'▶ Play';
+ $('animStatus').textContent=animBones.length?`${animBones.length} bones · ${animFrames.length} captured poses · ${animClips.length} built-in clips${animPlaying?' · Playing':' · Paused'}`:`No rigged bones in this GLB${animClips.length?' · '+animClips.length+' embedded clip(s)':' · Inspector and Paint remain usable'}`;
+}
+function drawPoseFrames(){const area=$('animFrames');area.replaceChildren();animFrames.forEach((p,i)=>{const b=document.createElement('button');b.textContent='Pose '+(i+1);b.classList.toggle('active',animFrame===i);b.onclick=()=>{animationPause();$('animClip').value='';animFrame=i;animTime=i*POSE_SEGMENT;restorePose(p);updateAnimationUI();drawPoseFrames()};area.append(b)})}
+for(const a of 'xyz'){
+ const line=document.createElement('div');line.className='animAxis';line.innerHTML=`<strong>${a.toUpperCase()}</strong><button id="anim${a}Minus">−1°</button><input type="range" min="-90" max="90" id="anim${a}" value="0"><button id="anim${a}Plus">+1°</button><output id="anim${a}Val">0°</output>`;$('animAxes').append(line);
+ $( 'anim'+a).oninput=()=>{animationPause();$('animClip').value='';applyJoint()};
+ for(const [suffix,n] of [['Minus',-1],['Plus',1]])$('anim'+a+suffix).onclick=()=>{const el=$('anim'+a);el.value=String(Math.max(-90,Math.min(90,Number(el.value)+n)));animationPause();$('animClip').value='';applyJoint()};
+}
+function applyJoint(){if(!animBones.length)return;const angle=['x','y','z'].map(a=>THREE.MathUtils.degToRad(Number($('anim'+a).value)));animBones[animChosen].quaternion.copy(animInitial[animChosen]).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...angle,'XYZ')));for(const a of 'xyz')$('anim'+a+'Val').textContent=$('anim'+a).value+'°'}
+$('animBone').onchange=()=>{animChosen=Number($('animBone').value);syncJoint()};
+$('animReset').onclick=()=>{if(!animBones.length)return;animationPause();animBones[animChosen].quaternion.copy(animInitial[animChosen]);syncJoint()};
+$('animResetAll').onclick=()=>{if(!animBones.length)return;animationPause();animBones.forEach((b,i)=>b.quaternion.copy(animInitial[i]));syncJoint()};
+$('animCapture').onclick=()=>{if(!animBones.length)return;animationPause();$('animClip').value='';animFrames.push(poseData());animFrame=animFrames.length-1;animTime=animateDuration();drawPoseFrames();updateAnimationUI()};
+$('animReplace').onclick=()=>{if(animFrame<0)return status('Choose a captured pose first.');animFrames[animFrame]=poseData();drawPoseFrames();status('Pose replaced.')};
+$('animDelete').onclick=()=>{if(animFrame<0)return;animationPause();animFrames.splice(animFrame,1);animFrame=-1;animTime=0;drawPoseFrames();updateAnimationUI()};
+$('animPlay').onclick=()=>{if(!animateDuration())return status('Capture two poses or select an embedded GLB animation clip.');if(animPlaying){animationPause();return}if(mode!=='nav')selectMode(false);animStarted=performance.now()-animTime*1000;animPlaying=true;updateAnimationUI()};
+$('animPause').onclick=animationPause;
+$('animTimeline').oninput=()=>{animPlaying=false;animationAt(Number($('animTimeline').value)/1000*animateDuration())};
+$('animPrev').onclick=()=>{animationPause();animationAt(animTime-POSE_SEGMENT/12)};
+$('animNext').onclick=()=>{animationPause();animationAt(animTime+POSE_SEGMENT/12)};
+$('animClip').onchange=()=>{animationPause();animTime=0;if(animAction)animAction.stop();animAction=null;const index=Number($('animClip').value);if($('animClip').value!==''&&animMixer&&animClips[index]){animAction=animMixer.clipAction(animClips[index]);animAction.reset();animAction.play();animMixer.setTime(0)}updateAnimationUI()};
+$('animFreeze').onclick=()=>{animationPause();showWorkspace('inspect');status('Pose frozen at '+animTime.toFixed(2)+' s. Mark a region in Inspect; handoff still needs pose attachment for full animation interchange.')};
+$('animSave').onclick=()=>{if(!animBones.length)return status('Load a rigged model first.');download(originalName.replace(/\.glb$/i,'')+'_poses.json',{format:'better-together-poses-v0.5',fileName:originalName,bones:animBones.map(b=>b.name),frames:animFrames,current:poseData()})};
+$('animImport').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.format!=='better-together-poses-v0.5'||JSON.stringify(d.bones)!==JSON.stringify(animBones.map(b=>b.name)))throw Error('Pose project requires the matching GLB bones.');if(!Array.isArray(d.frames)||d.frames.length>1000||!d.frames.every(p=>Array.isArray(p)&&p.length===animBones.length&&p.every(q=>Array.isArray(q)&&q.length===4&&q.every(Number.isFinite))))throw Error('Invalid pose data.');animationPause();animFrames=d.frames;animTime=0;restorePose(d.current);drawPoseFrames();updateAnimationUI();status('Pose project restored.') }catch(err){status('Pose import failed: '+err.message)}finally{e.target.value=''}};
+function setupMotion(gltf){
+ animPlaying=false;animBones=[];animInitial=[];animFrames=[];animFrame=-1;animTime=0;
+ if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=gltf.animations||[];
+ root.traverse(o=>{if(o.isBone){animBones.push(o);animInitial.push(o.quaternion.clone())}});
+ $('animBone').replaceChildren();if(animBones.length){animBones.forEach((b,i)=>{let opt=document.createElement('option');opt.value=i;opt.textContent=b.name||('Bone '+i);$('animBone').append(opt)})}
+ else{$('animBone').add(new Option('Unrigged: no bones', ''))}
+ animChosen=Math.max(0,animBones.findIndex(b=>/LeftLeg$/i.test(b.name)));$('animBone').value=String(animChosen);
+ $('motionRigControls').querySelectorAll('button,input,select').forEach(el=>el.disabled=!animBones.length);
+ $('animClip').replaceChildren();$('animClip').add(new Option('Captured keyframes',''));
+ animClips.forEach((clip,i)=>$('animClip').add(new Option(clip.name||'Animation '+(i+1),String(i))));
+ if(animClips.length)animMixer=new THREE.AnimationMixer(root);
+ drawPoseFrames();syncJoint();updateAnimationUI();
+}
+function updateAnimation(){
+ if(animPlaying){const duration=animateDuration();if(!duration){animPlaying=false;return}const time=((performance.now()-animStarted)/1000)%duration;animationAt(time)}
+}
+// Repair Review: viewer comparison is independent from the geometry-shell preview.
+let candidateRoot=null,candidateVisible=false,candidateName='';
+function showCandidate(show){
+ if(show&&!candidateRoot)return status('Load a proposed GLB first.');candidateVisible=show;
+ if(root)root.visible=!show;
+ if(candidateRoot)candidateRoot.visible=show;
+ if(show){previewGroup.visible=false;markGroup.visible=false;moveGroup.visible=false;hitMarker.style.display='none'}
+ else{previewGroup.visible=visibilityMode!=='all';markGroup.visible=visibilityMode==='all';updateMovePreview();renderVisibility()}
+ $('candidateOriginal').classList.toggle('active',!show);$('candidateView').classList.toggle('active',show);
+ $('candidateStatus').textContent=show?'Showing '+candidateName+'. Original geometry is still untouched.':'Showing original GLB.';
+}
+$('candidateOriginal').onclick=()=>showCandidate(false);$('candidateView').onclick=()=>showCandidate(true);
+$('candidateFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;let url;try{url=URL.createObjectURL(f);const g=await new GLTFLoader().loadAsync(url);if(candidateRoot)scene.remove(candidateRoot);candidateRoot=g.scene;candidateName=f.name;candidateRoot.visible=false;scene.add(candidateRoot);$('candidateStatus').textContent='Proposed GLB loaded: '+f.name+'. Tap Candidate to compare.'}catch(err){$('candidateStatus').textContent='Candidate failed: '+err.message}finally{if(url)URL.revokeObjectURL(url)}};
+$('candidateDecision').onclick=()=>{if(!candidateRoot)return status('Load proposed GLB before saving a decision.');download(originalName.replace(/\.glb$/i,'')+'_repair_review.json',{schema:'better-together-colab-repair-review-v1',original:originalName,originalSHA256:fingerprint,candidate:candidateName,decision:'reviewed-unapproved',camera:cameraData(),notes:$('note').value,warning:'Review JSON is a decision record, not a modified GLB.'});status('Review record saved; no file was modified.')};
+function clearUnifiedBeforeLoad(){
+ paintDragging=false;paintTarget=null;paintStroke=null;paintLast=null;paintBefore=null;
+ for(const p of paintSessions.values())p.tex.dispose();paintSessions.clear();
+ animPlaying=false;if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=[];
+ if(candidateRoot)scene.remove(candidateRoot);candidateRoot=null;candidateVisible=false;candidateName='';
+ $('candidateOriginal').classList.add('active');$('candidateView').classList.remove('active');$('candidateStatus').textContent='No proposed GLB loaded.';
+}
+function initializeUnified(gltf){refreshPaintTargets();setupMotion(gltf);showWorkspace(workspace)}
+updatePaintUI();updateAnimationUI();
+
+function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();renderer.render(scene,camera)}animate();
+</script>
+<script>
+// Web-installation infrastructure only. Installs from HTTPS (or localhost), not file://.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('CoLab update registration:',e)));
+}
+</script></body></html>

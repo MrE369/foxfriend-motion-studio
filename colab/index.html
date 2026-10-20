@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Better Together 3D CoLab · Unified Studio v0.10</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Better Together 3D CoLab · Unified Studio v0.11</title><style>
 *{box-sizing:border-box}body{margin:0;background:#101925;color:#eff7fc;font:15px system-ui}header{padding:11px 15px;background:#1b2a3b}h1{font-size:20px;margin:0 0 4px}small,.hint{color:#bacddd}.hint{font-size:13px;line-height:1.45;margin:6px 0 10px}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#view{height:calc(100dvh - 76px);min-height:350px;position:relative;background:#263648;overflow:hidden}#touch{position:absolute;inset:0;touch-action:none;pointer-events:none;z-index:2}#hud{position:absolute;top:8px;left:8px;pointer-events:none;background:#101925d9;border-radius:8px;padding:8px;font-size:12px;z-index:3}aside{background:#182536;padding:14px;max-height:calc(100dvh - 76px);overflow:auto}label{display:block;margin:12px 0 5px;font-weight:650}button,input,select,textarea{font:inherit;background:#2b4256;border:1px solid #71899b;color:#fff;border-radius:9px;min-height:43px;padding:10px;width:100%}button{cursor:pointer;margin:3px 0}.row{display:flex;gap:7px}.row>*{flex:1;min-width:0}.active{background:#186e67;border-color:#83f1d1}#status{background:#254052;color:#b8f0d1;border-radius:8px;padding:9px;margin:8px 0}#stats{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:#c8daea;background:#101a26;padding:9px;border-radius:8px}textarea{min-height:70px}.axiscontrol{display:grid;grid-template-columns:32px 1fr 90px 1fr;align-items:center;gap:7px;margin:6px 0}.axiscontrol output{text-align:center;font-variant-numeric:tabular-nums}.warn{color:#ffda91}#picked{font-size:13px;overflow-wrap:anywhere;background:#22394c;padding:9px;border-radius:8px}a{color:#a9ddfb}details{margin:8px 0}summary{cursor:pointer;font-weight:bold}@media(max-width:760px){main{display:flex;flex-direction:column}#view{position:sticky;top:0;z-index:9;height:41dvh;min-height:235px;box-shadow:0 8px 18px #0009}aside{overflow:visible;max-height:none}}
 #hitMarker{position:absolute;z-index:4;display:none;pointer-events:none;left:0;top:0;transform:translate(-50%,-50%);border:3px solid #121b25;background:#ffe16b;color:#101925;min-width:28px;height:28px;border-radius:50%;box-shadow:0 0 0 3px white,0 0 12px #000c;font-size:13px;line-height:22px;text-align:center;font-weight:900}#slots button[aria-pressed="true"]{outline:3px solid #ffffff;outline-offset:-6px}#importResult{display:none;margin-top:9px;padding:12px;border:2px solid #72f9a3;border-radius:9px;background:#123f39;color:#d6ffeb;line-height:1.5;font-size:15px;overflow-wrap:anywhere}
 #importResult.error{border-color:#ff9d59;background:#4b3029;color:#ffe4d8}
@@ -6,15 +6,27 @@
 #viewNotice.error{background:#4b3029ef;border-color:#ff9d59}
 #autoConnected{width:24px;min-height:24px;height:24px;vertical-align:middle;accent-color:#49d9ff;margin-right:8px}
 
-[hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
-</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#101925"><link rel="icon" type="image/png" href="./icon-192.png"></head><body><header><h1>Better Together 3D CoLab <small>· Unified Studio v0.10</small></h1><small>One model · Four workspaces · Local first · Original GLB untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div></div><aside>
+[hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#101925"><link rel="icon" type="image/png" href="./icon-192.png"></head><body><header><h1>Better Together 3D CoLab <small>· Unified Studio v0.11</small></h1><small>One model · Four workspaces · Local first · Original GLB untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div></div><aside>
 <label>1 · Load any GLB</label><input id="file" type="file" accept=".glb,model/gltf-binary"><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
 <button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
 <button type="button" id="tabButtonPaint" role="tab" aria-selected="false" aria-controls="tabPaint" data-tab="paint">🖌<span>Paint</span></button>
 <button type="button" id="tabButtonAnimate" role="tab" aria-selected="false" aria-controls="tabAnimate" data-tab="animate">▶<span>Animate</span></button>
 <button type="button" id="tabButtonReview" role="tab" aria-selected="false" aria-controls="tabReview" data-tab="review">◫<span>Review</span></button>
-</nav><p class="hint" id="workspaceHint">Six-color geometry selections and agent handoffs · B3.3 preserved</p><section id="tabInspect" class="workspace" role="tabpanel" aria-labelledby="tabButtonInspect"><label>2 · Surface selection</label><div class="row"><button id="nav" class="active">✋ Navigate</button><button id="select">◈ Select</button></div><div class="row"><button id="one">Triangle</button><button id="connected">Connected part</button><button id="mesh">Whole mesh</button></div><div class="row"><button id="clear">Clear selection</button><button id="frame">Frame selection</button></div><div id="picked">Tap a visible surface in Select mode.</div><label style="font-weight:500;display:flex;align-items:center;gap:4px"><input id="autoConnected" type="checkbox" checked> Auto-select connected part when tapping</label><p class="hint">Uncheck for individual triangles. A numbered, color-coded marker shows the exact surface tap even if a tiny triangle is hard to see. Use Connected part to expand the active region again.</p>
+</nav>
+<details class="subpanel" id="recoveryPanel" aria-label="Local session recovery"><summary id="recoverySummary">Local recovery</summary>
+ <p id="saveStatus" class="hint" aria-live="polite">Checking this device for a saved session…</p>
+ <div class="row"><button id="saveSession" disabled>Save now</button><button id="restoreSession" disabled>Restore last session</button></div>
+ <button id="forgetSession" disabled>Delete saved local copy</button>
+ <p class="hint">Private to this browser on this device. CoLab stores the original GLB, selections, paint, and poses locally when space allows. Nothing is uploaded. JSON exports remain your portable backup; previous paint undo history and comparison GLBs are not restored.</p>
+</details>
+<details class="subpanel" id="appUpdates" aria-label="App updates"><summary>App updates · version 0.11</summary>
+ <button id="checkUpdates">Check for updates</button>
+ <div id="updateReady" hidden><p class="hint">An approved update is ready. Save your project before restarting the app.</p><div class="row"><button id="applyUpdate">Save &amp; update</button><button id="laterUpdate">Later</button></div></div>
+ <p id="updateStatus" class="hint" aria-live="polite">Updates never interrupt active work automatically.</p>
+</details>
+<p class="hint" id="workspaceHint">Six-color geometry selections and agent handoffs · B3.3 preserved</p><section id="tabInspect" class="workspace" role="tabpanel" aria-labelledby="tabButtonInspect"><label>2 · Surface selection</label><div class="row"><button id="nav" class="active">✋ Navigate</button><button id="select">◈ Select</button></div><div class="row"><button id="one">Triangle</button><button id="connected">Connected part</button><button id="mesh">Whole mesh</button></div><div class="row"><button id="clear">Clear selection</button><button id="frame">Frame selection</button></div><div id="picked">Tap a visible surface in Select mode.</div><label style="font-weight:500;display:flex;align-items:center;gap:4px"><input id="autoConnected" type="checkbox" checked> Auto-select connected part when tapping</label><p class="hint">Uncheck for individual triangles. A numbered, color-coded marker shows the exact surface tap even if a tiny triangle is hard to see. Use Connected part to expand the active region again.</p>
 <label>3 · Six independent color selections</label><div id="slots" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div><label for="regionName">Active region name</label><input id="regionName" maxlength="100"><button id="clearAllRegions">Clear ALL six regions</button><p class="hint">Choose a color, tap geometry and expand to Connected part. Select another color to keep both regions visible. You can name each region. This is for inspection, not yet expression editing. B2.1/B3.1: tapping auto-expands connected geometry, and each color slot remembers its hit.</p><label>4 · Selection visibility</label><div class="row"><button id="showAll" class="active">Show all</button><button id="isolate">Isolate selected</button></div><div class="row"><button id="hideSelected">Hide selected</button><button id="contextOnly">Context + selected</button></div>
 <label for="isolateAlpha">Surrounding geometry visibility <output id="isolateAlphaValue">20%</output></label><input id="isolateAlpha" type="range" min="0" max="100" step="5" value="20">
 <p class="hint">Isolate shows selected triangles, optionally with faded surroundings. Hide selected shows all other triangles. Restore all to select another surface. Selection and original geometry remain intact.</p>
@@ -123,7 +135,7 @@ function activeSeed(){
   return null;
 }
 function updatePickMarker(){
-  const seed=activeSeed();if(!seed||!root){hitMarker.style.display='none';return}
+  const seed=activeSeed();if(!seed||!root||workspace!=='inspect'||candidateVisible){hitMarker.style.display='none';return}
   const v=new THREE.Vector3(...seed.point).project(camera);
   if(v.z<-1||v.z>1){hitMarker.style.display='none';return}
   const rect=view.getBoundingClientRect();
@@ -153,9 +165,9 @@ function applyStyle(){const alpha=Number($('context').value)/100;$('contextValue
 function clearPreviews(){for(const o of [...previewGroup.children]){o.geometry?.dispose();o.material?.dispose();previewGroup.remove(o)}for(const m of meshes)m.visible=true}
 function previewTriangles(m,indices,color,opacity){if(!indices.length)return;const pos=m.geometry.attributes.position,arr=new Float32Array(indices.length*9);let j=0;for(const t of indices)for(let k=0;k<3;k++){const v=new THREE.Vector3().fromBufferAttribute(pos,idx(m,t,k)).applyMatrix4(m.matrixWorld);arr[j++]=v.x;arr[j++]=v.y;arr[j++]=v.z}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(arr,3));g.computeVertexNormals();const mat=new THREE.MeshPhongMaterial({color,side:THREE.DoubleSide,transparent:opacity<1,opacity,depthWrite:opacity===1,depthTest:viewStyle!=='xray',shininess:30});const node=new THREE.Mesh(g,mat);node.frustumCulled=false;previewGroup.add(node)}
 function renderVisibility(){clearPreviews();if(visibilityMode==='all'||!root)return;const chosen=selections();if(!chosen.length){visibilityMode='all';updateVisibilityButtons();return}root.updateMatrixWorld(true);const fade=Number($('isolateAlpha').value)/100;for(const m of meshes){const picked=combined().get(m)||new Set(),n=triCount(m),yes=[],no=[];for(let i=0;i<n;i++)(picked.has(i)?yes:no).push(i);if(visibilityMode==='hide')previewTriangles(m,no,0xaab6c3,1);else{for(const r of regions){const ids=[...(r.parts.get(m)||[])];if(ids.length)previewTriangles(m,ids,r.color,1)}if(visibilityMode==='context'||fade>0)previewTriangles(m,no,0x9faab5,visibilityMode==='context'?Math.max(.05,fade):fade)}}for(const m of meshes)m.visible=false;markGroup.visible=false;updateVisibilityButtons();}
-function updateVisibilityButtons(){for(const [id,v] of [['showAll','all'],['isolate','isolate'],['hideSelected','hide'],['contextOnly','context']])$(id).classList.toggle('active',visibilityMode===v);$('isolateAlphaValue').textContent=$('isolateAlpha').value+'%';markGroup.visible=visibilityMode==='all'}
+function updateVisibilityButtons(){for(const [id,v] of [['showAll','all'],['isolate','isolate'],['hideSelected','hide'],['contextOnly','context']])$(id).classList.toggle('active',visibilityMode===v);$('isolateAlphaValue').textContent=$('isolateAlpha').value+'%';markGroup.visible=(workspace==='inspect'||workspace==='review')&&visibilityMode==='all'&&!candidateVisible}
 function setVisibility(v){if(!root)return status('Load a GLB first.');if(v!=='all'&&!selections().length)return status('Select one or more triangles first.');visibilityMode=v;if(v!=='all')selectMode(false);renderVisibility();status(v==='all'?'All geometry visible.':'Inspection mode: '+v+'. Original GLB unchanged.')}
-$('showAll').onclick=()=>setVisibility('all');$('isolate').onclick=()=>setVisibility('isolate');$('hideSelected').onclick=()=>setVisibility('hide');$('contextOnly').onclick=()=>setVisibility('context');$('isolateAlpha').oninput=()=>{updateVisibilityButtons();if(visibilityMode!=='all')renderVisibility()};
+$('showAll').onclick=()=>setVisibility('all');$('isolate').onclick=()=>setVisibility('isolate');$('hideSelected').onclick=()=>setVisibility('hide');$('contextOnly').onclick=()=>setVisibility('context');$('isolateAlpha').oninput=()=>{updateVisibilityButtons();if(visibilityMode!=='all')renderVisibility();if(workspace==='inspect')rememberInspectDisplay()};
 function selectMode(on){if(mode==='paint'&&typeof finishPaint==='function')finishPaint();if(on&&visibilityMode!=='all'){visibilityMode='all';renderVisibility()}mode=on?'select':'nav';controls.enabled=!on;overlay.style.pointerEvents=on?'auto':'none';$('select').classList.toggle('active',on);$('nav').classList.toggle('active',!on);status(on?'Select: tap the surface of any visible mesh.':'Navigate: rotate and zoom the model.')}
 $('nav').onclick=()=>selectMode(false);$('select').onclick=()=>root?selectMode(true):status('Load a GLB first.');
 function pick(e){if(!root)return;const r=overlay.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(meshes,true).find(x=>Number.isFinite(x.faceIndex));if(!hit)return status('No visible geometry under that point.');lastHit={mesh:hit.object,triangle:hit.faceIndex,point:hit.point.toArray(),normal:hit.face?.normal?.toArray()??null,uv:hit.uv?.toArray()??null};regions[regionIndex].hit=lastHit;
@@ -175,17 +187,17 @@ $('frame').onclick=()=>frameBounds(selectionBounds());
 function preset(axis){if(!modelBounds)return;const b=selectionBounds()||modelBounds,center=b.getCenter(new THREE.Vector3()),d=Math.max(b.getSize(new THREE.Vector3()).length()*1.7,.1);controls.target.copy(center);const dirs={front:[0,0,1],back:[0,0,-1],left:[-1,0,0],right:[1,0,0],top:[0,1,0],bottom:[0,-1,0]};camera.position.copy(center).add(new THREE.Vector3(...dirs[axis]).multiplyScalar(d));camera.up.set(0,0,axis==='top'?-1:axis==='bottom'?1:0);if(axis!=='top'&&axis!=='bottom')camera.up.set(0,1,0);camera.lookAt(center);controls.update()}
 for(const direction of ['front','back','left','right','top','bottom'])$(direction).onclick=()=>preset(direction);
 $('resetView').onclick=()=>{if(!defaultCamera)return;camera.position.fromArray(defaultCamera.position);camera.up.set(0,1,0);controls.target.fromArray(defaultCamera.target);controls.update()};
-$('context').oninput=applyStyle;for(const style of ['solid','wire','xray'])$(style).onclick=()=>{viewStyle=style;for(const v of ['solid','wire','xray'])$(v).classList.toggle('active',v===style);renderMarks()};
+$('context').oninput=()=>{applyStyle();if(workspace==='inspect')rememberInspectDisplay()};for(const style of ['solid','wire','xray'])$(style).onclick=()=>{viewStyle=style;for(const v of ['solid','wire','xray'])$(v).classList.toggle('active',v===style);renderMarks()};
 function clearMovePreview(){for(const item of [...moveGroup.children]){item.geometry.dispose();item.material.dispose();moveGroup.remove(item)}}
 function selectedCount(r){return [...r.parts.values()].reduce((n,x)=>n+x.size,0)}
 function borderWarning(r){let shared=0,selectedVertices=0;for(const [m,ids] of r.parts){const counts=new Map();for(let t=0;t<triCount(m);t++){const chosen=ids.has(t);for(let k=0;k<3;k++){const v=idx(m,t,k),old=counts.get(v)||0;counts.set(v,old|(chosen?1:2))}}for(const flag of counts.values()){if(flag&1)selectedVertices++;if(flag===3)shared++}}return {shared,selectedVertices}}
 function updateMoveUI(){const r=regions[regionIndex];for(let k=0;k<3;k++)$( ['moveX','moveY','moveZ'][k]).textContent=r.offset[k].toFixed(5);const n=selectedCount(r);const b=n?borderWarning(r):null;$('moveSafety').textContent=!n?'Active slot is empty. Select a component first.':b.shared?`⚠ ${b.shared} vertex indices are shared between selected and unselected triangles. Moving just this region would tear adjacent surfaces. Preview is only a visual guide.`:`${n} selected triangles; no shared vertex indices detected. This does not guarantee watertight or animation-safe geometry.`;$('previewOriginal').classList.toggle('active',!showProposal);$('previewAdjusted').classList.toggle('active',showProposal)}
 function updateMovePreview(){clearMovePreview();if(!root)return;
  const any=regions.some(r=>r.offset.some(x=>Math.abs(x)>1e-9)&&selectedCount(r));
- moveGroup.visible=showProposal&&any;
+ moveGroup.visible=(workspace==='review')&&showProposal&&any&&!candidateVisible;
  // Preserve every untouched region's visible highlight in the proposed view.
  // Only a region with a nonzero proposed offset suppresses its original overlay.
- markGroup.visible=visibilityMode==='all';
+ markGroup.visible=(workspace==='inspect'||workspace==='review')&&visibilityMode==='all'&&!candidateVisible;
  for(const child of markGroup.children){const r=regions[child.userData.regionIndex];child.visible=!(moveGroup.visible&&r&&selectedCount(r)&&r.offset.some(x=>Math.abs(x)>1e-9))}
  if(!moveGroup.visible){updateMoveUI();return}root.updateMatrixWorld(true);for(const r of regions){if(!selectedCount(r)||!r.offset.some(x=>Math.abs(x)>1e-9))continue;for(const [m,ids] of r.parts){const nums=[];const delta=new THREE.Vector3(...r.offset);for(const t of ids){if(t<0||t>=triCount(m))continue;for(const v of triVerts(m,t)){v.add(delta).applyMatrix4(m.matrixWorld);nums.push(v.x,v.y,v.z)}}if(!nums.length)continue;const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.Float32BufferAttribute(nums,3));geom.computeVertexNormals();const obj=new THREE.Mesh(geom,new THREE.MeshBasicMaterial({color:r.color,side:THREE.DoubleSide,transparent:true,opacity:.9,depthTest:false,depthWrite:false}));obj.frustumCulled=false;obj.renderOrder=150;moveGroup.add(obj)}}updateMoveUI()}
 function setProposal(v){showProposal=v;updateMovePreview();status(v?'Preview shows moved selected shells over the untouched original.':'Showing original selection positions.')}
@@ -197,7 +209,20 @@ $('resetAllMoves').onclick=()=>{if(!confirm('Reset all six proposed movements?')
 $('exportMoves').onclick=()=>{if(!root)return status('Load GLB first');const payload={schema:'better-together-3d-colab-movement-proposal-v1',source:{filename:originalName,sizeBytes:glbFileSize,sha256:fingerprint},space:'mesh-local',units:'GLB model units',previewOnly:true,regions:regions.map((r,i)=>({slot:i,color:r.color,label:r.name,offset:r.offset.slice(),selection:[...r.parts.entries()].map(([m,ids])=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',triangles:[...ids].sort((a,b)=>a-b)})),sharedVertexCount:borderWarning(r).shared})),camera:cameraData(),note:$('note').value,warning:'Non-destructive preview. The proposal does not stitch or deform adjacent geometry. Triangle IDs require the exact original GLB.'};download(originalName.replace(/\.glb$/i,'')+'_movement_proposal.json',payload);status('Movement proposal JSON exported. Original GLB unchanged.')};
 updateMoveUI();
 function hashBuffer(buffer){return crypto.subtle.digest('SHA-256',buffer).then(arr=>[...new Uint8Array(arr)].map(v=>v.toString(16).padStart(2,'0')).join(''))}
-$('file').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;dismissImportNotice();$('importResult').style.display='none';status('Loading '+f.name+'…');let url;try{const bytes=await f.arrayBuffer();const hash=await hashBuffer(bytes);url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const gltf=await new GLTFLoader().loadAsync(url);const incoming=[];gltf.scene.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)incoming.push(o)});if(!incoming.length)throw Error('GLB contains no renderable triangle meshes.');clearUnifiedBeforeLoad();if(root){clearPreviews();scene.remove(root);for(const m of meshes){const old=Array.isArray(m.material)?m.material:[m.material];old.forEach(a=>a.dispose());(baseMaterials.get(m)||[]).forEach(a=>a.dispose())}}root=gltf.scene;meshes=incoming;originalName=f.name;fingerprint=hash;glbFileSize=f.size;adjCache.clear();regions.forEach(r=>{r.parts.clear();r.offset=[0,0,0]});moveHistory.length=0;showProposal=false;clearMovePreview();regionIndex=0;triSelections=regions[0].parts;$('regionName').value=regions[0].name;lastHit=null;visibilityMode='all';clearMarks();materialCopies();scene.add(root);modelBounds=new THREE.Box3().setFromObject(root);frameBounds(modelBounds);defaultCamera={position:camera.position.toArray(),target:controls.target.toArray()};const n=meshes.reduce((sum,m)=>sum+triCount(m),0),v=meshes.reduce((sum,m)=>sum+m.geometry.attributes.position.count,0),uvCount=meshes.filter(m=>!!m.geometry.attributes.uv).length,bones=[];root.traverse(o=>{if(o.isBone)bones.push(o)});const materialCount=new Set(meshes.flatMap(m=>{const a=Array.isArray(m.material)?m.material:[m.material];return a.map(z=>z.uuid)})).size;$('stats').textContent=`File: ${f.name}\nSHA-256: ${hash.slice(0,16)}…\nMeshes: ${meshes.length} · vertices: ${v.toLocaleString()} · triangles: ${n.toLocaleString()}\nUV-mapped meshes: ${uvCount}/${meshes.length}\nBones: ${bones.length} · embedded animation clips: ${gltf.animations.length}\nMaterials: ${materialCount} (current rendering copies)\nRigging: ${bones.length?'present':'none — inspector still available'}`;$('import').value='';selectMode(false);renderMarks();initializeUnified(gltf);status('Loaded. Tap Select, then tap any visible triangle.')}catch(err){status('Load failed: '+err.message)}finally{if(url)URL.revokeObjectURL(url)}};
+async function loadGLBFile(f,fromRecovery=false){if(!f)return false;dismissImportNotice();$('importResult').style.display='none';if(editedSinceSave&&root)await saveSessionNow();status('Loading '+f.name+'…');let url;try{const bytes=await f.arrayBuffer();const hash=await hashBuffer(bytes);url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const gltf=await new GLTFLoader().loadAsync(url);const incoming=[];gltf.scene.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)incoming.push(o)});if(!incoming.length)throw Error('GLB contains no renderable triangle meshes.');clearUnifiedBeforeLoad();if(root){clearPreviews();scene.remove(root);for(const m of meshes){const old=Array.isArray(m.material)?m.material:[m.material];old.forEach(a=>a.dispose());(baseMaterials.get(m)||[]).forEach(a=>a.dispose())}}root=gltf.scene;meshes=incoming;originalName=f.name;fingerprint=hash;glbFileSize=f.size;adjCache.clear();regions.forEach(r=>{r.parts.clear();r.offset=[0,0,0]});moveHistory.length=0;showProposal=false;clearMovePreview();regionIndex=0;triSelections=regions[0].parts;$('regionName').value=regions[0].name;lastHit=null;visibilityMode='all';clearMarks();materialCopies();scene.add(root);modelBounds=new THREE.Box3().setFromObject(root);frameBounds(modelBounds);defaultCamera={position:camera.position.toArray(),target:controls.target.toArray()};const n=meshes.reduce((sum,m)=>sum+triCount(m),0),v=meshes.reduce((sum,m)=>sum+m.geometry.attributes.position.count,0),uvCount=meshes.filter(m=>!!m.geometry.attributes.uv).length,bones=[];root.traverse(o=>{if(o.isBone)bones.push(o)});const materialCount=new Set(meshes.flatMap(m=>{const a=Array.isArray(m.material)?m.material:[m.material];return a.map(z=>z.uuid)})).size;$('stats').textContent=`File: ${f.name}\nSHA-256: ${hash.slice(0,16)}…\nMeshes: ${meshes.length} · vertices: ${v.toLocaleString()} · triangles: ${n.toLocaleString()}\nUV-mapped meshes: ${uvCount}/${meshes.length}\nBones: ${bones.length} · embedded animation clips: ${gltf.animations.length}\nMaterials: ${materialCount} (current rendering copies)\nRigging: ${bones.length?'present':'none — inspector still available'}`;$('import').value='';selectMode(false);
+ if(!fromRecovery){inspectorDisplay={style:'solid',context:0,visibility:'all',isolateAlpha:20};workspace='review';}
+ renderMarks();initializeUnified(gltf);if(!fromRecovery)showWorkspace('inspect');status('Loaded. Tap Select, then tap any visible triangle.');
+ currentModelBlob=new Blob([bytes],{type:'model/gltf-binary'});
+ if(!fromRecovery){
+  if(hasPriorRecovery){autosaveEnabled=false;recoveryMessage('Existing saved session protected. Restore it, or tap Save now to replace it with the loaded character.');}
+  else{autosaveEnabled=true;scheduleAutosave();}
+ }
+ $('saveSession').disabled=false;
+ return true;
+ }catch(err){status('Load failed: '+err.message);return false}
+ finally{if(url)URL.revokeObjectURL(url)}
+}
+$('file').onchange=e=>loadGLBFile(e.target.files?.[0]);
 function cameraData(){return {position:camera.position.toArray(),target:controls.target.toArray(),up:camera.up.toArray()}}
 function selectionData(){return selections().map(({mesh:m,triangles})=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',nodePath:(()=>{let p=[],o=m;while(o&&o!==root){p.push(o.name||o.type);o=o.parent}return p.reverse().join('/')})(),triangleIndexing:'Three.js BufferGeometry faceIndex; triangles in source decoded geometry, indexed or non-indexed',triangles,representativeLocalPosition:triangles.length?triVerts(m,triangles[0])[0].toArray():null}))}
 $('export').onclick=()=>{if(!root)return status('Load a model first.');const data={schema:'better-together-3d-colab-geometry-selection-v2',groups:regions.map((r,i)=>({slot:i,color:r.color,label:r.name,selection:[...r.parts].filter(([,v])=>v.size).map(([m,a])=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',triangles:[...a].sort((x,y)=>x-y)}))})),app:'Better Together 3D CoLab',createdAt:new Date().toISOString(),source:{filename:originalName,sizeBytes:glbFileSize,sha256:fingerprint},selection:selectionData(),lastHit:lastHit?{meshIndex:meshes.indexOf(lastHit.mesh),triangleIndex:lastHit.triangle,localPosition:lastHit.mesh.worldToLocal(new THREE.Vector3(...lastHit.point)).toArray(),worldPosition:lastHit.point,localNormal:lastHit.normal,uv:lastHit.uv}:null,view:{camera:cameraData(),style:viewStyle,contextTransparency:Number($('context').value)/100},annotation:{label:$('label').value,note:$('note').value},warning:'Triangle IDs are valid only for this exact GLB hash and its decoded geometry. They may change after re-export or topology changes.'};download(originalName.replace(/\.glb$/i,'')+'_geometry_selection.json',data);status('Selection JSON exported. Share it with the original GLB for analysis.')};
@@ -215,7 +240,7 @@ if(!merging){showProposal=false;clearMovePreview();regions.forEach(r=>r.offset=[
 visibilityMode='all';const h=d.lastHit;lastHit=h&&meshes[h.meshIndex]&&Number.isInteger(h.triangleIndex)&&h.triangleIndex>=0&&h.triangleIndex<triCount(meshes[h.meshIndex])?{mesh:meshes[h.meshIndex],triangle:h.triangleIndex,point:Array.isArray(h.worldPosition)?h.worldPosition:[0,0,0],normal:h.localNormal??null,uv:h.uv??null}:null;if(!merging){$('label').value=String(d.annotation?.label??'').slice(0,150);$('note').value=String(d.annotation?.note??'').slice(0,20000)}if(!merging&&d.view?.camera&&[d.view.camera.position,d.view.camera.target].every(a=>Array.isArray(a)&&a.length===3&&a.every(Number.isFinite))){camera.position.fromArray(d.view.camera.position);controls.target.fromArray(d.view.camera.target);if(Array.isArray(d.view.camera.up)&&d.view.camera.up.length===3&&d.view.camera.up.every(Number.isFinite))camera.up.fromArray(d.view.camera.up);controls.update()}if(!merging){viewStyle=['solid','wire','xray'].includes(d.view?.style)?d.view.style:'solid';$('context').value=String(Math.round(Math.max(0,Math.min(.85,Number(d.view?.contextTransparency)||0))*100))};for(const v of ['solid','wire','xray'])$(v).classList.toggle('active',v===viewStyle);renderMarks();updateMovePreview();
 const counts=regions.map(r=>[...r.parts.values()].reduce((n,a)=>n+a.size,0));
 const filled=counts.filter(n=>n>0).length;
-importFeedback((merging?'Merged':'Restored')+' JSON successfully: '+filled+' colored region(s), '+counts.reduce((a,b)=>a+b,0)+' assigned triangle(s). GLB fingerprint verified. Colors are visible in the viewer.');
+importFeedback((merging?'Merged':'Restored')+' JSON successfully: '+filled+' colored region(s), '+counts.reduce((a,b)=>a+b,0)+' assigned triangle(s). GLB fingerprint verified. Colors are visible in the viewer.');scheduleAutosave();
 }catch(err){importFeedback('JSON import was NOT completed: '+err.message,true)}finally{e.target.value=''}};
 // -----------------------------------------------------------------------------
 // Unified CoLab v0.10 workspaces. The inspector remains the baseline scene owner.
@@ -223,10 +248,26 @@ importFeedback((merging?'Merged':'Restored')+' JSON successfully: '+filled+' col
 // -----------------------------------------------------------------------------
 const WORKSPACES={inspect:'Six-color Geometry Inspector · tested B3.3 foundation',paint:'Direct UV painting · experimental integration',animate:'Rig posing and Motion Check · experimental integration',review:'Non-destructive geometry and GLB comparison'};
 let workspace='inspect';
+let inspectorDisplay={style:'solid',context:0,visibility:'all',isolateAlpha:20};
+function rememberInspectDisplay(){
+ inspectorDisplay={style:viewStyle,context:Number($('context').value),visibility:visibilityMode,isolateAlpha:Number($('isolateAlpha').value)};
+}
 function showWorkspace(name){
   if(!WORKSPACES[name])return;
+  if(workspace==='inspect'&&name!=='inspect')rememberInspectDisplay();
   if(mode==='paint')finishPaint();
   if(mode!=='nav')selectMode(false);
+  // Inspect owns its wireframe, X-ray and hide/isolate settings. Other tabs use solid geometry.
+  if(name==='inspect'){
+   viewStyle=inspectorDisplay.style;
+   visibilityMode=inspectorDisplay.visibility;
+   $('context').value=String(inspectorDisplay.context);
+   $('isolateAlpha').value=String(inspectorDisplay.isolateAlpha);
+  }else{
+   viewStyle='solid';visibilityMode='all';$('context').value='0';
+  }
+  for(const style of ['solid','wire','xray'])$(style).classList.toggle('active',viewStyle===style);
+
   if(name!=='review'&&candidateVisible)showCandidate(false);
   workspace=name;
   for(const key of Object.keys(WORKSPACES)){
@@ -235,13 +276,15 @@ function showWorkspace(name){
     b.classList.toggle('active',key===name);b.setAttribute('aria-selected',key===name?'true':'false');
   }
   $('workspaceHint').textContent=WORKSPACES[name];
+  if(root){renderMarks();} // restores model visibility and tab-specific preview without touching the saved selections.
+
   if(name==='paint')updatePaintUI();
   if(name==='animate')updateAnimationUI();
   if(name==='review')updateMoveUI();
   // Keep the scene and saved selections, but only show colored region overlays
   // in workspaces where they help. Never obscure the paint or animation view.
   markGroup.visible=(name==='inspect'||name==='review') && visibilityMode==='all' && !candidateVisible;
-  moveGroup.visible=name==='review' && showProposal && !candidateVisible;
+  moveGroup.visible=name==='review' && showProposal && !candidateVisible && moveGroup.children.length>0;
   hitMarker.style.display=name==='inspect'?hitMarker.style.display:'none';
   $('paintStart').classList.remove('active');$('paintNavigate').classList.add('active');
 }
@@ -331,7 +374,7 @@ function finishPaint(){
  if(!paintDragging)return;paintDragging=false;paintLast=null;
  const p=paintSessions.get(paintTarget);
  if(p&&paintBefore){p.undo.push(paintBefore);if(p.undo.length>8)p.undo.shift();if(paintStroke?.samples.length)p.strokes.push(paintStroke)}
- paintBefore=null;paintStroke=null;paintCanvasPreview();paintMessage('Stroke saved in this workspace. Export JSON to preserve it outside your current session.');
+ paintBefore=null;paintStroke=null;paintCanvasPreview();paintMessage('Stroke completed; local recovery will save it automatically. You can also export JSON.');scheduleAutosave();
 }
 overlay.addEventListener('pointerup',finishPaint);overlay.addEventListener('pointercancel',finishPaint);
 $('paintUndo').onclick=()=>{finishPaint();const p=paintSessions.get(paintTarget);if(!p?.undo.length)return paintMessage('No recent stroke to undo.');p.ctx.putImageData(p.undo.pop(),0,0);p.tex.needsUpdate=true;p.strokes.pop();paintCanvasPreview();paintMessage('Paint stroke undone.')};
@@ -365,7 +408,7 @@ $('paintImport').onchange=async e=>{
   if(/^#[0-9a-f]{6}$/i.test(d.brush?.color||''))$('paintColor').value=d.brush.color;
   if(Number.isFinite(d.brush?.sizePx)&&d.brush.sizePx>=1&&d.brush.sizePx<=110)$('paintSize').value=String(d.brush.sizePx);
   if(Number.isFinite(d.brush?.opacity)&&d.brush.opacity>=.05&&d.brush.opacity<=1)$('paintOpacity').value=String(Math.round(d.brush.opacity*100));
-  updatePaintUI();paintMessage('Paint restored with '+p.strokes.length+' tracked strokes. Undo starts with the next stroke.');
+  updatePaintUI();paintMessage('Paint restored with '+p.strokes.length+' tracked strokes. Undo starts with the next stroke.');scheduleAutosave();
  }catch(err){paintMessage('Paint import failed: '+err.message)}finally{e.target.value=''}
 };
 $('paintGLB').onclick=async()=>{
@@ -448,7 +491,7 @@ function showCandidate(show){
  if(root)root.visible=!show;
  if(candidateRoot)candidateRoot.visible=show;
  if(show){previewGroup.visible=false;markGroup.visible=false;moveGroup.visible=false;hitMarker.style.display='none'}
- else{previewGroup.visible=visibilityMode!=='all';markGroup.visible=visibilityMode==='all';updateMovePreview();renderVisibility()}
+ else{previewGroup.visible=visibilityMode!=='all';markGroup.visible=(workspace==='inspect'||workspace==='review')&&visibilityMode==='all';updateMovePreview();renderVisibility()}
  $('candidateOriginal').classList.toggle('active',!show);$('candidateView').classList.toggle('active',show);
  $('candidateStatus').textContent=show?'Showing '+candidateName+'. Original geometry is still untouched.':'Showing original GLB.';
 }
@@ -465,11 +508,234 @@ function clearUnifiedBeforeLoad(){
 function initializeUnified(gltf){refreshPaintTargets();setupMotion(gltf);showWorkspace(workspace)}
 updatePaintUI();updateAnimationUI();
 
-function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();renderer.render(scene,camera)}animate();
-</script>
-<script>
-// Web-installation infrastructure only. Installs from HTTPS (or localhost), not file://.
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
- window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('CoLab update registration:',e)));
+// ----- v0.11 local-first recovery --------------------------------------------
+// Only the last model/project is kept in THIS browser's IndexedDB. No server API.
+const RECOVERY_DB='better-together-3d-colab-local-recovery';
+const RECOVERY_SCHEMA='better-together-3d-colab-recovery-v1';
+const MAX_RECOVERY_GLB=64*1024*1024;
+let dbPromise=null, currentModelBlob=null, savedAssetHash=null;
+let recoveryInProgress=false, autosaveEnabled=true, hasPriorRecovery=false, autosaveTimer=null, saveBusy=false, saveQueued=false, editedSinceSave=false;
+function recoveryMessage(s){$('saveStatus').textContent=s}
+function openRecoveryDB(){
+ if(!('indexedDB' in window))return Promise.reject(Error('Browser local storage is unavailable.'));
+ if(dbPromise)return dbPromise;
+ dbPromise=new Promise((resolve,reject)=>{
+  const req=indexedDB.open(RECOVERY_DB,1);
+  req.onupgradeneeded=()=>{const db=req.result;for(const name of ['assets','projects'])if(!db.objectStoreNames.contains(name))db.createObjectStore(name,{keyPath:'id'})};
+  req.onsuccess=()=>resolve(req.result);
+  req.onerror=()=>reject(req.error||Error('Local database could not open.'));
+  req.onblocked=()=>reject(Error('Close other CoLab tabs before using local recovery.'));
+ }).catch(err=>{dbPromise=null;throw err});
+ return dbPromise;
 }
+async function recoveryRead(store){
+ const db=await openRecoveryDB();return new Promise((resolve,reject)=>{
+  const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).get('current');
+  req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||Error('Cannot read local session.'));
+ });
+}
+async function recoveryWrite(snapshot){
+ const db=await openRecoveryDB();const needsAsset=savedAssetHash!==fingerprint;
+ if(needsAsset&&!(currentModelBlob instanceof Blob))throw Error('Original GLB bytes are not available. Reload your GLB to enable recovery.');
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(['assets','projects'],'readwrite');
+  tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||Error('Local save failed.'));tx.onabort=()=>reject(tx.error||Error('Local save was aborted.'));
+  if(needsAsset)tx.objectStore('assets').put({id:'current',filename:originalName,sha256:fingerprint,sizeBytes:glbFileSize,blob:currentModelBlob});
+  tx.objectStore('projects').put({id:'current',snapshot});
+ });
+}
+async function recoveryDelete(){
+ const db=await openRecoveryDB();return new Promise((resolve,reject)=>{
+  const tx=db.transaction(['assets','projects'],'readwrite');
+  tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||Error('Could not delete local session.'));
+  tx.objectStore('assets').delete('current');tx.objectStore('projects').delete('current');
+ });
+}
+function safe3(a){return Array.isArray(a)&&a.length===3&&a.every(x=>typeof x==='number'&&Number.isFinite(x))}
+function safeQuaternion(q){return Array.isArray(q)&&q.length===4&&q.every(x=>typeof x==='number'&&Number.isFinite(x))}
+function snapRegion(r){return {name:r.name,offset:r.offset.slice(),parts:[...r.parts].map(([m,ids])=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',triangles:[...ids].sort((a,b)=>a-b)}))}}
+function canvasBlob(canvas){return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('Paint texture could not be saved.')),'image/png'))}
+async function captureSession(){
+ // Capture the original source identity: never use decoded triangles from a different GLB.
+ const data={schema:RECOVERY_SCHEMA,createdAt:new Date().toISOString(),model:{filename:originalName,sha256:fingerprint,sizeBytes:glbFileSize},
+  workspace,regionIndex,regions:regions.map(snapRegion),
+  inspectDisplay:workspace==='inspect'?{style:viewStyle,context:Number($('context').value),visibility:visibilityMode,isolateAlpha:Number($('isolateAlpha').value)}:{...inspectorDisplay},
+  camera:cameraData(),note:$('note').value,label:$('label').value,
+  review:{showProposal,moveStep:$('moveStep').value,moveHistory:moveHistory.map(h=>({regionIndex:h.regionIndex,offset:h.offset.slice()}))},
+  brush:{color:$('paintColor').value,size:Number($('paintSize').value),opacity:Number($('paintOpacity').value),resolution:Number($('paintResolution').value),targetIndex:paintTarget?meshes.indexOf(paintTarget):null},
+  painting:[],
+  motion:{boneNames:animBones.map(b=>b.name),frames:animFrames.map(frame=>frame.map(q=>q.slice())),pose:animBones.length?poseData().map(q=>q.slice()):[],chosen:animChosen,frame:animFrame,time:animTime,clip:$('animClip').value||''}};
+ for(const [m,p] of paintSessions){const index=meshes.indexOf(m);if(index<0)continue;data.painting.push({meshIndex:index,meshName:m.name||'',width:p.canvas.width,texture:await canvasBlob(p.canvas),strokes:p.strokes});}
+ return data;
+}
+function scheduleAutosave(){
+ if(recoveryInProgress||!autosaveEnabled||!root)return;
+ editedSinceSave=true;
+ recoveryMessage('Unsaved edits · local save pending…');
+ if(autosaveTimer)clearTimeout(autosaveTimer);
+ autosaveTimer=setTimeout(()=>{autosaveTimer=null;saveSessionNow()},2300);
+}
+async function saveSessionNow(){
+ if(!root)return false;
+ if(recoveryInProgress)return false;
+ if(paintDragging){scheduleAutosave();return false}
+ if(saveBusy){saveQueued=true;return false}
+ if(autosaveTimer){clearTimeout(autosaveTimer);autosaveTimer=null}
+ if(glbFileSize>MAX_RECOVERY_GLB){autosaveEnabled=false;recoveryMessage('GLB exceeds 64 MB local recovery limit. Export project JSON before closing.');return false}
+ saveBusy=true;saveQueued=false;editedSinceSave=false;
+ recoveryMessage('Saving privately on this device…');
+ try{
+  const snapshot=await captureSession();await recoveryWrite(snapshot);savedAssetHash=fingerprint;autosaveEnabled=true;
+  hasPriorRecovery=true;$('recoverySummary').textContent='Local recovery · saved';$('restoreSession').disabled=false;$('forgetSession').disabled=false;
+  recoveryMessage('Saved locally · '+new Date(snapshot.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+' · '+originalName);
+  return true;
+ }catch(err){editedSinceSave=true;recoveryMessage('Local save FAILED: '+err.message+' Export JSON as a backup.');return false}
+ finally{
+  saveBusy=false;
+  if(saveQueued||editedSinceSave&&autosaveEnabled){saveQueued=false;scheduleAutosave()}
+ }
+}
+function validateSavedRegions(snapshot){
+ if(!Array.isArray(snapshot.regions)||snapshot.regions.length!==6)throw Error('Saved region palette is invalid.');
+ return snapshot.regions.map((s,i)=>{
+  if(typeof s.name!=='string'||s.name.length>100||!safe3(s.offset)||!Array.isArray(s.parts)||s.parts.length>meshes.length)throw Error('Saved region '+(i+1)+' is invalid.');
+  const parts=new Map();
+  for(const entry of s.parts){
+   const m=meshes[entry.meshIndex];if(!m||m.name!==(entry.meshName||'')||parts.has(m)||!Array.isArray(entry.triangles)||entry.triangles.length>triCount(m))throw Error('Saved mesh identity does not match.');
+   if(entry.triangles.some(t=>!Number.isInteger(t)||t<0||t>=triCount(m)))throw Error('Invalid triangle ID in saved region.');
+   parts.set(m,new Set(entry.triangles));
+  }
+  return {name:s.name,offset:s.offset.slice(),parts};
+ });
+}
+async function applyRecoveredSession(s){
+ if(s.schema!==RECOVERY_SCHEMA||s.model?.sha256!==fingerprint||s.model?.sizeBytes!==glbFileSize||s.model?.filename!==originalName)throw Error('Saved model fingerprint or filename does not match.');
+ const checked=validateSavedRegions(s);
+ for(const item of s.painting||[]){if(!paintEligible(meshes[item.meshIndex])||meshes[item.meshIndex].name!==(item.meshName||'')||![1024,2048].includes(item.width)||!(item.texture instanceof Blob)||item.texture.size>32*1024*1024||!Array.isArray(item.strokes)||item.strokes.length>5000)throw Error('Saved paint layer is not compatible with the source mesh.');}
+ const pose=s.motion;
+ if(pose?.boneNames&&JSON.stringify(pose.boneNames)!==JSON.stringify(animBones.map(b=>b.name)))throw Error('Saved skeleton does not match.');
+ if(pose?.frames&&!Array.isArray(pose.frames))throw Error('Invalid saved animation frames.');
+ if(pose?.frames?.some(frame=>!Array.isArray(frame)||frame.length!==animBones.length||frame.some(q=>!safeQuaternion(q))))throw Error('Invalid saved keyframes.');
+ for(let i=0;i<6;i++){regions[i].name=checked[i].name;regions[i].parts=checked[i].parts;regions[i].offset=checked[i].offset;regions[i].hit=null}
+ regionIndex=Number.isInteger(s.regionIndex)&&s.regionIndex>=0&&s.regionIndex<6?s.regionIndex:0;
+ triSelections=regions[regionIndex].parts;lastHit=null;$('regionName').value=regions[regionIndex].name;
+ moveHistory.length=0;for(const entry of s.review?.moveHistory||[])if(Number.isInteger(entry.regionIndex)&&entry.regionIndex>=0&&entry.regionIndex<6&&safe3(entry.offset)&&moveHistory.length<5000)moveHistory.push(entry);
+ showProposal=!!s.review?.showProposal;$('moveStep').value=['0.00025','0.001','0.005','0.01'].includes(s.review?.moveStep)?s.review.moveStep:'0.001';
+ inspectorDisplay={style:['solid','wire','xray'].includes(s.inspectDisplay?.style)?s.inspectDisplay.style:'solid',context:Math.max(0,Math.min(85,Number(s.inspectDisplay?.context)||0)),visibility:['all','hide','isolate','context'].includes(s.inspectDisplay?.visibility)?s.inspectDisplay.visibility:'all',isolateAlpha:Math.max(0,Math.min(100,Number(s.inspectDisplay?.isolateAlpha)||20))};
+ $('label').value=String(s.label||'').slice(0,150);$('note').value=String(s.note||'').slice(0,20000);
+ if(safe3(s.camera?.position)&&safe3(s.camera?.target)){camera.position.fromArray(s.camera.position);controls.target.fromArray(s.camera.target);if(safe3(s.camera.up))camera.up.fromArray(s.camera.up);controls.update()}
+ for(const item of s.painting||[]){
+  const m=meshes[item.meshIndex],p=startPaintSession(m,item.width);
+  const bitmap=await createImageBitmap(item.texture);
+  if(bitmap.width!==item.width||bitmap.height!==item.width){bitmap.close();throw Error('Saved texture resolution is invalid.')}
+  p.ctx.clearRect(0,0,item.width,item.width);p.ctx.drawImage(bitmap,0,0);bitmap.close();p.tex.needsUpdate=true;
+  p.strokes=item.strokes;p.undo=[];p.painted=true;
+ }
+ const brush=s.brush||{};
+ if(/^#[a-f0-9]{6}$/i.test(brush.color||''))$('paintColor').value=brush.color;
+ if(Number.isFinite(brush.size)&&brush.size>=1&&brush.size<=110)$('paintSize').value=String(brush.size);
+ if(Number.isFinite(brush.opacity)&&brush.opacity>=5&&brush.opacity<=100)$('paintOpacity').value=String(brush.opacity);
+ if([1024,2048].includes(brush.resolution))$('paintResolution').value=String(brush.resolution);
+ if(Number.isInteger(brush.targetIndex)&&paintEligible(meshes[brush.targetIndex])){paintTarget=meshes[brush.targetIndex];$('paintTarget').value=String(brush.targetIndex)}
+ animFrames=pose?.frames||[];animFrame=Number.isInteger(pose?.frame)&&pose.frame>=0&&pose.frame<animFrames.length?pose.frame:-1;animChosen=Number.isInteger(pose?.chosen)&&pose.chosen>=0&&pose.chosen<animBones.length?pose.chosen:0;
+ if(animBones.length){$('animBone').value=String(animChosen);if(Array.isArray(pose?.pose)&&pose.pose.length===animBones.length&&pose.pose.every(safeQuaternion))restorePose(pose.pose)}
+ animPlaying=false;animTime=Number.isFinite(pose?.time)?Math.max(0,pose.time):0;drawPoseFrames();syncJoint();updateAnimationUI();
+ const chosenPaint=Number.isInteger(brush.targetIndex)?brush.targetIndex:null;
+ refreshPaintTargets();if(chosenPaint!==null&&paintEligible(meshes[chosenPaint])){paintTarget=meshes[chosenPaint];$('paintTarget').value=String(chosenPaint)}updatePaintUI();
+ const target=WORKSPACES[s.workspace]?s.workspace:'inspect';
+ // Ensure the proper tab's state is applied without overwriting the saved Inspect appearance.
+ workspace='review';showWorkspace(target);
+ renderMarks();updateMoveUI();paintCanvasPreview();
+}
+async function restoreSavedSession(){
+ if(recoveryInProgress)return;
+ try{
+  const [rec,asset]=await Promise.all([recoveryRead('projects'),recoveryRead('assets')]);
+  if(!rec?.snapshot||!asset?.blob)throw Error('No complete saved session is available.');
+  if(rec.snapshot.model?.sha256!==asset.sha256||rec.snapshot.model?.sizeBytes!==asset.sizeBytes)throw Error('Saved GLB and project records do not match.');
+  if(!confirm('Restore '+asset.filename+' and replace the current unsaved workspace? The original GLB on your device is not changed.'))return;
+  const actual=await hashBuffer(await asset.blob.arrayBuffer());
+  if(actual!==asset.sha256)throw Error('Saved GLB failed fingerprint validation.');
+  recoveryInProgress=true;
+  const file=new File([asset.blob],asset.filename,{type:'model/gltf-binary'});
+  if(!(await loadGLBFile(file,true)))throw Error('Saved GLB could not be opened.');
+  await applyRecoveredSession(rec.snapshot);
+  savedAssetHash=asset.sha256;hasPriorRecovery=true;$('recoverySummary').textContent='Local recovery · restored';autosaveEnabled=true;editedSinceSave=false;
+  recoveryMessage('Restored locally: '+asset.filename+' · six regions, paint and poses recovered. Previous paint undo history is not available.');$('recoveryPanel').open=false;
+  status('Saved session restored from this device.');
+ }catch(err){recoveryMessage('Restore failed: '+err.message+' Original GLB files remain untouched.');}
+ finally{recoveryInProgress=false}
+}
+$('saveSession').onclick=async()=>{
+ if(!root)return recoveryMessage('Load a GLB or restore your saved session first.');
+ if(hasPriorRecovery&&!autosaveEnabled&&!recoveryInProgress){
+  if(!confirm('Replace your previous local recovery session with the currently loaded character? Export any older work first.'))return;
+ }
+ autosaveEnabled=true;await saveSessionNow();
+};
+$('restoreSession').onclick=restoreSavedSession;
+$('forgetSession').onclick=async()=>{
+ if(!confirm('Permanently delete this browser’s local CoLab recovery copy? Export your JSON projects first. Your currently loaded character will remain open.'))return;
+ try{await recoveryDelete();savedAssetHash=null;hasPriorRecovery=false;$('recoverySummary').textContent='Local recovery · paused';autosaveEnabled=false;$('restoreSession').disabled=true;$('forgetSession').disabled=true;recoveryMessage('Local recovery copy deleted. Autosave paused until you tap Save now or load a new GLB.')}catch(err){recoveryMessage('Could not remove saved copy: '+err.message)}
+};
+async function recoveryOnLaunch(){
+ try{const [saved,asset]=await Promise.all([recoveryRead('projects'),recoveryRead('assets')]);
+  if(saved?.snapshot&&asset?.blob&&saved.snapshot.model?.sha256===asset.sha256){
+   hasPriorRecovery=true;savedAssetHash=asset.sha256;$('recoverySummary').textContent='Local recovery · previous session found';$('recoveryPanel').open=true;$('restoreSession').disabled=false;$('forgetSession').disabled=false;
+   recoveryMessage('Saved session found: '+asset.filename+' · tap Restore last session to reopen it.');
+  }else{hasPriorRecovery=false;$('recoverySummary').textContent='Local recovery · ready';recoveryMessage('No previous session on this device. Load a GLB to begin.');}
+ }catch(err){autosaveEnabled=false;recoveryMessage('Local recovery unavailable: '+err.message+' Export JSON as a backup.');}
+}
+recoveryOnLaunch();
+// Changes are debounced; do not store every motion-playback frame.
+document.querySelector('aside').addEventListener('input',event=>{if(!event.target.closest('#recoveryPanel,#appUpdates'))scheduleAutosave()});
+document.querySelector('aside').addEventListener('click',event=>{if(!event.target.closest('#recoveryPanel,#appUpdates'))setTimeout(scheduleAutosave,0)});
+overlay.addEventListener('pointerup',()=>setTimeout(scheduleAutosave,0));
+controls.addEventListener('end',scheduleAutosave);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&editedSinceSave)saveSessionNow()});
+// ----- v0.11 safe update prompt ----------------------------------------------
+let swRegistration=null,authorizedUpdate=false;
+function showUpdate(reg){
+ if(!reg?.waiting||!navigator.serviceWorker.controller)return;
+ $('updateReady').hidden=false;$('appUpdates').open=true;
+ $('updateStatus').textContent='A new CoLab build is downloaded and waiting for your approval to restart.';
+}
+function watchUpdate(reg){
+ if(reg.waiting)showUpdate(reg);
+ reg.addEventListener('updatefound',()=>{
+  const worker=reg.installing;if(!worker)return;
+  worker.addEventListener('statechange',()=>{if(worker.state==='installed')showUpdate(reg)});
+ });
+}
+async function checkAppUpdate(){
+ try{
+  if(!swRegistration)throw Error('The installed app update service is unavailable.');
+  $('updateStatus').textContent='Checking for app updates…';
+  await swRegistration.update();
+  if(swRegistration.waiting)showUpdate(swRegistration);
+  else $('updateStatus').textContent='No update waiting. Your currently installed version can keep working.';
+ }catch(err){$('updateStatus').textContent='Update check failed: '+err.message}
+}
+$('checkUpdates').onclick=checkAppUpdate;
+$('laterUpdate').onclick=()=>{$('updateReady').hidden=true;$('updateStatus').textContent='Update postponed. Your current work stays open.'};
+$('applyUpdate').onclick=async()=>{
+ if(!swRegistration?.waiting)return;
+ if(root&&hasPriorRecovery&&!autosaveEnabled&&!recoveryInProgress){
+  if(!confirm('A previous recovery copy is protected. Replace it with your current work before updating?'))return;
+  autosaveEnabled=true;
+ }
+ if(root&&!(await saveSessionNow())){$('updateStatus').textContent='Please export your work before updating: local recovery save was not completed.';return}
+ authorizedUpdate=true;
+ $('updateStatus').textContent='Saved. Installing approved update…';
+ swRegistration.waiting.postMessage({type:'SKIP_WAITING'});
+};
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(authorizedUpdate)location.reload()});
+ window.addEventListener('load',async()=>{
+  try{swRegistration=await navigator.serviceWorker.register('./sw.js');watchUpdate(swRegistration)}
+  catch(err){$('updateStatus').textContent='App update setup unavailable: '+err.message}
+ });
+}else $('updateStatus').textContent='App updates work from the installed HTTPS version, not a downloaded HTML file.';
+
+function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();renderer.render(scene,camera)}animate();
 </script></body></html>

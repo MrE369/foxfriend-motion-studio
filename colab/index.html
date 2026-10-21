@@ -59,6 +59,9 @@
 <label for="animClip">Embedded GLB animation clips (if present)</label><select id="animClip"><option value="">Captured keyframes</option></select>
 <button id="animFreeze">Freeze and inspect pose</button>
 <div class="row"><button id="animSave">⬇ Pose JSON</button><label class="smallFileLabel">↥ Restore<input id="animImport" type="file" accept=".json,application/json"></label></div>
+<div class="row"><label for="animExportName">New animation clip name<input id="animExportName" type="text" value="CoLab_Sit" maxlength="64" autocomplete="off"></label></div>
+<button id="animExportGlb" type="button">⬇ Export Animated GLB · Experimental</button>
+<p class="hint">Exports a new GLB with your captured poses as an embedded clip, alongside the model's imported clips. Your original GLB and saved session remain unchanged. Reimport the download to verify.</p>
 <p class="hint" id="animStatus">Load a rigged GLB to enable posing. Animated GLBs with clips can be previewed without manual keyframe capture.</p>
 </section><section id="tabReview" class="workspace" role="tabpanel" aria-labelledby="tabButtonReview" hidden><h2>Repair Review <small>· experimental</small></h2>
 <p class="hint">Existing six-region movement-preview controls remain intact. They show detached geometry proposals, not a repaired or watertight mesh.</p><label>6 · Non-destructive region movement preview</label>
@@ -468,6 +471,38 @@ $('animClip').onchange=()=>{animationPause();animTime=0;if(animAction)animAction
 $('animFreeze').onclick=()=>{animationPause();showWorkspace('inspect');status('Pose frozen at '+animTime.toFixed(2)+' s. Mark a region in Inspect; handoff still needs pose attachment for full animation interchange.')};
 $('animSave').onclick=()=>{if(!animBones.length)return status('Load a rigged model first.');download(originalName.replace(/\.glb$/i,'')+'_poses.json',{format:'better-together-poses-v0.5',fileName:originalName,bones:animBones.map(b=>b.name),frames:animFrames,current:poseData()})};
 $('animImport').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.format!=='better-together-poses-v0.5'||JSON.stringify(d.bones)!==JSON.stringify(animBones.map(b=>b.name)))throw Error('Pose project requires the matching GLB bones.');if(!Array.isArray(d.frames)||d.frames.length>1000||!d.frames.every(p=>Array.isArray(p)&&p.length===animBones.length&&p.every(q=>Array.isArray(q)&&q.length===4&&q.every(Number.isFinite))))throw Error('Invalid pose data.');animationPause();animFrames=d.frames;animTime=0;restorePose(d.current);drawPoseFrames();updateAnimationUI();status('Pose project restored.') }catch(err){status('Pose import failed: '+err.message)}finally{e.target.value=''}};
+// Non-destructive animation export. Retains the loaded GLB's embedded clips.
+$('animExportGlb').onclick=async()=>{
+ if(!root||animBones.length===0||animFrames.length<2)return status('Load a rigged GLB and capture at least two poses before exporting.');
+ if(animPlaying)animationPause();
+ const button=$('animExportGlb'),label=button.textContent,previous=poseData(),selected=$('animClip').value;
+ button.disabled=true;button.textContent='Preparing animated GLB…';
+ try{
+  // Bone tracks use names that GLTFExporter resolves to actual skeleton nodes.
+  const names=animBones.map(b=>b.name);
+  if(names.some(n=>!n)||new Set(names).size!==names.length)throw Error('This rig has unnamed or duplicate bones; export requires unique bone names.');
+  const clipName=($('animExportName').value.trim().replace(/[^a-zA-Z0-9_ -]/g,'_')||'CoLab_Action').slice(0,64);
+  const times=animFrames.map((_,i)=>i*POSE_SEGMENT),tracks=[];
+  for(let j=0;j<animBones.length;j++){
+   const values=[];
+   for(const frame of animFrames){
+    const q=new THREE.Quaternion().fromArray(frame[j]).normalize();
+    values.push(q.x,q.y,q.z,q.w);
+   }
+   tracks.push(new THREE.QuaternionKeyframeTrack(names[j]+'.quaternion',times,values));
+  }
+  const clip=new THREE.AnimationClip(clipName,times[times.length-1],tracks);
+  const all=[...animClips,clip];
+  // Export a temporary full-visibility view, without modifying the source model.
+  const hidden=[];root.traverse(o=>{if(!o.visible){hidden.push(o);o.visible=true}});
+  try{
+   const bytes=await new GLTFExporter().parseAsync(root,{binary:true,onlyVisible:false,animations:all,maxTextureSize:2048});
+   downloadRaw(new Blob([bytes],{type:'model/gltf-binary'}),originalName.replace(/\.glb$/i,'')+'_CoLab_Animated.glb');
+   status('Animated GLB exported with '+all.length+' clips. Reimport it to verify the new clip.');
+  }finally{for(const o of hidden)o.visible=false}
+ }catch(err){status('Animation export failed: '+err.message)}
+ finally{restorePose(previous);$('animClip').value=selected;button.disabled=false;button.textContent=label}
+};
 function setupMotion(gltf){
  animPlaying=false;animBones=[];animInitial=[];animFrames=[];animFrame=-1;animTime=0;
  if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=gltf.animations||[];

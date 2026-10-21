@@ -50,6 +50,15 @@
 <p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
 <div id="motionRigControls"><label for="animBone">Joint</label><select id="animBone"><option>Load a rigged model</option></select><div id="animAxes"></div>
 <div class="row"><button id="animReset">Reset joint</button><button id="animResetAll">Reset pose</button></div>
+<details class="subpanel" id="animIkPanel"><summary>IK · Move a paw, hand or foot (experimental)</summary>
+<p class="hint">Select three connected bones from the loaded rig: upper joint, middle joint, and end joint. Choose the end joint first, then use Auto-chain. Move its target using model-local X/Y/Z. Capture keyframe saves the resulting pose. No mesh or original file is overwritten.</p>
+<label>End joint (paw / hand / foot)<select id="animIkEnd"></select></label>
+<button id="animIkAuto">Find parent chain</button>
+<p class="hint" id="animIkChain">Choose a rigged model and an end joint.</p>
+<div class="row"><button id="animIkTarget">Use current position</button><button id="animIkSolve">Solve IK target</button></div>
+<div id="animIkCoords"></div>
+<p class="hint" id="animIkStatus">Experimental 2-joint IK. Not all skeletons are compatible.</p>
+</details>
 <button id="animCapture">Capture keyframe</button><div id="animFrames" class="framebuttons"></div>
 <div class="row"><button id="animReplace">Replace keyframe</button><button id="animDelete">Delete keyframe</button></div>
 </div>
@@ -503,12 +512,73 @@ $('animExportGlb').onclick=async()=>{
  }catch(err){status('Animation export failed: '+err.message)}
  finally{restorePose(previous);$('animClip').value=selected;button.disabled=false;button.textContent=label}
 };
+// Explicit-chain CCD IK pilot; isolated to Motion Studio.
+let ikEnd=null,ikMiddle=null,ikUpper=null,ikPoint=null;
+function ikNotice(s){$('animIkStatus').textContent=s}
+function ikChainPick(){
+ const end=animBones[Number($('animIkEnd').value)];
+ if(!end||!end.parent?.isBone||!end.parent.parent?.isBone){ikUpper=ikMiddle=ikEnd=null;ikNotice('Choose an end bone with two bone parents.');return false}
+ ikEnd=end;ikMiddle=end.parent;ikUpper=ikMiddle.parent;
+ $('animIkChain').textContent=ikUpper.name+' → '+ikMiddle.name+' → '+ikEnd.name;
+ return true;
+}
+function ikTargetFromEnd(){
+ if(!ikChainPick())return;
+ root.updateMatrixWorld(true);
+ ikPoint=ikEnd.getWorldPosition(new THREE.Vector3());
+ ikDraw();ikNotice('Target initialized. Adjust coordinates and tap Solve IK target.');
+}
+function ikDraw(){
+ if(!ikPoint||!root)return;
+ const p=root.worldToLocal(ikPoint.clone());
+ for(const axis of 'xyz')$('animIk'+axis).value=p[axis].toFixed(3);
+}
+for(const axis of 'xyz'){
+ const wrap=document.createElement('label');wrap.textContent=axis.toUpperCase()+' · target (model units)';
+ const inp=document.createElement('input');inp.id='animIk'+axis;inp.type='number';inp.step='0.02';inp.value='0';
+ wrap.append(inp);$('animIkCoords').append(wrap);
+}
+$('animIkAuto').onclick=()=>{if(ikChainPick())ikTargetFromEnd()};
+$('animIkEnd').onchange=()=>{ikUpper=ikMiddle=ikEnd=null;ikPoint=null;ikChainPick()};
+$('animIkTarget').onclick=ikTargetFromEnd;
+$('animIkSolve').onclick=()=>{
+ if(!ikUpper&&!ikChainPick())return;
+ if(!root)return;
+ const targetLocal=new THREE.Vector3(...'xyz'.split('').map(a=>Number($('animIk'+a).value)));
+ if(![targetLocal.x,targetLocal.y,targetLocal.z].every(Number.isFinite))return ikNotice('Enter finite target coordinates.');
+ const target=root.localToWorld(targetLocal);
+ animationPause();$('animClip').value='';if(animAction){animAction.stop();animAction=null}
+ root.updateMatrixWorld(true);
+ const upperPos=ikUpper.getWorldPosition(new THREE.Vector3()),midPos=ikMiddle.getWorldPosition(new THREE.Vector3()),endPos=ikEnd.getWorldPosition(new THREE.Vector3());
+ if(upperPos.distanceTo(midPos)<1e-5||midPos.distanceTo(endPos)<1e-5)return ikNotice('Zero-length bone segment: cannot solve this chain.');
+ for(let pass=0;pass<24;pass++){
+  root.updateMatrixWorld(true);
+  if(ikEnd.getWorldPosition(new THREE.Vector3()).distanceTo(target)<0.001)break;
+  for(const joint of [ikMiddle,ikUpper]){
+   root.updateMatrixWorld(true);
+   const jp=joint.getWorldPosition(new THREE.Vector3());
+   const a=ikEnd.getWorldPosition(new THREE.Vector3()).sub(jp);
+   const b=target.clone().sub(jp);
+   if(a.lengthSq()<1e-9||b.lengthSq()<1e-9)continue;
+   const turn=new THREE.Quaternion().setFromUnitVectors(a.normalize(),b.normalize());
+   const worldQ=joint.getWorldQuaternion(new THREE.Quaternion());
+   const parentQ=joint.parent.getWorldQuaternion(new THREE.Quaternion());
+   joint.quaternion.copy(parentQ.invert().multiply(turn.multiply(worldQ))).normalize();
+  }
+ }
+ root.updateMatrixWorld(true);
+ ikPoint=target.clone();syncJoint();
+ const error=ikEnd.getWorldPosition(new THREE.Vector3()).distanceTo(target);
+ ikNotice('IK solved · remaining distance '+error.toFixed(3)+' model units. Capture keyframe to save.');
+};
 function setupMotion(gltf){
  animPlaying=false;animBones=[];animInitial=[];animFrames=[];animFrame=-1;animTime=0;
  if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=gltf.animations||[];
  root.traverse(o=>{if(o.isBone){animBones.push(o);animInitial.push(o.quaternion.clone())}});
  $('animBone').replaceChildren();if(animBones.length){animBones.forEach((b,i)=>{let opt=document.createElement('option');opt.value=i;opt.textContent=b.name||('Bone '+i);$('animBone').append(opt)})}
  else{$('animBone').add(new Option('Unrigged: no bones', ''))}
+ $('animIkEnd').replaceChildren();animBones.forEach((b,i)=>$('animIkEnd').add(new Option(b.name||'Bone '+i,String(i))));
+ ikEnd=ikMiddle=ikUpper=null;ikPoint=null;$('animIkChain').textContent='Choose an end joint and tap Find parent chain.';
  animChosen=Math.max(0,animBones.findIndex(b=>/LeftLeg$/i.test(b.name)));$('animBone').value=String(animChosen);
  $('motionRigControls').querySelectorAll('button,input,select').forEach(el=>el.disabled=!animBones.length);
  $('animClip').replaceChildren();$('animClip').add(new Option('Captured keyframes',''));

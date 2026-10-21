@@ -56,6 +56,8 @@
 <button id="animIkAuto">Find parent chain</button>
 <p class="hint" id="animIkChain">Choose a rigged model and an end joint.</p>
 <div class="row"><button id="animIkTarget">Use current position</button><button id="animIkSolve">Solve IK target</button></div>
+<button id="animIkDrag" type="button">✋ Drag IK target · Off</button>
+<p class="hint">Turn on Drag IK, then drag the colored target directly in the 3D view. The target moves parallel to your screen; use the coordinate controls for depth adjustments. Turn off to rotate the camera normally.</p>
 <div id="animIkCoords"></div>
 <p class="hint" id="animIkStatus">Experimental 2-joint IK. Not all skeletons are compatible.</p>
 </details>
@@ -266,6 +268,7 @@ function rememberInspectDisplay(){
 }
 function showWorkspace(name){
   if(!WORKSPACES[name])return;
+  if(name!=='animate'&&typeof ikDragStop==='function')ikDragStop();
   if(workspace==='inspect'&&name!=='inspect')rememberInspectDisplay();
   if(mode==='paint')finishPaint();
   if(mode!=='nav')selectMode(false);
@@ -526,7 +529,7 @@ function ikTargetFromEnd(){
  if(!ikChainPick())return;
  root.updateMatrixWorld(true);
  ikPoint=ikEnd.getWorldPosition(new THREE.Vector3());
- ikDraw();ikNotice('Target initialized. Adjust coordinates and tap Solve IK target.');
+ ikHandleRefresh();ikDraw();ikNotice('Target initialized. Adjust coordinates and tap Solve IK target.');
 }
 function ikDraw(){
  if(!ikPoint||!root)return;
@@ -567,18 +570,64 @@ $('animIkSolve').onclick=()=>{
   }
  }
  root.updateMatrixWorld(true);
- ikPoint=target.clone();syncJoint();
+ ikPoint=target.clone();ikHandleRefresh();syncJoint();
  const error=ikEnd.getWorldPosition(new THREE.Vector3()).distanceTo(target);
  ikNotice('IK solved · remaining distance '+error.toFixed(3)+' model units. Capture keyframe to save.');
 };
+// Touch-friendly screen-plane IK handle, only active while explicitly enabled.
+let ikDragging=false,ikDragPointer=null,ikDragPlane=null,ikDragOffset=null;
+const ikHandle=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),new THREE.MeshBasicMaterial({color:0x50f3c1,depthTest:false,transparent:true,opacity:.9}));
+ikHandle.visible=false;ikHandle.renderOrder=999;scene.add(ikHandle);
+const ikHitRay=new THREE.Raycaster();
+function ikHandleScale(){if(!ikPoint)return;ikHandle.scale.setScalar(Math.max(.015,camera.position.distanceTo(ikPoint)*.035))}
+function ikHandleRefresh(){ikHandle.visible=ikDragging&&!!ikPoint&&workspace==='animate'&&!!root;if(ikHandle.visible){ikHandle.position.copy(ikPoint);ikHandleScale()}}
+function ikDragStop(){ikDragging=false;ikDragPointer=null;ikHandle.visible=false;controls.enabled=true;$('animIkDrag').textContent='✋ Drag IK target · Off'}
+$('animIkDrag').onclick=()=>{
+ if(ikDragging){ikDragStop();return}
+ if(!ikUpper&&!ikChainPick())return;
+ if(!ikPoint)ikTargetFromEnd();
+ if(!ikPoint)return;
+ animationPause();selectMode(false);ikDragging=true;controls.enabled=false;
+ $('animIkDrag').textContent='✋ Drag IK target · On';
+ ikHandleRefresh();ikNotice('Drag the green sphere to pose the selected chain. Capture keyframe afterward.');
+};
+function ikPointerRay(e){
+ const r=renderer.domElement.getBoundingClientRect();
+ const pointer=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+ ikHitRay.setFromCamera(pointer,camera);return ikHitRay.ray;
+}
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(!ikDragging||!ikPoint||!root||e.button!==0)return;
+ const ray=ikPointerRay(e);ikHandleScale();
+ const sphere=new THREE.Sphere(ikPoint.clone(),ikHandle.scale.x*2.1);
+ if(ray.intersectSphere(sphere,new THREE.Vector3())===null)return;
+ ikDragPointer=e.pointerId;
+ const normal=camera.getWorldDirection(new THREE.Vector3());
+ ikDragPlane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,ikPoint);
+ const hit=ray.intersectPlane(ikDragPlane,new THREE.Vector3());
+ ikDragOffset=hit?ikPoint.clone().sub(hit):new THREE.Vector3();
+ renderer.domElement.setPointerCapture(e.pointerId);e.preventDefault();e.stopPropagation();
+},true);
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(!ikDragging||ikDragPointer!==e.pointerId||!ikDragPlane)return;
+ const hit=ikPointerRay(e).intersectPlane(ikDragPlane,new THREE.Vector3());
+ if(!hit)return;
+ const world=hit.add(ikDragOffset);
+ const local=root.worldToLocal(world.clone());
+ for(const a of 'xyz')$('animIk'+a).value=local[a].toFixed(3);
+ $('animIkSolve').click();ikPoint=world;ikHandleRefresh();e.preventDefault();
+},true);
+for(const event of ['pointerup','pointercancel','lostpointercapture']){
+ renderer.domElement.addEventListener(event,e=>{if(e.pointerId===ikDragPointer){ikDragPointer=null;ikDragPlane=null;ikDragOffset=null}},true);
+}
 function setupMotion(gltf){
- animPlaying=false;animBones=[];animInitial=[];animFrames=[];animFrame=-1;animTime=0;
+ ikDragStop();animPlaying=false;animBones=[];animInitial=[];animFrames=[];animFrame=-1;animTime=0;
  if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=gltf.animations||[];
  root.traverse(o=>{if(o.isBone){animBones.push(o);animInitial.push(o.quaternion.clone())}});
  $('animBone').replaceChildren();if(animBones.length){animBones.forEach((b,i)=>{let opt=document.createElement('option');opt.value=i;opt.textContent=b.name||('Bone '+i);$('animBone').append(opt)})}
  else{$('animBone').add(new Option('Unrigged: no bones', ''))}
  $('animIkEnd').replaceChildren();animBones.forEach((b,i)=>$('animIkEnd').add(new Option(b.name||'Bone '+i,String(i))));
- ikEnd=ikMiddle=ikUpper=null;ikPoint=null;$('animIkChain').textContent='Choose an end joint and tap Find parent chain.';
+ ikEnd=ikMiddle=ikUpper=null;ikPoint=null;ikHandleRefresh();$('animIkChain').textContent='Choose an end joint and tap Find parent chain.';
  animChosen=Math.max(0,animBones.findIndex(b=>/LeftLeg$/i.test(b.name)));$('animBone').value=String(animChosen);
  $('motionRigControls').querySelectorAll('button,input,select').forEach(el=>el.disabled=!animBones.length);
  $('animClip').replaceChildren();$('animClip').add(new Option('Captured keyframes',''));

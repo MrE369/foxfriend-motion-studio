@@ -1,6 +1,6 @@
 // Better Together 3D CoLab v0.11 beta
 // Updates are installed in the background but NEVER force a reload of an active editing session.
-const CACHE='bt3d-colab-v011-recovery-1';
+const CACHE='bt3d-colab-v011-recovery-2';
 const SHELL=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));

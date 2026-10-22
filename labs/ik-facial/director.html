@@ -1704,8 +1704,22 @@ function jointGestureEnd(event,cancelled=false){
 // Bind on the common parent in CAPTURE phase. Handles events from both
 // rendered WebGL and the transparent touch canvas before either can intercept.
 // Pointer capture is held by #view so all subsequent moves stay in the session.
-view.addEventListener('pointerdown',jointGestureDown,true);
-view.addEventListener('pointermove',jointGestureMove,true);
+function safelyHandleJointGesture(event,kind){
+ try{
+  if(kind==='down')jointGestureDown(event);
+  else if(kind==='move')jointGestureMove(event);
+ }catch(err){
+  const detail='Pose gesture '+kind+' failed: '+(err?.message||String(err));
+  jointInputTelemetry.lastReject=detail;
+  if(lastJointDrag)lastJointDrag.error=detail;
+  $('jointStatus').textContent=detail;
+  jointModeBanner.textContent='⚠ Pose input error · see below';
+  // Never let a faulty joint handler silently turn the gesture into camera orbit.
+  if(jointInteractionMode==='pose'){event.preventDefault?.();event.stopImmediatePropagation?.();}
+ }
+}
+view.addEventListener('pointerdown',e=>safelyHandleJointGesture(e,'down'),true);
+view.addEventListener('pointermove',e=>safelyHandleJointGesture(e,'move'),true);
 view.addEventListener('pointerup',e=>jointGestureEnd(e,false),true);
 view.addEventListener('pointercancel',e=>jointGestureEnd(e,true),true);
 view.addEventListener('lostpointercapture',e=>jointGestureEnd(e,true),true);
@@ -1722,14 +1736,14 @@ view.addEventListener('touchstart',e=>{
  jointInputTelemetry.touchStart++;
  if(jointPointer)return;
  const touch=e.changedTouches?.[0];if(!touch)return;
- jointGestureDown(legacyJointEvent(e,touch,'start'));
+ safelyHandleJointGesture(legacyJointEvent(e,touch,'start'),'down');
 },{capture:true,passive:false});
 view.addEventListener('touchmove',e=>{
  if(jointInteractionMode!=='pose'||workspace!=='animate')return;
  jointInputTelemetry.touchMove++;
  if(!jointPointer?.id||jointPointer.id<1000000)return;
  const touch=[...e.touches].find(t=>1000000+t.identifier===jointPointer.id);
- if(touch)jointGestureMove(legacyJointEvent(e,touch,'move'));
+ if(touch)safelyHandleJointGesture(legacyJointEvent(e,touch,'move'),'move');
 },{capture:true,passive:false});
 for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
  if(!jointPointer||jointPointer.id<1000000)return;

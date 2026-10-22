@@ -4,7 +4,7 @@
 export function installSculptTools({THREE,renderer,camera,controls,getSelected,getActive,onUpdate}){
  const $=id=>document.getElementById(id);
  const ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),inWorld=new THREE.Vector3();
- const history=[],baselines=new Map();
+ const history=[],baselines=new Map(),adjacencyCache=new WeakMap();
  let enabled=false,gesture=null,lastCursor=null;
  const status=t=>$('sculptStatus').textContent=t;
  const cursor=document.createElement('div');
@@ -59,14 +59,16 @@ export function installSculptTools({THREE,renderer,camera,controls,getSelected,g
    g.getAttribute('normal').needsUpdate=true;
  }
  function neighbors(mesh){
-   const g=mesh.geometry,p=g.getAttribute('position'),links=Array.from({length:p.count},()=>new Set());
+   const g=mesh.geometry,p=g.getAttribute('position');
+   const old=adjacencyCache.get(g);if(old)return old;
+   const links=Array.from({length:p.count},()=>new Set());
    const ids=g.index;
    const count=ids?ids.count:p.count;
    for(let i=0;i+2<count;i+=3){
       const a=ids?ids.getX(i):i,b=ids?ids.getX(i+1):i+1,c=ids?ids.getX(i+2):i+2;
       links[a].add(b);links[a].add(c);links[b].add(a);links[b].add(c);links[c].add(a);links[c].add(b);
    }
-   return links.map(s=>Array.from(s));
+   const result=links.map(s=>Array.from(s));adjacencyCache.set(g,result);return result;
  }
  function radius(){return Number($('sculptRadius').value)||.025;}
  function strength(){return Number($('sculptStrength').value)||.002;}

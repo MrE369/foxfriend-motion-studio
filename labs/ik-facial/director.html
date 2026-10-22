@@ -214,6 +214,8 @@
 <p class="hint" id="reviewLoadGuide" role="status">For side-by-side comparison, first load the ORIGINAL Finn using "Load any GLB" near the top of the controls. Then choose the repaired model below. If you only have the repair file, CoLab can still show it by itself.</p>
 <label for="candidateFile">Proposed GLB</label><input id="candidateFile" type="file" accept=".glb,model/gltf-binary">
 <div class="row"><button id="candidateOriginal" class="active">Original</button><button id="candidateView">Candidate</button></div>
+<div class="row"><button id="reviewFaceFocus" type="button">👁 Focus on face</button><button id="reviewChangeDots" type="button" disabled>● Show changed points</button></div>
+<p id="reviewChangeStatus" class="hint" role="status">Load the matching original and candidate GLBs to measure actual geometry differences. For texture-only repairs, use Original / Candidate.</p>
 <button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></div></section></aside></main><script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -496,6 +498,7 @@ function showWorkspace(name){
   updateArtReferenceDisplay();
   if(name==='animate')updateAnimationUI();
   if(name==='review')updateMoveUI();
+  syncReviewChangeControls();
   // Keep the scene and saved selections, but only show colored region overlays
   // in workspaces where they help. Never obscure the paint or animation view.
   markGroup.visible=(name==='inspect'||name==='review') && visibilityMode==='all' && !candidateVisible;
@@ -1003,6 +1006,102 @@ function updateAnimation(){
 }
 // Repair Review: viewer comparison is independent from the geometry-shell preview.
 let candidateRoot=null,candidateVisible=false,candidateName='';
+
+const reviewChangeGroup=new THREE.Group();scene.add(reviewChangeGroup);
+let reviewChangeEnabled=false,reviewChangeCount=0,reviewMaxDistance=0,reviewComparisonCompatible=false;
+function releaseReviewChangeGeometry(){
+ for(const item of [...reviewChangeGroup.children]){
+  reviewChangeGroup.remove(item);
+  item.geometry.dispose();item.material.dispose();
+ }
+ reviewChangeCount=0;reviewMaxDistance=0;reviewComparisonCompatible=false;
+ reviewChangeGroup.visible=false;
+}
+function syncReviewChangeControls(){
+ const enable=!!root&&!!candidateRoot&&reviewComparisonCompatible;
+ $('reviewChangeDots').disabled=!enable;
+ $('reviewChangeDots').textContent=reviewChangeEnabled?'● Hide changed points':'● Show changed points';
+ reviewChangeGroup.visible=enable&&reviewChangeEnabled&&candidateVisible&&workspace==='review';
+ $('reviewFaceFocus').disabled=!(root||candidateRoot);
+}
+function buildReviewChangePoints(){
+ releaseReviewChangeGeometry();
+ if(!root||!candidateRoot){
+  $('reviewChangeStatus').textContent='Load original Finn with “Load any GLB” and choose proposed Finn here to compare geometry.';
+  syncReviewChangeControls();return;
+ }
+ const before=[],after=[];
+ root.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)before.push(o)});
+ candidateRoot.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)after.push(o)});
+ if(!before.length||before.length!==after.length){
+  $('reviewChangeStatus').textContent='The mesh counts differ. Compare visually instead of using vertex highlighting.';
+  syncReviewChangeControls();return;
+ }
+ const points=[];
+ candidateRoot.updateMatrixWorld(true);
+ for(let m=0;m<before.length;m++){
+  const one=before[m].geometry.attributes.position,two=after[m].geometry.attributes.position;
+  if(!one||!two||one.count!==two.count){
+   $('reviewChangeStatus').textContent='Mesh topology differs. Visual comparison remains available, but vertex highlighting is unsafe.';
+   releaseReviewChangeGeometry();syncReviewChangeControls();return;
+  }
+  const local=[];
+  for(let i=0;i<one.count;i++){
+   const dx=one.getX(i)-two.getX(i),dy=one.getY(i)-two.getY(i),dz=one.getZ(i)-two.getZ(i);
+   const distance=Math.hypot(dx,dy,dz);
+   if(distance<0.00003)continue;
+   reviewChangeCount++;reviewMaxDistance=Math.max(reviewMaxDistance,distance);
+   // On a phone, cap the rendered dot overlay rather than creating tens of
+   // thousands of marker spheres. Vertices and skin weights stay untouched.
+   if(points.length<6000){
+    const world=after[m].localToWorld(new THREE.Vector3(two.getX(i),two.getY(i),two.getZ(i)));
+    points.push(world.x,world.y,world.z);
+   }
+  }
+ }
+ reviewComparisonCompatible=true;
+ if(points.length){
+  const geom=new THREE.BufferGeometry();
+  geom.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
+  const marker=new THREE.Points(geom,new THREE.PointsMaterial({
+   color:0xff64c8,size:4.5,sizeAttenuation:false,depthTest:false,depthWrite:false,
+   transparent:true,opacity:0.88
+  }));
+  marker.frustumCulled=false;marker.renderOrder=998;
+  reviewChangeGroup.add(marker);
+ }
+ $('reviewChangeStatus').textContent=reviewChangeCount
+  ?reviewChangeCount.toLocaleString()+' geometry vertices changed · largest movement '+reviewMaxDistance.toFixed(5)+' model units. Tap “Show changed points” to see the edited areas.'
+  :'No measurable geometry changes at this precision. If the artwork looks different, this may be a texture/material edit. Use Original / Candidate.';
+ syncReviewChangeControls();
+}
+$('reviewChangeDots').onclick=()=>{
+ reviewChangeEnabled=!reviewChangeEnabled;
+ syncReviewChangeControls();
+};
+$('reviewFaceFocus').onclick=()=>{
+ const target=(candidateVisible&&candidateRoot)?candidateRoot:(root||candidateRoot);
+ if(!target)return $('candidateStatus').textContent='Load an original or proposed character first.';
+ target.updateMatrixWorld(true);
+ const bounds=new THREE.Box3().setFromObject(target);
+ if(bounds.isEmpty())return $('candidateStatus').textContent='Cannot frame an empty character.';
+ const center=bounds.getCenter(new THREE.Vector3());
+ const height=Math.max(.05,bounds.max.y-bounds.min.y);
+ // A friendly 3D portrait framing for upright characters, not a fixed model
+ // coordinate that would fail on other glTF assets.
+ center.y=bounds.min.y+height*.905;
+ center.z+=height*.03;
+ const distance=Math.max(.15,height*.30);
+ camera.up.set(0,1,0);
+ controls.target.copy(center);
+ camera.position.copy(center).add(new THREE.Vector3(0,0,distance));
+ camera.near=Math.max(.00001,distance/10000);
+ camera.far=Math.max(100,distance*100);
+ camera.lookAt(center);camera.updateProjectionMatrix();
+ controls.enabled=true;controls.update();
+ $('candidateStatus').textContent='Camera focused on the face. Switch Original / Candidate to compare from this same angle.';
+};
+
 function frameVisibleReviewModel(model){
  if(!model)return;
  model.updateMatrixWorld(true);
@@ -1038,6 +1137,7 @@ function showCandidate(show){
  if(candidateRoot)candidateRoot.visible=show;
  if(show){previewGroup.visible=false;markGroup.visible=false;moveGroup.visible=false;hitMarker.style.display='none'}
  else{previewGroup.visible=visibilityMode!=='all';markGroup.visible=(workspace==='inspect'||workspace==='review')&&visibilityMode==='all';updateMovePreview();renderVisibility()}
+ syncReviewChangeControls();
  $('candidateOriginal').classList.toggle('active',!show);$('candidateView').classList.toggle('active',show);
  $('candidateStatus').textContent=show?'Showing '+candidateName+(root?' · original preserved.':' · load original GLB for comparison.'):'Showing original: '+originalName;
  syncReviewLoadGuide();
@@ -1057,6 +1157,7 @@ $('candidateFile').onchange=async e=>{
   directorRepairReady=false;directorRepairClips=g.animations||[];
   $('directorExportRepair').disabled=true;
   candidateRoot.visible=false;scene.add(candidateRoot);
+  buildReviewChangePoints();
   // A freshly loaded candidate must be visible even when the original
   // has not yet been loaded in this browser tab.
   if(!root){
@@ -1082,10 +1183,13 @@ function clearUnifiedBeforeLoad(){
  for(const p of paintSessions.values())p.tex.dispose();paintSessions.clear();
  animPlaying=false;if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=[];
  if(candidateRoot)scene.remove(candidateRoot);candidateRoot=null;candidateVisible=false;candidateName='';
+ releaseReviewChangeGeometry();reviewChangeEnabled=false;
+ $('reviewChangeStatus').textContent='Load original and candidate models to display changed mesh vertices.';
+ syncReviewChangeControls();
  $('candidateOriginal').classList.add('active');$('candidateView').classList.remove('active');$('candidateStatus').textContent='No proposed GLB loaded.';
  syncReviewLoadGuide();
 }
-function initializeUnified(gltf){refreshPaintTargets();setupMotion(gltf);showWorkspace(workspace);syncReviewLoadGuide()}
+function initializeUnified(gltf){refreshPaintTargets();setupMotion(gltf);showWorkspace(workspace);syncReviewLoadGuide();syncReviewChangeControls()}
 updatePaintUI();updateAnimationUI();
 
 // ----- v0.11 local-first recovery --------------------------------------------

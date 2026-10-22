@@ -2,13 +2,20 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CoLab · Easy Pose Lab</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#101925;color:#eef6ff;font:15px system-ui}header{padding:12px 18px;background:#1b2b3b}h1{margin:0;font-size:21px}small,.muted{color:#b5c9d8}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#viewport{position:relative;height:calc(100dvh - 78px);min-height:320px}aside{padding:15px;background:#182738;max-height:calc(100dvh - 78px);overflow:auto}button,input,select{width:100%;min-height:40px;background:#2b4358;border:1px solid #8096a9;border-radius:8px;color:white;padding:8px;font:inherit;margin:4px 0}button{cursor:pointer}button:hover{background:#376077}label{display:block;margin:12px 0 4px;font-weight:650}#viewport canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}#fitView{position:absolute;right:12px;top:12px;z-index:3;width:auto;min-height:36px;padding:6px 12px;background:#243d54dd;border-color:#93b6cd;font-size:14px}#advancedPanel{display:none}#advancedPanel.open{display:block}#quickLegs{display:grid;grid-template-columns:1fr 1fr;gap:6px}#quickLegs button{font-size:14px;min-width:0;margin:0}#quickLegs button.active{background:#876822;border-color:#f5dc84}#simpleHelp{line-height:1.45;color:#c7dbeb}#advancedToggle{margin-top:14px;background:#23394b}button:disabled{opacity:.45;cursor:not-allowed}fieldset{border:1px solid #526a80;border-radius:10px;margin:12px 0;padding:12px}legend{font-weight:bold}#status{padding:9px;background:#234a43;border-radius:8px;white-space:pre-wrap}#bones{height:190px}#morphs{max-height:260px;overflow:auto}.morph{display:grid;grid-template-columns:1fr 85px;gap:6px;align-items:center}.morph input{min-height:20px}#notes{font-size:13px;line-height:1.5;color:#c6d5e1}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}@media(max-width:760px){main{display:flex;flex-direction:column;height:calc(100dvh - 78px);height:calc(100svh - 78px);min-height:0;overflow:hidden}#viewport{position:relative;flex:0 0 43%;height:43%;min-height:180px;max-height:50%;overflow:hidden}aside{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}header{padding:9px 12px}h1{font-size:18px}}
+*{box-sizing:border-box}body{margin:0;background:#101925;color:#eef6ff;font:15px system-ui}header{padding:12px 18px;background:#1b2b3b}h1{margin:0;font-size:21px}small,.muted{color:#b5c9d8}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#viewport{position:relative;height:calc(100dvh - 78px);min-height:320px}aside{padding:15px;background:#182738;max-height:calc(100dvh - 78px);overflow:auto}button,input,select{width:100%;min-height:40px;background:#2b4358;border:1px solid #8096a9;border-radius:8px;color:white;padding:8px;font:inherit;margin:4px 0}button{cursor:pointer}button:hover{background:#376077}label{display:block;margin:12px 0 4px;font-weight:650}#viewport canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}#fitView{position:absolute;right:12px;top:12px;z-index:3;width:auto;min-height:36px;padding:6px 12px;background:#243d54dd;border-color:#93b6cd;font-size:14px}#advancedPanel{display:none}#advancedPanel.open{display:block}#quickLegs{display:grid;grid-template-columns:1fr 1fr;gap:6px}#quickLegs button{font-size:14px;min-width:0;margin:0}#quickLegs button.active{background:#876822;border-color:#f5dc84}#bodyPanel{margin:12px 0;padding:12px;border:1px solid #61788a;border-radius:12px;background:#233749}#bodyPanel[hidden]{display:none!important}#bodyPanel input[type=range]{accent-color:#78dce9;min-height:28px;padding:3px}#bodyPanel label{font-size:14px}#bodyPanel output{float:right;color:#b0e9f4}#simpleHelp{line-height:1.45;color:#c7dbeb}#advancedToggle{margin-top:14px;background:#23394b}button:disabled{opacity:.45;cursor:not-allowed}fieldset{border:1px solid #526a80;border-radius:10px;margin:12px 0;padding:12px}legend{font-weight:bold}#status{padding:9px;background:#234a43;border-radius:8px;white-space:pre-wrap}#bones{height:190px}#morphs{max-height:260px;overflow:auto}.morph{display:grid;grid-template-columns:1fr 85px;gap:6px;align-items:center}.morph input{min-height:20px}#notes{font-size:13px;line-height:1.5;color:#c6d5e1}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}@media(max-width:760px){main{display:flex;flex-direction:column;height:calc(100dvh - 78px);height:calc(100svh - 78px);min-height:0;overflow:hidden}#viewport{position:relative;flex:0 0 43%;height:43%;min-height:180px;max-height:50%;overflow:hidden}aside{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}header{padding:9px 12px}h1{font-size:18px}}
 </style></head><body>
-<header><h1>CoLab · Easy Pose Lab <small>0.6 · experimental</small></h1><small>Isolated prototype — no changes to Unified Studio</small></header>
+<header><h1>CoLab · Easy Pose Lab <small>0.7 · experimental</small></h1><small>Isolated prototype — no changes to Unified Studio</small></header>
 <main><div id="viewport"><button type="button" id="fitView" title="Center the whole character">⊡ Center view</button></div><aside>
 <label for="file">Load rigged GLB / GLTF</label><input id="file" type="file" accept=".glb,.gltf,.vrm">
 <div id="status" role="status">Ready. Import a rigged GLB such as Blue Toro.</div>
-<section aria-label="Easy pose controls"><h2 style="font-size:18px;margin-bottom:6px">Easy Pose</h2><div id="rigSummary" role="status" style="padding:9px;border-radius:8px;background:#264456;margin:8px 0">Load a rigged GLB to identify its skeleton.</div><p id="simpleHelp">1. Load a rigged character.<br>2. Tap a glowing joint point or choose a body-part button.<br>3. Drag the yellow point to pose it. Drag elsewhere to rotate the view.</p><div id="quickLegs" aria-label="Leg picker"></div><div class="row"><button id="simpleReset">Reset pose</button><button id="simpleClear">Stop posing</button></div><p class="muted" id="poseStatus">Load a rigged GLB to start posing.</p></section>
+<section aria-label="Easy pose controls"><h2 style="font-size:18px;margin-bottom:6px">Easy Pose</h2><div id="rigSummary" role="status" style="padding:9px;border-radius:8px;background:#264456;margin:8px 0">Load a rigged GLB to identify its skeleton.</div><p id="simpleHelp">1. Load a rigged character.<br>2. Tap a glowing joint point or choose a body-part button.<br>3. Drag the yellow point to pose it. Drag elsewhere to rotate the view.</p><div id="quickLegs" aria-label="Body-part picker"></div>
+<div id="bodyPanel" hidden><strong>Blue Toro · Body posing</strong>
+<p class="muted">Try a playful bow, or drag the chest and hip markers. CoLab will attempt to keep his hooves planted.</p>
+<div class="row"><button id="bowPreset" type="button">Playful bow</button><button id="standTall" type="button">Stand tall</button></div>
+<label for="bowDepth">Lower chest <output id="bowValue">0%</output></label><input type="range" id="bowDepth" min="0" max="100" step="1" value="0">
+<label for="hipSway">Shift hips <output id="hipValue">Center</output></label><input type="range" id="hipSway" min="-100" max="100" step="1" value="0">
+<p id="bodyStatus" class="muted">Experimental body IK · avoid extreme joint angles.</p></div>
+<div class="row"><button id="simpleReset">Reset pose</button><button id="simpleClear">Stop posing</button></div><p class="muted" id="poseStatus">Load a rigged GLB to start posing.</p></section>
 <button id="advancedToggle" aria-expanded="false" aria-controls="advancedPanel">Advanced tools ▾</button><div id="advancedPanel">
 <fieldset><legend>Skeleton inspector</legend>
 <div class="row"><button id="showBones">Toggle bones</button><button id="reset">Reset pose</button></div>
@@ -24,7 +31,7 @@
 </fieldset>
 <fieldset><legend>Facial morph targets</legend><div id="morphs">Load a model to inspect available face shapes.</div><button id="zeroMorphs">Reset expressions</button></fieldset>
 <fieldset><legend>Diagnostics</legend><pre id="diagnostics" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px"></pre><button id="export">Export diagnostic JSON</button></fieldset>
-<p id="notes">This first lab detects actual skeletons and morph targets, supports reversible posing of a validated two-bone chain, and exports diagnostic data. It does not create missing facial geometry or perform full-body IK yet. For a .gltf with external files, convert to a self-contained .glb first.</p>
+<p id="notes">This first lab detects actual skeletons and morph targets, supports reversible limb posing and an experimental Blue Toro chest/hip bow with basic hoof planting. It does not create missing facial geometry, guarantee anatomical joint limits, or perform general-purpose full-body IK yet. For a .gltf with external files, convert to a self-contained .glb first.</p>
 </div></aside></main>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 <script type="module">
@@ -33,6 +40,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {TransformControls} from 'three/addons/controls/TransformControls.js';
 import {createRigAdapter} from './rig-adapter.js';
+import {supportsToroBody,createToroBody} from './toro-body.js';
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x283746);
 const camera=new THREE.PerspectiveCamera(48,1,.01,200);camera.position.set(3,2.2,4.8);
@@ -43,7 +51,7 @@ const grid=new THREE.GridHelper(12,24,0x678499,0x3b5163);scene.add(grid);
 const orbit=new OrbitControls(camera,renderer.domElement);orbit.enableDamping=true;orbit.enablePan=true;
 const transform=new TransformControls(camera,renderer.domElement);transform.setSize(.85);scene.add(transform.getHelper());transform.addEventListener('dragging-changed',e=>orbit.enabled=!e.value);
 const loader=new GLTFLoader();const clock=new THREE.Clock();
-let rigAdapter=null,sourceFilename='',model=null,bones=[],skinned=[],morphMeshes=[],helpers=[],chain=null,target=null,original=new Map(),show=false,hoofHandles=[],activeHoof=null,headHandle=null,headControl=null,polePoint=null,dragPointer=null,dragOffset=new THREE.Vector3(),dragPlane=new THREE.Plane(),modelSize=1,modelBounds=null,frameCenter=null;
+let rigAdapter=null,sourceFilename='',model=null,bones=[],skinned=[],morphMeshes=[],helpers=[],chain=null,target=null,original=new Map(),show=false,hoofHandles=[],activeHoof=null,headHandle=null,headControl=null,polePoint=null,dragPointer=null,dragOffset=new THREE.Vector3(),dragPlane=new THREE.Plane(),modelSize=1,modelBounds=null,frameCenter=null,bodyHandles=[],bodySession=null,activeBody=null,bodyDragStart=null;
 const status=s=>$('status').textContent=s;
 function resize(){const el=$('viewport');const width=Math.max(1,el.clientWidth),height=Math.max(1,el.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix()}
 function frameCharacter(bounds=modelBounds){
@@ -72,7 +80,7 @@ function frameCharacter(bounds=modelBounds){
 }
 $('fitView').onclick=()=>frameCharacter();
 new ResizeObserver(resize).observe($('viewport'));resize();
-function clearHoofHandles(){for(const h of hoofHandles){scene.remove(h.mesh);h.mesh.geometry.dispose();h.mesh.material.dispose()}if(headHandle){scene.remove(headHandle.mesh);headHandle.mesh.geometry.dispose();headHandle.mesh.material.dispose();headHandle=null}hoofHandles=[];activeHoof=null;$('quickLegs').replaceChildren()}
+function clearHoofHandles(){for(const h of bodyHandles){scene.remove(h.mesh);h.mesh.geometry.dispose();h.mesh.material.dispose()}bodyHandles=[];$('bodyPanel').hidden=true;for(const h of hoofHandles){scene.remove(h.mesh);h.mesh.geometry.dispose();h.mesh.material.dispose()}if(headHandle){scene.remove(headHandle.mesh);headHandle.mesh.geometry.dispose();headHandle.mesh.material.dispose();headHandle=null}hoofHandles=[];activeHoof=null;$('quickLegs').replaceChildren()}
 function clearScene(){modelBounds=null;frameCenter=null;removeTarget();clearHoofHandles();transform.detach();rigAdapter=null;$('rigSummary').textContent='Load a rigged GLB to identify its skeleton.';if(model){scene.remove(model);model=null}helpers.forEach(h=>scene.remove(h));helpers=[];bones=[];skinned=[];morphMeshes=[];original.clear();chain=null;['bones','root','mid','end'].forEach(id=>$(id).replaceChildren());$('preset').replaceChildren();$('usePreset').disabled=true;$('morphs').replaceChildren()}
 function fill(id){const el=$(id);el.replaceChildren();bones.forEach((b,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=b.name||'(unnamed bone '+i+')';el.append(o)})}
 function friendlyLabel(ch){
@@ -94,6 +102,7 @@ function refreshPresets(){
    const handle={mesh,button,indexes,label,end:c};hoofHandles.push(handle);
    button.onclick=()=>selectHoof(handle);quick.append(button);found++;
  }
+ if(/blue[ +_-]*toro/i.test(sourceFilename)&&supportsToroBody(rigAdapter)){setupBodyHandles();$('bodyPanel').hidden=false}
  const head=rigAdapter?.getPart('head')?.bone||null;
  if(head){
    const button=document.createElement('button');button.textContent='Head';button.type='button';
@@ -109,6 +118,75 @@ function refreshPresets(){
  $('rigSummary').textContent='Detected: '+rigLabel+' · '+(rigAdapter?.bones.length||0)+' bones · '+found+' IK chains';
  $('poseStatus').textContent=found?'Choose a body part and drag its point. Rotation limits are still experimental.':head?'Head control available, but no limb chains were verified.':'Open Advanced tools to inspect the model.';
 }
+function setupBodyHandles(){
+ const markers=[
+  {kind:'chest',label:'Chest',bone:rigAdapter.getBone('tripoSpine_2'),offset:new THREE.Vector3(0,modelSize*.11,modelSize*.08)},
+  {kind:'hips',label:'Hips',bone:rigAdapter.getBone('tripoSpine_0'),offset:new THREE.Vector3(0,modelSize*.11,-modelSize*.035)}
+ ];
+ for(const m of markers){
+  const from=m.bone.getWorldPosition(new THREE.Vector3()).add(m.offset);
+  const localPoint=m.bone.worldToLocal(from.clone());
+  const mesh=new THREE.Mesh(new THREE.SphereGeometry(Math.max(.024,modelSize*.013),16,12),
+    new THREE.MeshBasicMaterial({color:0x7dd5ed,depthTest:false,transparent:true,opacity:.92}));
+  mesh.position.copy(from);mesh.renderOrder=999;scene.add(mesh);
+  const button=document.createElement('button');button.textContent=m.label;button.type='button';
+  const h={...m,localPoint,mesh,button};button.onclick=()=>selectBody(h);
+  bodyHandles.push(h);$('quickLegs').prepend(button);
+ }
+}
+function refreshBodyMarkers(){
+ for(const h of bodyHandles)h.mesh.position.copy(h.bone.localToWorld(h.localPoint.clone()));
+}
+function syncBodySliders(){
+ const ctrl=bodySession?.controller;
+ $('bowDepth').value=String(Math.round((ctrl?.bow||0)*100));$('bowValue').textContent=$('bowDepth').value+'%';
+ $('hipSway').value=String(Math.round((ctrl?.sway||0)*100));
+ $('hipValue').textContent=Math.abs(Number($('hipSway').value))<2?'Center':Math.abs(Number($('hipSway').value))+'% '+(Number($('hipSway').value)<0?'left':'right');
+}
+function selectBody(h){
+ if(!h)return;
+ const previous=bodySession?.controller;
+ removeTarget();
+ const controller=previous||createToroBody(THREE,rigAdapter,model,solveLimb);
+ bodySession={controller};activeBody=h;rigAdapter?.pose.acquire('ik');
+ hoofHandles.forEach(x=>{x.mesh.visible=true;x.button.classList.remove('active')});
+ if(headHandle){headHandle.mesh.visible=true;headHandle.button.classList.remove('active')}
+ bodyHandles.forEach(x=>{x.mesh.visible=x!==h;x.button.classList.toggle('active',x===h)});
+ target=new THREE.Mesh(new THREE.SphereGeometry(Math.max(.033,modelSize*.018),18,14),
+   new THREE.MeshBasicMaterial({color:0xffdc64,depthTest:false}));
+ target.renderOrder=1000;target.position.copy(h.mesh.position);scene.add(target);
+ $('poseStatus').textContent=h.kind==='chest'?'Chest: drag the yellow point down to bow or up to stand taller.':'Hips: drag the yellow point sideways for a gentle weight shift.';
+ syncBodySliders();
+}
+function applyBodyValues(bow,sway){
+ if(!bodySession)return;
+ const result=bodySession.controller.apply(bow,sway);
+ refreshBodyMarkers();syncBodySliders();
+ $('bodyStatus').textContent=result.footDrift>Math.max(.012,modelSize*.015)?
+  'Some hooves may shift at this pose depth. Reduce the bow or hip shift for a steadier stance.':
+  'Hoof planting assist active · movement is experimental.';
+ return result;
+}
+$('bowPreset').onclick=()=>{
+ if(!bodySession)selectBody(bodyHandles.find(x=>x.kind==='chest'));
+ if(!bodySession)return;
+ applyBodyValues(.72,bodySession.controller.sway);
+ if(target&&activeBody)target.position.copy(activeBody.mesh.position);
+};
+$('standTall').onclick=()=>{
+ $('reset').click();
+ $('bodyStatus').textContent='Standing pose restored.';
+};
+$('bowDepth').oninput=()=>{
+ if(!bodySession)selectBody(bodyHandles.find(x=>x.kind==='chest'));
+ if(bodySession)applyBodyValues(Number($('bowDepth').value)/100,bodySession.controller.sway);
+ if(target&&activeBody)target.position.copy(activeBody.mesh.position);
+};
+$('hipSway').oninput=()=>{
+ if(!bodySession)selectBody(bodyHandles.find(x=>x.kind==='hips'));
+ if(bodySession)applyBodyValues(bodySession.controller.bow,Number($('hipSway').value)/100);
+ if(target&&activeBody)target.position.copy(activeBody.mesh.position);
+};
 function selectHoof(h){activeHoof=h;['root','mid','end'].forEach((id,i)=>$(id).value=String(h.indexes[i]));activateChain(false);hoofHandles.forEach(x=>{x.mesh.visible=x!==h;x.button.classList.toggle('active',x===h)});if(headHandle){headHandle.mesh.visible=true;headHandle.button.classList.remove('active')}$('poseStatus').textContent=h.label+': drag the yellow point. Drag outside it to rotate the character.';}
 function selectHead(){if(!headHandle)return;removeTarget();activeHoof=null;hoofHandles.forEach(h=>{h.mesh.visible=true;h.button.classList.remove('active')});const h=headHandle;rigAdapter?.pose.acquire('ik');h.mesh.visible=false;h.button.classList.add('active');const position=h.bone.localToWorld(new THREE.Vector3(0,h.length,0));const pivot=world(h.bone);headControl={bone:h.bone,length:h.length,restDir:position.clone().sub(pivot).normalize()};target=new THREE.Mesh(new THREE.SphereGeometry(Math.max(.033,modelSize*.018),18,14),new THREE.MeshBasicMaterial({color:0xffdc64,depthTest:false}));target.renderOrder=1000;target.position.copy(position);scene.add(target);$('poseStatus').textContent='Head: drag the yellow point to tilt or turn the head. Other body parts stay in place for now.';status('Head posing active. Motion is limited to protect connected joints.');}
 function world(b){return b.getWorldPosition(new THREE.Vector3())}
@@ -141,8 +219,8 @@ function load(buffer){
 }
 $('file').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;status('Loading '+f.name+'…');try{sourceFilename=f.name;load(await f.arrayBuffer())}catch(err){status('Import error: '+err.message)}});
 $('showBones').onclick=()=>{show=!show;helpers.forEach(h=>h.visible=show)};
-$('reset').onclick=()=>{if(rigAdapter)rigAdapter.pose.reset();else for(const [b,p] of original){b.position.copy(p.position);b.quaternion.copy(p.quaternion);b.scale.copy(p.scale)}if(chain&&target)target.position.copy(world(chain[2]));if(headControl&&target){const h=headControl;target.position.copy(h.bone.localToWorld(new THREE.Vector3(0,h.length,0)));h.restDir.copy(target.position).sub(world(h.bone)).normalize()}status('Original bone transforms restored.')};
-function removeTarget(){rigAdapter?.pose.release('ik');transform.detach();dragPointer=null;orbit.enabled=true;if(target){scene.remove(target);target.geometry.dispose();target.material.dispose();target=null}chain=null;headControl=null;polePoint=null;refreshDiagnostics()}
+$('reset').onclick=()=>{$('clear').click();if(rigAdapter)rigAdapter.pose.reset();else for(const [b,p] of original){b.position.copy(p.position);b.quaternion.copy(p.quaternion);b.scale.copy(p.scale)}if(chain&&target)target.position.copy(world(chain[2]));if(headControl&&target){const h=headControl;target.position.copy(h.bone.localToWorld(new THREE.Vector3(0,h.length,0)));h.restDir.copy(target.position).sub(world(h.bone)).normalize()}status('Original bone transforms restored.')};
+function removeTarget(){bodySession=null;activeBody=null;bodyDragStart=null;bodyHandles.forEach(h=>{h.mesh.visible=true;h.button.classList.remove('active')});syncBodySliders();rigAdapter?.pose.release('ik');transform.detach();dragPointer=null;orbit.enabled=true;if(target){scene.remove(target);target.geometry.dispose();target.material.dispose();target=null}chain=null;headControl=null;polePoint=null;refreshDiagnostics()}
 $('clear').onclick=()=>{removeTarget();activeHoof=null;hoofHandles.forEach(h=>{h.mesh.visible=true;h.button.classList.remove('active')});if(headHandle){headHandle.mesh.visible=true;headHandle.button.classList.remove('active')}status('Pose control cleared.')};$('simpleClear').onclick=()=>$('clear').click();$('simpleReset').onclick=()=>$('reset').click();$('advancedToggle').onclick=()=>{const open=$('advancedPanel').classList.toggle('open');$('advancedToggle').setAttribute('aria-expanded',String(open));$('advancedToggle').textContent=open?'Hide advanced tools ▴':'Advanced tools ▾';};
 function activateChain(useGizmo=true){const a=bones[Number($('root').value)],b=bones[Number($('mid').value)],c=bones[Number($('end').value)];if(!a||!b||!c||b.parent!==a||c.parent!==b){status('Choose directly connected root → middle → end bones.');return}removeTarget();rigAdapter?.pose.acquire('ik');chain=[a,b,c];target=new THREE.Mesh(new THREE.SphereGeometry(Math.max(.033,modelSize*.018),18,14),new THREE.MeshBasicMaterial({color:0xffdc64,depthTest:false}));target.renderOrder=1000;target.position.copy(world(c));const p0=world(a),p1=world(b),p2=world(c);const axis=p2.clone().sub(p0).normalize();const bend=p1.clone().sub(p0).addScaledVector(axis,-p1.clone().sub(p0).dot(axis));polePoint=p1.clone().addScaledVector(bend.lengthSq()>1e-8?bend.normalize():new THREE.Vector3(0,0,1),Math.max(modelSize*.1,p0.distanceTo(p2)*.2));scene.add(target);if(useGizmo){transform.attach(target);transform.setMode('translate')}status('Two-bone IK active: '+chain.map(x=>x.name).join(' → '));refreshDiagnostics()}
 $('chain').onclick=()=>activateChain(true);
@@ -154,15 +232,46 @@ $('export').onclick=()=>{const blob=new Blob([JSON.stringify(refreshDiagnostics(
 // Rotate a bone by a WORLD-SPACE delta expressed in its PARENT frame.
 // Using the bone's own world quaternion here is incorrect and causes twisting.
 function turnBone(bone,worldDelta){const parentWorld=new THREE.Quaternion();if(bone.parent)bone.parent.getWorldQuaternion(parentWorld);const localDelta=parentWorld.clone().invert().multiply(worldDelta).multiply(parentWorld);bone.quaternion.premultiply(localDelta).normalize();bone.updateWorldMatrix(true,true)}
-function solve(){if(rigAdapter&&!rigAdapter.pose.canWrite('ik'))return;if(headControl&&target){const h=headControl;const pivot=world(h.bone),direction=target.position.clone().sub(pivot);if(direction.lengthSq()<1e-9)return;direction.normalize();const rotation=new THREE.Quaternion().setFromUnitVectors(h.restDir,direction),capped=new THREE.Quaternion().rotateTowards(rotation,Math.PI*.24);const desiredDir=h.restDir.clone().applyQuaternion(capped);const current=h.bone.localToWorld(new THREE.Vector3(0,h.length,0)).sub(pivot).normalize();turnBone(h.bone,new THREE.Quaternion().setFromUnitVectors(current,desiredDir));return}if(!chain||!target)return;const [a,b,c]=chain;a.updateWorldMatrix(true,true);const p0=world(a),p1=world(b),p2=world(c),l1=p0.distanceTo(p1),l2=p1.distanceTo(p2);if(l1<1e-5||l2<1e-5)return;
-const desired=target.position.clone().sub(p0);const raw=desired.length();if(raw<1e-7)return;const dir=desired.normalize();const min=Math.abs(l1-l2)+1e-4,max=l1+l2-1e-4,dist=THREE.MathUtils.clamp(raw,Math.min(min,max),Math.max(min,max));const reachable=p0.clone().addScaledVector(dir,dist);
-let bend=polePoint?polePoint.clone().sub(p0):p1.clone().sub(p0);bend.addScaledVector(dir,-bend.dot(dir));if(bend.lengthSq()<1e-8){bend=new THREE.Vector3(0,0,1).addScaledVector(dir,-dir.z);if(bend.lengthSq()<1e-8)bend=new THREE.Vector3(1,0,0).addScaledVector(dir,-dir.x)}bend.normalize();
-const along=(l1*l1-l2*l2+dist*dist)/(2*dist),height=Math.sqrt(Math.max(0,l1*l1-along*along)),midGoal=p0.clone().addScaledVector(dir,along).addScaledVector(bend,height);
-const upperOld=p1.clone().sub(p0).normalize(),upperNew=midGoal.clone().sub(p0).normalize();turnBone(a,new THREE.Quaternion().setFromUnitVectors(upperOld,upperNew));
-const newMid=world(b),newEnd=world(c);const lowerOld=newEnd.clone().sub(newMid).normalize(),lowerNew=reachable.sub(newMid).normalize();turnBone(b,new THREE.Quaternion().setFromUnitVectors(lowerOld,lowerNew));}
+function solveLimb(a,b,c,goal,pole){
+ a.updateWorldMatrix(true,true);
+ const p0=world(a),p1=world(b),p2=world(c),l1=p0.distanceTo(p1),l2=p1.distanceTo(p2);
+ if(l1<1e-5||l2<1e-5)return;
+ const desired=goal.clone().sub(p0),raw=desired.length();if(raw<1e-7)return;
+ const dir=desired.normalize(),min=Math.abs(l1-l2)+1e-4,max=l1+l2-1e-4;
+ const dist=THREE.MathUtils.clamp(raw,Math.min(min,max),Math.max(min,max));
+ const reachable=p0.clone().addScaledVector(dir,dist);
+ let bend=pole?pole.clone().sub(p0):p1.clone().sub(p0);
+ bend.addScaledVector(dir,-bend.dot(dir));
+ if(bend.lengthSq()<1e-8){
+  bend=new THREE.Vector3(0,0,1).addScaledVector(dir,-dir.z);
+  if(bend.lengthSq()<1e-8)bend=new THREE.Vector3(1,0,0).addScaledVector(dir,-dir.x);
+ }
+ bend.normalize();
+ const along=(l1*l1-l2*l2+dist*dist)/(2*dist);
+ const height=Math.sqrt(Math.max(0,l1*l1-along*along));
+ const midGoal=p0.clone().addScaledVector(dir,along).addScaledVector(bend,height);
+ const oldUpper=p1.clone().sub(p0).normalize(),newUpper=midGoal.clone().sub(p0).normalize();
+ turnBone(a,new THREE.Quaternion().setFromUnitVectors(oldUpper,newUpper));
+ const newMid=world(b),newEnd=world(c);
+ const oldLower=newEnd.clone().sub(newMid).normalize(),newLower=reachable.sub(newMid).normalize();
+ turnBone(b,new THREE.Quaternion().setFromUnitVectors(oldLower,newLower));
+}
+function solve(){
+ if(rigAdapter&&!rigAdapter.pose.canWrite('ik'))return;
+ if(headControl&&target){
+  const h=headControl,pivot=world(h.bone),direction=target.position.clone().sub(pivot);
+  if(direction.lengthSq()<1e-9)return;direction.normalize();
+  const rotation=new THREE.Quaternion().setFromUnitVectors(h.restDir,direction);
+  const capped=new THREE.Quaternion().rotateTowards(rotation,Math.PI*.24);
+  const desiredDir=h.restDir.clone().applyQuaternion(capped);
+  const current=h.bone.localToWorld(new THREE.Vector3(0,h.length,0)).sub(pivot).normalize();
+  turnBone(h.bone,new THREE.Quaternion().setFromUnitVectors(current,desiredDir));return;
+ }
+ if(chain&&target)solveLimb(...chain,target.position,polePoint);
+}
 const pointerRay=new THREE.Raycaster(),pointerNdc=new THREE.Vector2();
 function pointFromEvent(e){const r=renderer.domElement.getBoundingClientRect();pointerNdc.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));pointerRay.setFromCamera(pointerNdc,camera)}
-renderer.domElement.addEventListener('pointerdown',e=>{if(e.button!==0||!model)return;pointFromEvent(e);const pick=[...(target?[target]:[]),...hoofHandles.filter(h=>h.mesh.visible).map(h=>h.mesh),...(headHandle?.mesh.visible?[headHandle.mesh]:[])];// A target's visible dot can be small while its finger-sized touch zone stays usable.
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.button!==0||!model)return;pointFromEvent(e);const pick=[...(target?[target]:[]),...hoofHandles.filter(h=>h.mesh.visible).map(h=>h.mesh),...(headHandle?.mesh.visible?[headHandle.mesh]:[]),...bodyHandles.filter(h=>h.mesh.visible).map(h=>h.mesh)];// A target's visible dot can be small while its finger-sized touch zone stays usable.
  const rect=renderer.domElement.getBoundingClientRect();let picked=null,closest=28;
  for(const object of pick){
   const ndc=object.getWorldPosition(new THREE.Vector3()).project(camera);
@@ -172,9 +281,19 @@ renderer.domElement.addEventListener('pointerdown',e=>{if(e.button!==0||!model)r
   if(delta<closest){closest=delta;picked=object;}
  }
  const hit=picked?{object:picked}:pointerRay.intersectObjects(pick,false)[0];if(!hit)return;
- const h=hoofHandles.find(x=>x.mesh===hit.object);if(h)selectHoof(h);if(headHandle&&hit.object===headHandle.mesh)selectHead();if(!target)return;const normal=camera.getWorldDirection(new THREE.Vector3());dragPlane.setFromNormalAndCoplanarPoint(normal,target.position);const at=new THREE.Vector3();if(!pointerRay.ray.intersectPlane(dragPlane,at))return;dragOffset.copy(target.position).sub(at);dragPointer=e.pointerId;orbit.enabled=false;transform.detach();renderer.domElement.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation()},true);
-renderer.domElement.addEventListener('pointermove',e=>{if(dragPointer!==e.pointerId||!target)return;pointFromEvent(e);const at=new THREE.Vector3();if(pointerRay.ray.intersectPlane(dragPlane,at)){target.position.copy(at.add(dragOffset));solve()}e.preventDefault();e.stopImmediatePropagation()},true);
-function endDrag(e){if(dragPointer!==e.pointerId)return;dragPointer=null;orbit.enabled=true;if(renderer.domElement.hasPointerCapture(e.pointerId))renderer.domElement.releasePointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation()}
+ const h=hoofHandles.find(x=>x.mesh===hit.object);if(h)selectHoof(h);if(headHandle&&hit.object===headHandle.mesh)selectHead();const body=bodyHandles.find(h=>h.mesh===hit.object);if(body)selectBody(body);if(!target)return;const normal=camera.getWorldDirection(new THREE.Vector3());dragPlane.setFromNormalAndCoplanarPoint(normal,target.position);const at=new THREE.Vector3();if(!pointerRay.ray.intersectPlane(dragPlane,at))return;dragOffset.copy(target.position).sub(at);bodyDragStart=activeBody&&bodySession?{point:target.position.clone(),bow:bodySession.controller.bow,sway:bodySession.controller.sway}:null;dragPointer=e.pointerId;orbit.enabled=false;transform.detach();renderer.domElement.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation()},true);
+renderer.domElement.addEventListener('pointermove',e=>{if(dragPointer!==e.pointerId||!target)return;pointFromEvent(e);const at=new THREE.Vector3();if(pointerRay.ray.intersectPlane(dragPlane,at)){target.position.copy(at.add(dragOffset));
+ if(activeBody&&bodySession&&bodyDragStart){
+  const basis=Math.max(modelSize,.3);
+  const bow=activeBody.kind==='chest'?
+    THREE.MathUtils.clamp(bodyDragStart.bow+(bodyDragStart.point.y-target.position.y)/(basis*.22),0,1):
+    bodySession.controller.bow;
+  const sway=activeBody.kind==='hips'?
+    THREE.MathUtils.clamp(bodyDragStart.sway+(target.position.x-bodyDragStart.point.x)/(basis*.14),-1,1):
+    bodySession.controller.sway;
+  applyBodyValues(bow,sway);
+ }else solve()}e.preventDefault();e.stopImmediatePropagation()},true);
+function endDrag(e){if(dragPointer!==e.pointerId)return;dragPointer=null;bodyDragStart=null;orbit.enabled=true;if(renderer.domElement.hasPointerCapture(e.pointerId))renderer.domElement.releasePointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation()}
 renderer.domElement.addEventListener('pointerup',endDrag,true);renderer.domElement.addEventListener('pointercancel',endDrag,true);
-function tick(){requestAnimationFrame(tick);if(chain||headControl)solve();for(const h of hoofHandles)if(h!==activeHoof)h.mesh.position.copy(world(h.end));if(headHandle&&!headControl)headHandle.mesh.position.copy(headHandle.bone.localToWorld(new THREE.Vector3(0,headHandle.length,0)));orbit.update();renderer.render(scene,camera)}tick();
+function tick(){requestAnimationFrame(tick);if(chain||headControl)solve();for(const h of hoofHandles)if(h!==activeHoof)h.mesh.position.copy(world(h.end));if(bodyHandles.length)refreshBodyMarkers();if(headHandle&&!headControl)headHandle.mesh.position.copy(headHandle.bone.localToWorld(new THREE.Vector3(0,headHandle.length,0)));orbit.update();renderer.render(scene,camera)}tick();
 </script></body></html>

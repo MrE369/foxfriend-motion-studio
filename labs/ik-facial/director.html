@@ -1277,5 +1277,196 @@ $('agentPreview').onclick=async()=>{
  }catch(err){$('agentRecipeStatus').textContent='Proposal could not be previewed: '+err.message}
 };
 
-function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();renderer.render(scene,camera)}animate();
+
+// ---- Universal draggable skeleton dots (Blue Toro's Easy Pose grammar) ----
+const jointDotGroup=new THREE.Group();scene.add(jointDotGroup);
+const jointDotGeometry=new THREE.SphereGeometry(1,14,10);
+const jointDotBlue=new THREE.MeshBasicMaterial({color:0x72e3fa,depthTest:false,depthWrite:false,transparent:true,opacity:.93});
+const jointDotYellow=new THREE.MeshBasicMaterial({color:0xffdc64,depthTest:false,depthWrite:false});
+let jointMarkers=[],jointDotsOn=true,jointSelected=-1,jointPointer=null;
+function clearJointPoints(){
+ if(jointPointer)endJointDrag(null,true);
+ jointDotGroup.clear();jointMarkers=[];jointSelected=-1;
+ $('jointSearch').value='';$('jointSelect').replaceChildren();
+ $('jointDotToggle').textContent='🔵 Show all joint dots · On';
+ $('jointStatus').textContent='Load a rigged GLB, then tap any blue dot.';
+ jointDotGroup.visible=false;
+}
+function refreshJointList(){
+ const query=$('jointSearch').value.trim().toLowerCase();
+ const prev=$('jointSelect').value;
+ const list=$('jointSelect');list.replaceChildren();
+ let match=0;
+ animBones.forEach((bone,i)=>{
+  const label=String(i+1).padStart(2,'0')+' · '+(bone.name||'Unnamed joint '+(i+1));
+  if(!query||label.toLowerCase().includes(query)){
+   list.add(new Option(label,String(i)));match++;
+  }
+ });
+ if(match)list.value=String([...list.options].some(opt=>opt.value===String(jointSelected))?jointSelected:prev);
+ if(!list.value&&match)list.selectedIndex=0;
+ if(!match)list.add(new Option('No matching joints',''));
+}
+function setupJointPoints(){
+ clearJointPoints();
+ if(!animBones.length){$('jointDotToggle').disabled=true;$('jointPick').disabled=true;return;}
+ $('jointDotToggle').disabled=false;$('jointPick').disabled=false;jointDotsOn=true;
+ for(const [index,bone] of animBones.entries()){
+  const dot=new THREE.Mesh(jointDotGeometry,jointDotBlue);
+  dot.renderOrder=1010;dot.userData.jointIndex=index;dot.frustumCulled=false;
+  jointDotGroup.add(dot);jointMarkers.push({bone,dot,index});
+ }
+ refreshJointList();refreshJointDots();
+ $('jointStatus').textContent=animBones.length+' skeleton joints detected. Tap any blue dot, or choose a joint from the list. Drag to pose.';
+}
+function refreshJointDots(){
+ const show=jointDotsOn&&workspace==='animate'&&!!root&&!candidateVisible&&animBones.length>0;
+ jointDotGroup.visible=show;
+ $('jointDotToggle').textContent=(jointDotsOn?'🔵 Hide joint dots':'◯ Show all joint dots')+' · '+(jointDotsOn?'On':'Off');
+ if(!show)return;
+ // Fixed screen-size dots on phone, with much larger invisible tap zones.
+ const height=Math.max(1,renderer.domElement.getBoundingClientRect().height);
+ const factor=2*Math.tan(THREE.MathUtils.degToRad(camera.fov)*.5)/height;
+ for(const entry of jointMarkers){
+  const pos=entry.bone.getWorldPosition(new THREE.Vector3());
+  entry.dot.position.copy(pos);
+  const selected=entry.index===jointSelected;
+  entry.dot.material=selected?jointDotYellow:jointDotBlue;
+  const pixelRadius=selected?7.2:5.1;
+  const distance=Math.max(camera.near,camera.position.distanceTo(pos));
+  entry.dot.scale.setScalar(Math.max(.0002,distance*factor*pixelRadius));
+ }
+}
+function selectSkeletonJoint(index){
+ if(!Number.isInteger(index)||index<0||index>=animBones.length)return;
+ if(ikDragging)ikDragStop();
+ if(workspace!=='animate')showWorkspace('animate');
+ if(mode!=='nav')selectMode(false);
+ animationPause();
+ if(animAction){animAction.stop();animAction=null;}
+ $('animClip').value='';
+ animChosen=index;$('animBone').value=String(index);syncJoint();
+ jointSelected=index;jointDotsOn=true;
+ $('jointSearch').value='';
+ refreshJointList();$('jointSelect').value=String(index);
+ const bone=animBones[index];
+ const parents=skeletonAncestors(bone,3);
+ $('jointStatus').textContent=(bone.name||'Unnamed joint '+(index+1))
+  +(parents.length?' · moving '+parents.length+' connected parent joint(s)':' · skeleton root: movable body anchor')
+  +'. Drag the yellow dot. Blue dots are other available joints.';
+ refreshJointDots();
+}
+$('jointSearch').oninput=refreshJointList;
+$('jointPick').onclick=()=>{
+ const index=Number($('jointSelect').value);
+ if(!Number.isInteger(index)||!animBones[index])return $('jointStatus').textContent='Select a detected joint first.';
+ selectSkeletonJoint(index);
+};
+$('jointDotToggle').onclick=()=>{
+ jointDotsOn=!jointDotsOn;
+ if(jointPointer)endJointDrag(null,true);
+ if(jointDotsOn&&workspace!=='animate')showWorkspace('animate');
+ refreshJointDots();
+ $('jointStatus').textContent=jointDotsOn?'Grab a blue dot to pose, or drag empty space to orbit.':'Dots hidden; drag anywhere to orbit the model.';
+};
+$('directorPoseDots').onclick=()=>{
+ if(!root||!animBones.length)return directorMessage('Load a rigged GLB first; CoLab needs a skeleton to show draggable dots.');
+ jointDotsOn=true;showWorkspace('animate');refreshJointDots();
+ $('allSkeletonPoints').scrollIntoView({behavior:'smooth',block:'start'});
+ directorMessage('Every detected skeleton joint now has a small blue dot. Tap and drag to pose; select by name when dots overlap.');
+};
+$('jointResetPose').onclick=()=>{
+ $('animResetAll').click();
+ refreshJointDots();
+ $('jointStatus').textContent='Original full-body bone transforms restored. Capture keyframes to preserve a new pose.';
+};
+$('jointCapturePose').onclick=()=>{
+ if(!animBones.length)return;
+ $('animCapture').click();
+ $('jointStatus').textContent='Pose '+animFrames.length+' captured. Move other dots, then Capture pose again. Play in Motion Studio.';
+};
+function jointPointHit(event){
+ refreshJointDots();
+ const rect=renderer.domElement.getBoundingClientRect();
+ if(rect.width<=0||rect.height<=0)return null;
+ let best=null,dist=29;
+ for(const joint of jointMarkers){
+  const projected=joint.dot.position.clone().project(camera);
+  if(projected.z < -1 || projected.z > 1)continue;
+  const px=rect.left+(projected.x+1)*rect.width/2;
+  const py=rect.top+(1-projected.y)*rect.height/2;
+  const distance=Math.hypot(event.clientX-px,event.clientY-py);
+  // Prefer the currently selected joint when markers are nearly coincident.
+  const weighted=distance-(joint.index===jointSelected?3:0);
+  if(weighted<dist){dist=weighted;best=joint;}
+ }
+ return best;
+}
+function jointPointerRay(event){
+ const rect=renderer.domElement.getBoundingClientRect();
+ const p=new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,1-(event.clientY-rect.top)/rect.height*2);
+ return new THREE.Raycaster().setFromCamera(p,camera).ray;
+}
+function endJointDrag(event,cancelled=false){
+ const state=jointPointer;if(!state)return;
+ if(event&&event.pointerId!==state.id)return;
+ jointPointer=null;
+ if(cancelled){
+  // Cancelled gestures always restore their exact pre-drag state.
+  animBones.forEach((b,i)=>{b.quaternion.fromArray(state.quaternions[i]);b.position.fromArray(state.positions[i]);});
+  $('jointStatus').textContent='Gesture cancelled. The previous pose was restored.';
+ }else $('jointStatus').textContent=(state.bone.name||'Joint')+' moved. Capture pose to save the result as an animation keyframe.';
+ controls.enabled=true;
+ const canvas=renderer.domElement;
+ if(event&&canvas.hasPointerCapture?.(state.id))canvas.releasePointerCapture(state.id);
+ refreshJointDots();
+ if(!cancelled)scheduleAutosave();
+}
+renderer.domElement.addEventListener('pointerdown',event=>{
+ if(event.button!==0||!jointDotsOn||workspace!=='animate'||!root||candidateVisible||!jointMarkers.length)return;
+ const entry=jointPointHit(event);
+ if(!entry)return;
+ selectSkeletonJoint(entry.index);
+ refreshJointDots();
+ const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(
+  camera.getWorldDirection(new THREE.Vector3()),entry.bone.getWorldPosition(new THREE.Vector3()));
+ const intersection=jointPointerRay(event).intersectPlane(plane,new THREE.Vector3());
+ if(!intersection)return;
+ const start=entry.bone.getWorldPosition(new THREE.Vector3());
+ jointPointer={
+  id:event.pointerId,index:entry.index,bone:entry.bone,plane,
+  offset:start.clone().sub(intersection),start,
+  quaternions:animBones.map(b=>b.quaternion.toArray()),
+  positions:animBones.map(b=>b.position.toArray()),
+  maxMove:Math.max(.2,modelBounds?.getSize(new THREE.Vector3()).length()*.65||.2)
+ };
+ controls.enabled=false;renderer.domElement.setPointerCapture(event.pointerId);
+ event.preventDefault();event.stopImmediatePropagation();
+},true);
+renderer.domElement.addEventListener('pointermove',event=>{
+ if(!jointPointer||jointPointer.id!==event.pointerId)return;
+ const state=jointPointer;
+ const intersection=jointPointerRay(event).intersectPlane(state.plane,new THREE.Vector3());
+ if(!intersection)return;
+ const goal=intersection.add(state.offset);
+ const delta=goal.clone().sub(state.start);
+ if(delta.length()>state.maxMove)goal.copy(state.start).add(delta.setLength(state.maxMove));
+ try{
+  const result=poseSkeletonPoint(THREE,state.bone,goal,
+   {maxParents:3,iterations:12,maxStep:.24,tolerance:Math.max(.001,state.maxMove*.002),allowCoincidentTranslation:true,maxTranslate:state.maxMove});
+  $('jointStatus').textContent=(state.bone.name||'Joint')+' · '+(result.mode==='root-translation'?'moving body root':result.mode==='coincident-joint-translation'?'moving coincident joint':'posing connected joints')
+   +' · reach error '+result.error.toFixed(3);
+ }catch(err){$('jointStatus').textContent='Joint motion stopped: '+err.message;endJointDrag(event,true)}
+ refreshJointDots();
+ event.preventDefault();event.stopImmediatePropagation();
+},true);
+for(const eventName of ['pointerup','pointercancel','lostpointercapture']){
+ renderer.domElement.addEventListener(eventName,event=>{
+  if(!jointPointer||jointPointer.id!==event.pointerId)return;
+  endJointDrag(event,eventName!=='pointerup');
+  event.preventDefault();event.stopImmediatePropagation();
+ },true);
+}
+
+function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
 </script></body></html>

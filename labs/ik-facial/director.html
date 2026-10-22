@@ -1338,6 +1338,12 @@ function syncJointInteraction(){
  const isActive=workspace==='animate'&&!!root&&animBones.length>0&&!candidateVisible;
  const posing=isActive&&jointInteractionMode==='pose';
  if(!jointPointer&&!ikDragging)controls.enabled=!posing;
+ // The top canvas is the pose-specific touch surface. This prevents the orbit
+ // handler on the WebGL canvas from ever stealing a mobile drag.
+ if(mode==='nav'){
+  overlay.style.pointerEvents=posing?'auto':'none';
+  overlay.style.cursor=posing?'grab':'';
+ }
  $('jointPoseMode').classList.toggle('active',posing);
  $('jointOrbitMode').classList.toggle('active',isActive&&!posing);
  $('jointModeHint').textContent=posing?'POSE · Camera locked. Drag any dot or body part. Select an exact joint by name if needed.':'ORBIT · Drag to rotate the camera. Switch back to Pose to move joints.';
@@ -1461,7 +1467,7 @@ function jointPointHit(event){
  refreshJointDots();
  const rect=renderer.domElement.getBoundingClientRect();
  if(rect.width<=0||rect.height<=0)return null;
- let best=null,dist=29;
+ let best=null,dist=46;
  for(const joint of jointMarkers){
   const projected=joint.dot.position.clone().project(camera);
   if(projected.z < -1 || projected.z > 1)continue;
@@ -1469,7 +1475,7 @@ function jointPointHit(event){
   const py=rect.top+(1-projected.y)*rect.height/2;
   const distance=Math.hypot(event.clientX-px,event.clientY-py);
   // Prefer the currently selected joint when markers are nearly coincident.
-  const weighted=distance-(joint.index===jointSelected?3:0);
+  const weighted=distance-(joint.index===jointSelected?9:0);
   if(weighted<dist){dist=weighted;best=joint;}
  }
  return best;
@@ -1488,74 +1494,108 @@ function endJointDrag(event,cancelled=false){
   animBones.forEach((b,i)=>{b.quaternion.fromArray(state.quaternions[i]);b.position.fromArray(state.positions[i]);});
   $('jointStatus').textContent='Gesture cancelled. The previous pose was restored.';
  }else $('jointStatus').textContent=(state.bone.name||'Joint')+' moved. Capture pose to save the result as an animation keyframe.';
- const canvas=renderer.domElement;
- if(canvas.hasPointerCapture?.(state.id))canvas.releasePointerCapture(state.id);
+ const surface=state.surface;
+ if(surface?.hasPointerCapture?.(state.id))surface.releasePointerCapture(state.id);
  syncJointInteraction();refreshJointDots();
  if(!cancelled)scheduleAutosave();
 }
-renderer.domElement.addEventListener('pointerdown',event=>{
+// Explicit pose touch surface: in Pose mode all touches go to the upper canvas.
+// The WebGL canvas remains a fallback for mouse and legacy deployments.
+function jointGestureDown(event){
  if(event.button!==0||jointInteractionMode!=='pose'||workspace!=='animate'||!root||candidateVisible||!jointMarkers.length)return;
- let entry=jointDotsOn?jointPointHit(event):null;
+ if(jointPointer)return;
+ let entry=jointDotsOn?jointPointHit(event):null,hitMethod=entry?'joint dot':'';
  if(!entry){
-  // Actual character-surface touch is valid: no need to land on a tiny dot.
   const ray=jointPointerRay(event);
   const hit=ray.intersectObjects(meshes,true).find(item=>item.object.visible&&item.object.isMesh);
   if(hit){
-   if(jointSurfacePin&&jointSelected>=0)entry=jointMarkers[jointSelected];
+   if(jointSurfacePin&&jointSelected>=0){entry=jointMarkers[jointSelected];hitMethod='pinned joint';}
    else{
-    let nearest=Infinity;
+    let bestDistance=Infinity;
     for(const marker of jointMarkers){
      const d=marker.bone.getWorldPosition(new THREE.Vector3()).distanceToSquared(hit.point);
-     if(d<nearest){nearest=d;entry=marker;}
+     if(d<bestDistance){bestDistance=d;entry=marker;}
     }
+    hitMethod='body surface';
    }
   }
  }
  if(!entry){
-  $('jointStatus').textContent='Pose mode: touch a blue dot or a visible part of your character. Use Orbit for the camera.';
+  $('jointStatus').textContent='Pose mode is listening. Touch a blue dot or Toro’s visible body; the camera stays still.';
+  jointModeBanner.textContent='✋ POSE · Touch a hoof or blue dot';
+  event.preventDefault();event.stopImmediatePropagation();
   return;
  }
  if(!jointSurfacePin||entry.index!==jointSelected)jointSurfacePin=false;
  selectSkeletonJoint(entry.index);
- refreshJointDots();
+ const world=entry.bone.getWorldPosition(new THREE.Vector3());
  const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(
-  camera.getWorldDirection(new THREE.Vector3()),entry.bone.getWorldPosition(new THREE.Vector3()));
+  camera.getWorldDirection(new THREE.Vector3()),world);
  const intersection=jointPointerRay(event).intersectPlane(plane,new THREE.Vector3());
- if(!intersection)return;
- const start=entry.bone.getWorldPosition(new THREE.Vector3());
+ if(!intersection){
+  $('jointStatus').textContent='Could not find the drag plane. Rotate view in Orbit mode and try again.';
+  event.preventDefault();event.stopImmediatePropagation();
+  return;
+ }
+ const size=modelBounds?.getSize(new THREE.Vector3()).length()||1;
  jointPointer={
-  id:event.pointerId,index:entry.index,bone:entry.bone,plane,
-  offset:start.clone().sub(intersection),start,
+  id:event.pointerId,index:entry.index,bone:entry.bone,plane,surface:event.currentTarget,
+  offset:world.clone().sub(intersection),start:world.clone(),
   quaternions:animBones.map(b=>b.quaternion.toArray()),
   positions:animBones.map(b=>b.position.toArray()),
-  maxMove:Math.max(.2,modelBounds?.getSize(new THREE.Vector3()).length()*.65||.2)
+  maxMove:Math.max(.2,size*.65),
+  moves:0,source:hitMethod
  };
- controls.enabled=false;renderer.domElement.setPointerCapture(event.pointerId);
+ controls.enabled=false;
+ if(event.currentTarget.setPointerCapture)event.currentTarget.setPointerCapture(event.pointerId);
+ $('jointStatus').textContent='Touch started on '+(entry.bone.name||'joint '+(entry.index+1))+' via '+hitMethod+'. Now drag your finger.';
+ jointModeBanner.textContent='✋ Grabbed '+(entry.bone.name||'joint '+(entry.index+1))+' · drag';
+ refreshJointDots();
  event.preventDefault();event.stopImmediatePropagation();
-},true);
-renderer.domElement.addEventListener('pointermove',event=>{
+}
+function jointGestureMove(event){
  if(!jointPointer||jointPointer.id!==event.pointerId)return;
  const state=jointPointer;
  const intersection=jointPointerRay(event).intersectPlane(state.plane,new THREE.Vector3());
- if(!intersection)return;
+ if(!intersection){
+  $('jointStatus').textContent='Touch moving, but could not project onto the drag plane.';
+  event.preventDefault();event.stopImmediatePropagation();return;
+ }
  const goal=intersection.add(state.offset);
  const delta=goal.clone().sub(state.start);
  if(delta.length()>state.maxMove)goal.copy(state.start).add(delta.setLength(state.maxMove));
  try{
   const result=poseSkeletonPoint(THREE,state.bone,goal,
-   {maxParents:/(?:head|neck)/i.test(state.bone.name||'')?1:3,iterations:12,maxStep:.24,tolerance:Math.max(.001,state.maxMove*.002),allowCoincidentTranslation:true,maxTranslate:state.maxMove});
-  $('jointStatus').textContent=(state.bone.name||'Joint')+' · '+(result.mode==='root-translation'?'moving body root':result.mode==='coincident-joint-translation'?'moving coincident joint':'posing connected joints')
-   +' · reach error '+result.error.toFixed(3);
- }catch(err){$('jointStatus').textContent='Joint motion stopped: '+err.message;endJointDrag(event,true)}
+   {maxParents:/(?:head|neck)/i.test(state.bone.name||'')?1:3,iterations:12,maxStep:.24,
+    tolerance:Math.max(.001,state.maxMove*.002),allowCoincidentTranslation:true,maxTranslate:state.maxMove});
+  state.moves++;
+  $('jointStatus').textContent='Dragging '+(state.bone.name||'joint')+' · '+state.moves+' touch updates · '+result.mode+' · remaining distance '+result.error.toFixed(3);
+  jointModeBanner.textContent='✋ DRAG '+state.moves+' · remaining '+result.error.toFixed(3);
+ }catch(err){
+  $('jointStatus').textContent='Joint drag error: '+err.message;
+  jointModeBanner.textContent='⚠ Drag error · see controls';
+  endJointDrag(event,true);
+ }
  refreshJointDots();
  event.preventDefault();event.stopImmediatePropagation();
-},true);
-for(const eventName of ['pointerup','pointercancel','lostpointercapture']){
- renderer.domElement.addEventListener(eventName,event=>{
-  if(!jointPointer||jointPointer.id!==event.pointerId)return;
-  endJointDrag(event,eventName!=='pointerup');
-  event.preventDefault();event.stopImmediatePropagation();
- },true);
+}
+function jointGestureEnd(event,cancelled=false){
+ if(!jointPointer||jointPointer.id!==event.pointerId)return;
+ const state=jointPointer;
+ // A clear banner signal remains even after your finger leaves the screen.
+ const moves=state.moves,name=state.bone.name||'joint';
+ endJointDrag(event,cancelled);
+ jointModeBanner.textContent=cancelled?'✋ POSE · cancelled':
+  moves?'✓ '+name+' · '+moves+' drag updates':'✋ '+name+' selected · no drag movement';
+ if(!cancelled&&!moves)$('jointStatus').textContent='Selected '+name+' but received no pointer-move events. Try dragging farther; report this message if it repeats.';
+ event.preventDefault();event.stopImmediatePropagation();
+}
+for(const touchSurface of [renderer.domElement,overlay]){
+ touchSurface.addEventListener('pointerdown',jointGestureDown,true);
+ touchSurface.addEventListener('pointermove',jointGestureMove,true);
+ touchSurface.addEventListener('pointerup',e=>jointGestureEnd(e,false),true);
+ touchSurface.addEventListener('pointercancel',e=>jointGestureEnd(e,true),true);
+ touchSurface.addEventListener('lostpointercapture',e=>jointGestureEnd(e,true),true);
 }
 
 function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();

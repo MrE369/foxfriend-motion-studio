@@ -113,8 +113,10 @@
 <p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
 <div id="allSkeletonPoints" class="subpanel" aria-label="Grab every skeleton joint">
  <h3>🔵 Pose every joint</h3>
- <p class="hint">Grab any small blue dot directly on your character; the selected one turns yellow. Pull it to pose connected bones. Drag empty space to rotate the camera. Every detected joint can also be chosen by name.</p>
- <div class="row"><button id="jointDotToggle" type="button">🔵 Show all joint dots · On</button><button id="jointCapturePose" type="button">Capture pose</button></div>
+ <p class="hint">Choose Pose to drag any blue dot or touch a body part. The camera stays locked while posing. Choose Orbit when you want to rotate the model. Every detected joint can also be chosen by name.</p>
+ <div class="row"><button id="jointPoseMode" type="button" class="active">✋ Pose · move body parts</button><button id="jointOrbitMode" type="button">↻ Orbit · rotate camera</button></div>
+<p id="jointModeHint" class="hint">Pose: camera locked. Drag a dot or the character itself. Switch to Orbit to rotate the camera.</p>
+<div class="row"><button id="jointDotToggle" type="button">🔵 Show all joint dots · On</button><button id="jointCapturePose" type="button">Capture pose</button></div>
  <label for="jointSearch">Find a joint (optional)</label><input id="jointSearch" type="search" placeholder="Head, spine, tripo, arm, leg…">
  <label for="jointSelect">All detected skeleton joints</label>
  <select id="jointSelect" aria-label="Every detected skeleton joint"><option value="">Load a rigged GLB</option></select>
@@ -378,6 +380,7 @@ function showWorkspace(name){
   moveGroup.visible=name==='review' && showProposal && !candidateVisible && moveGroup.children.length>0;
   hitMarker.style.display=name==='inspect'?hitMarker.style.display:'none';
   $('paintStart').classList.remove('active');$('paintNavigate').classList.add('active');
+  syncJointInteraction();
 }
 for(const b of document.querySelectorAll('#workspaceTabs [data-tab]'))b.addEventListener('click',()=>showWorkspace(b.dataset.tab));
 // PAINT: independent 2D canvases for each UV-mapped, single-material mesh.
@@ -714,7 +717,7 @@ function ikHandleRefresh(){ikHandle.visible=ikDragging&&!!ikPoint&&workspace==='
 function ikDragStop(){ikDragging=false;ikDragPointer=null;ikHandle.visible=false;controls.enabled=true;$('animIkDrag').textContent='✋ Drag IK target · Off'}
 $('animIkDrag').onclick=()=>{
  if(ikDragging){ikDragStop();return}
- jointDotsOn=false;refreshJointDots();
+ jointInteractionMode='orbit';jointDotsOn=false;syncJointInteraction();refreshJointDots();
  if(!ikUpper&&!ikChainPick())return;
  if(!ikPoint)ikTargetFromEnd();
  if(!ikPoint)return;
@@ -1327,9 +1330,34 @@ const jointDotGeometry=new THREE.SphereGeometry(1,14,10);
 const jointDotBlue=new THREE.MeshBasicMaterial({color:0x72e3fa,depthTest:false,depthWrite:false,transparent:true,opacity:.93});
 const jointDotYellow=new THREE.MeshBasicMaterial({color:0xffdc64,depthTest:false,depthWrite:false});
 let jointMarkers=[],jointDotsOn=true,jointSelected=-1,jointPointer=null;
+let jointInteractionMode='pose',jointSurfacePin=false;
+const jointModeBanner=document.createElement('div');
+jointModeBanner.style.cssText='position:absolute;left:8px;bottom:9px;z-index:5;pointer-events:none;border-radius:8px;padding:6px 10px;background:#123c3bef;color:#d1ffee;font-size:12px;border:1px solid #63ae9a;display:none';
+view.append(jointModeBanner);
+function syncJointInteraction(){
+ const isActive=workspace==='animate'&&!!root&&animBones.length>0&&!candidateVisible;
+ const posing=isActive&&jointInteractionMode==='pose';
+ if(!jointPointer&&!ikDragging)controls.enabled=!posing;
+ $('jointPoseMode').classList.toggle('active',posing);
+ $('jointOrbitMode').classList.toggle('active',isActive&&!posing);
+ $('jointModeHint').textContent=posing?'POSE · Camera locked. Drag any dot or body part. Select an exact joint by name if needed.':'ORBIT · Drag to rotate the camera. Switch back to Pose to move joints.';
+ jointModeBanner.style.display=isActive?'block':'none';
+ jointModeBanner.textContent=posing?'✋ POSE · Move joints':'↻ ORBIT · Rotate camera';
+}
+function setJointInteraction(which){
+ if(which!=='pose'&&which!=='orbit')return;
+ if(jointPointer)endJointDrag(null,true);
+ if(which==='pose'&&ikDragging)ikDragStop();
+ jointInteractionMode=which;
+ if(which==='pose')jointDotsOn=true;
+ syncJointInteraction();refreshJointDots();
+ $('jointStatus').textContent=which==='pose'?'Pose mode: drag Blue Toro’s head, a blue dot, or another body part. The camera will stay still.':'Orbit mode: drag anywhere to change the view. Tap Pose to grab body parts again.';
+}
+$('jointPoseMode').onclick=()=>setJointInteraction('pose');
+$('jointOrbitMode').onclick=()=>setJointInteraction('orbit');
 function clearJointPoints(){
  if(jointPointer)endJointDrag(null,true);
- jointDotGroup.clear();jointMarkers=[];jointSelected=-1;
+ jointDotGroup.clear();jointMarkers=[];jointSelected=-1;jointSurfacePin=false;
  $('jointSearch').value='';$('jointSelect').replaceChildren();
  jointDotsOn=true;$('jointDotToggle').textContent='🔵 Show all joint dots · On';
  $('jointStatus').textContent='Load a rigged GLB, then tap any blue dot.';
@@ -1351,18 +1379,18 @@ function refreshJointList(){
 }
 function setupJointPoints(){
  clearJointPoints();
- if(!animBones.length){$('jointDotToggle').disabled=true;$('jointPick').disabled=true;return;}
+ if(!animBones.length){$('jointDotToggle').disabled=true;$('jointPick').disabled=true;syncJointInteraction();return;}
  $('jointDotToggle').disabled=false;$('jointPick').disabled=false;jointDotsOn=true;
  for(const [index,bone] of animBones.entries()){
   const dot=new THREE.Mesh(jointDotGeometry,jointDotBlue);
   dot.renderOrder=1010;dot.userData.jointIndex=index;dot.frustumCulled=false;
   jointDotGroup.add(dot);jointMarkers.push({bone,dot,index});
  }
- refreshJointList();refreshJointDots();
- $('jointStatus').textContent=animBones.length+' skeleton joints detected. Tap any blue dot, or choose a joint from the list. Drag to pose.';
+ refreshJointList();refreshJointDots();syncJointInteraction();
+ $('jointStatus').textContent=animBones.length+' skeleton joints detected. Pose mode: drag any dot or body part. Use Orbit to rotate.';
 }
 function refreshJointDots(){
- const show=jointDotsOn&&workspace==='animate'&&!!root&&!candidateVisible&&animBones.length>0;
+ const show=jointDotsOn&&jointInteractionMode==='pose'&&workspace==='animate'&&!!root&&!candidateVisible&&animBones.length>0;
  jointDotGroup.visible=show;
  $('jointDotToggle').textContent=(jointDotsOn?'🔵 Hide joint dots':'◯ Show all joint dots')+' · '+(jointDotsOn?'On':'Off');
  if(!show)return;
@@ -1388,7 +1416,8 @@ function selectSkeletonJoint(index){
  if(animAction){animAction.stop();animAction=null;}
  $('animClip').value='';
  animChosen=index;$('animBone').value=String(index);syncJoint();
- jointSelected=index;jointDotsOn=true;
+ jointSelected=index;jointDotsOn=true;jointInteractionMode='pose';
+ syncJointInteraction();
  $('jointSearch').value='';
  refreshJointList();$('jointSelect').value=String(index);
  const bone=animBones[index];
@@ -1402,18 +1431,19 @@ $('jointSearch').oninput=refreshJointList;
 $('jointPick').onclick=()=>{
  const index=Number($('jointSelect').value);
  if(!Number.isInteger(index)||!animBones[index])return $('jointStatus').textContent='Select a detected joint first.';
- selectSkeletonJoint(index);
+ selectSkeletonJoint(index);jointSurfacePin=true;
+ $('jointStatus').textContent='Joint locked to '+(animBones[index].name||'unnamed joint')+'. In Pose mode, drag anywhere on Blue Toro to move that joint.';
 };
 $('jointDotToggle').onclick=()=>{
  jointDotsOn=!jointDotsOn;
  if(jointPointer)endJointDrag(null,true);
  if(jointDotsOn&&workspace!=='animate')showWorkspace('animate');
- refreshJointDots();
- $('jointStatus').textContent=jointDotsOn?'Grab a blue dot to pose, or drag empty space to orbit.':'Dots hidden; drag anywhere to orbit the model.';
+ syncJointInteraction();refreshJointDots();
+ $('jointStatus').textContent=jointDotsOn?'In Pose mode drag a dot or body part.':'Dots hidden. Pose still moves the character; use Orbit to rotate the camera.';
 };
 $('directorPoseDots').onclick=()=>{
  if(!root||!animBones.length)return directorMessage('Load a rigged GLB first; CoLab needs a skeleton to show draggable dots.');
- jointDotsOn=true;showWorkspace('animate');refreshJointDots();
+ jointDotsOn=true;showWorkspace('animate');setJointInteraction('pose');refreshJointDots();
  $('allSkeletonPoints').scrollIntoView({behavior:'smooth',block:'start'});
  directorMessage('Every detected skeleton joint now has a small blue dot. Tap and drag to pose; select by name when dots overlap.');
 };
@@ -1458,16 +1488,34 @@ function endJointDrag(event,cancelled=false){
   animBones.forEach((b,i)=>{b.quaternion.fromArray(state.quaternions[i]);b.position.fromArray(state.positions[i]);});
   $('jointStatus').textContent='Gesture cancelled. The previous pose was restored.';
  }else $('jointStatus').textContent=(state.bone.name||'Joint')+' moved. Capture pose to save the result as an animation keyframe.';
- controls.enabled=true;
  const canvas=renderer.domElement;
  if(canvas.hasPointerCapture?.(state.id))canvas.releasePointerCapture(state.id);
- refreshJointDots();
+ syncJointInteraction();refreshJointDots();
  if(!cancelled)scheduleAutosave();
 }
 renderer.domElement.addEventListener('pointerdown',event=>{
- if(event.button!==0||!jointDotsOn||workspace!=='animate'||!root||candidateVisible||!jointMarkers.length)return;
- const entry=jointPointHit(event);
- if(!entry)return;
+ if(event.button!==0||jointInteractionMode!=='pose'||workspace!=='animate'||!root||candidateVisible||!jointMarkers.length)return;
+ let entry=jointDotsOn?jointPointHit(event):null;
+ if(!entry){
+  // Actual character-surface touch is valid: no need to land on a tiny dot.
+  const ray=jointPointerRay(event);
+  const hit=ray.intersectObjects(meshes,true).find(item=>item.object.visible&&item.object.isMesh);
+  if(hit){
+   if(jointSurfacePin&&jointSelected>=0)entry=jointMarkers[jointSelected];
+   else{
+    let nearest=Infinity;
+    for(const marker of jointMarkers){
+     const d=marker.bone.getWorldPosition(new THREE.Vector3()).distanceToSquared(hit.point);
+     if(d<nearest){nearest=d;entry=marker;}
+    }
+   }
+  }
+ }
+ if(!entry){
+  $('jointStatus').textContent='Pose mode: touch a blue dot or a visible part of your character. Use Orbit for the camera.';
+  return;
+ }
+ if(!jointSurfacePin||entry.index!==jointSelected)jointSurfacePin=false;
  selectSkeletonJoint(entry.index);
  refreshJointDots();
  const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(

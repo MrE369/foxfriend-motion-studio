@@ -8,7 +8,8 @@
 
 [hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
 #directorPanel{background:#223a4c;border-color:#72cdb7}#directorPanel summary{padding:5px 0}#directorPanel h3{color:#a7ecdf}#directorPanel p{line-height:1.45}.directorFlow{margin:11px 0;padding:10px 12px;background:#122635;border:1px solid #476d7c;border-radius:10px}#directorPanel input[type=range]{padding:5px;min-height:32px;accent-color:#77e4cc}#directorPanel input[type=color]{padding:4px}#directorPanel output{font-variant-numeric:tabular-nums;color:#9af1d7}#directorPanel button:disabled{opacity:.4}#allSkeletonPoints{border-color:#6689a3;background:#20384c}#allSkeletonPoints input[type=search]{min-height:40px}#allSkeletonPoints p{line-height:1.45}
-</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>One model · Four workspaces · Local first · Original GLB untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div></div><aside>
+#artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);max-height:62%;background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}#artReferencePin img{display:block;width:100%;max-height:calc(41dvh - 93px);object-fit:contain}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>One model · Four workspaces · Local first · Original GLB untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
 <button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
 <button type="button" id="tabButtonPaint" role="tab" aria-selected="false" aria-controls="tabPaint" data-tab="paint">🖌<span>Paint</span></button>
@@ -99,16 +100,33 @@
 <label for="label">Selection label</label><input id="label" placeholder="e.g. suspected upper eyelid"><label for="note">Instructions / observations</label><textarea id="note" placeholder="What is this surface? Is there geometry behind it?"></textarea><button id="export">⬇ Export selection JSON</button><label for="import">Restore selection JSON</label><label style="font-weight:400"><input id="mergeImport" type="checkbox" style="width:auto;min-height:0;margin-right:8px">Add to current selection instead of replacing (matching GLB only)</label><input id="import" type="file" accept=".json,application/json"><div id="importResult" role="status" aria-live="polite"></div><p class="hint">Handoff records a SHA-256 fingerprint of the original GLB, a mesh path, triangle indices, UVs when present, and 3D hit location. Import refuses a different file fingerprint. Original model data is never rewritten.</p>
 <details><summary>Scope and limitations</summary><p class="hint">Milestone A includes universal inspection, triangle selection, connected-component selection using shared geometric edges, mesh selection, display modes, camera presets, and JSON save/restore. Large selections may be slow on phones. Connected parts are determined by matching position edges within a small tolerance, so near-coincident seams may connect or stay separate depending on geometry. This test hides or isolates selected source triangles in the viewer without editing GLB geometry; previews are rebuilt as lightweight meshes and may not follow animated/skinned deformation. Painting and geometry edits remain future milestones.</p></details>
 </section><section id="tabPaint" class="workspace" role="tabpanel" aria-labelledby="tabButtonPaint" hidden><h2>Character Paint Studio <small>· integrated test</small></h2>
-<p class="hint">Same loaded model and camera. Select a UV-mapped single-material mesh, then paint on it. Original geometry stays untouched. Overlapping UVs and seams are not yet corrected. Painting is experimental in this unified build.</p>
-<label for="paintTarget">Paint target (UV mapped mesh)</label><select id="paintTarget"><option value="">Load a model</option></select>
+<p class="hint">Experimental local painting. Original GLB remains untouched. Start on a small part of Finn or Sylvara's clothing, inspect the result, and use Undo whenever needed.</p>
+<div class="subpanel" id="artReferencePanel">
+<h3>🖼 Concept art · paint together</h3>
+<p class="hint">Add your original drawing as a local visual reference. You can pin it to the 3D viewer without uploading it to anyone. To collaborate with an AI partner, share the art image in your conversation along with a CoLab screenshot and JSON.</p>
+<label for="artReferenceFile">Choose concept art (PNG, JPEG or WebP)</label>
+<input id="artReferenceFile" type="file" accept="image/png,image/jpeg,image/webp">
+<img id="artReferencePreview" alt="Loaded concept art" hidden>
+<p id="artReferenceSummary" role="status">No reference loaded. Your artwork stays on this device until you choose to share it.</p>
+<div class="row"><button id="artReferenceToggle" type="button" disabled>Pin image over viewer</button><button id="artReferenceRemove" type="button" disabled>Remove reference</button></div>
+<p class="hint">Reference art is visual guidance; it does not automatically repaint the model or send the image to Aster. Screenshots from your phone can show us both the drawing and 3D result.</p>
+</div>
+<div id="firstPaintGuide">
+<strong>First repaint · simple test</strong>
+<p class="hint">1. Tap a piece of clothing to choose its surface. 2. Pick a color. 3. Start Paint. 4. Make one small stroke. 5. Inspect, Undo, or save your Paint JSON. 6. Export a separate test GLB only when you're happy.</p>
+<button id="paintPickTarget" type="button">👆 Tap a surface to choose where to paint</button>
+<p id="paintPickStatus" class="hint" role="status">Load Finn or Sylvara first. You don't need to know the names of their meshes.</p>
+</div>
+<label for="paintTarget">Selected surface · advanced mesh choice</label><select id="paintTarget"><option value="">Load a model</option></select>
 <div class="row"><button id="paintNavigate" class="active">✋ Navigate</button><button id="paintStart">🖌 Paint</button></div>
 <label for="paintColor">Brush color</label><input type="color" id="paintColor" value="#e78b9c">
-<label for="paintSize">Size: <output id="paintSizeValue">20</output> px</label><input id="paintSize" type="range" min="1" max="110" value="20">
-<label for="paintOpacity">Opacity: <output id="paintOpacityValue">100%</output></label><input id="paintOpacity" type="range" min="5" max="100" value="100">
+<label for="paintSize">Brush size: <output id="paintSizeValue">16</output> texture pixels</label><input id="paintSize" type="range" min="1" max="110" value="16">
+<label for="paintOpacity">Opacity: <output id="paintOpacityValue">35%</output></label><input id="paintOpacity" type="range" min="5" max="100" value="35">
 <label for="paintResolution">Texture resolution</label><select id="paintResolution"><option value="1024">1024 × 1024 (phone-friendly)</option><option value="2048">2048 × 2048 (more detail)</option></select>
 <div class="row"><button id="paintUndo">↶ Undo stroke</button><button id="paintClear">Reset paint</button></div>
 <label>Painted UV texture</label><canvas id="paintPreview" width="1024" height="1024"></canvas>
-<div class="row"><button id="paintPNG">⬇ PNG</button><button id="paintGLB">⬇ Textured GLB</button></div>
+<div class="row"><button id="paintPNG">⬇ PNG</button><button id="paintGLB">⬇ Test GLB</button></div>
+<p class="hint" id="paintQualityNote" role="status">The paint canvas is phone-friendly. Larger original textures may lose detail in a test export; CoLab will warn you before that happens.</p>
 <button id="paintJSON">⬇ Paint Project JSON</button><label for="paintImport">Restore Paint Project JSON</label><input id="paintImport" type="file" accept=".json,application/json">
 <p class="hint" id="paintStatus">Painting requires UV coordinates. Paint JSON includes sampled 3D hit positions; textured GLB is a new export, never an overwrite. A brush stroke can affect overlapping UV islands.</p>
 </section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
@@ -387,6 +405,7 @@ function showWorkspace(name){
   if(root){renderMarks();} // restores model visibility and tab-specific preview without touching the saved selections.
 
   if(name==='paint')updatePaintUI();
+  updateArtReferenceDisplay();
   if(name==='animate')updateAnimationUI();
   if(name==='review')updateMoveUI();
   // Keep the scene and saved selections, but only show colored region overlays
@@ -409,7 +428,58 @@ function paintCanvasPreview(){
   const p=paintSessions.get(paintTarget);if(!p){paintPrevCtx.clearRect(0,0,paintPrev.width,paintPrev.height);return}
   paintPrev.width=p.canvas.width;paintPrev.height=p.canvas.height;paintPrevCtx.drawImage(p.canvas,0,0);
 }
+let artReferenceUrl=null,artReferenceName='',artReferencePinned=false;
+function updateArtReferenceDisplay(){
+ const has=!!artReferenceUrl,visible=has&&artReferencePinned&&workspace==='paint';
+ $('artReferenceToggle').disabled=!has;$('artReferenceRemove').disabled=!has;
+ $('artReferenceToggle').textContent=artReferencePinned?'Hide image from viewer':'Pin image over viewer';
+ $('artReferencePin').hidden=!visible;
+ $('artReferencePreview').hidden=!has;
+ if(has){$('artReferencePinImage').src=artReferenceUrl;$('artReferencePreview').src=artReferenceUrl}
+}
+$('artReferenceFile').onchange=e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>12*1024*1024){
+  $('artReferenceSummary').textContent='Choose a PNG, JPEG or WebP up to 12 MB. Nothing was uploaded.';
+  e.target.value='';return;
+ }
+ const nextUrl=URL.createObjectURL(file),img=new Image();
+ img.onload=()=>{
+  if(img.width>12000||img.height>12000){URL.revokeObjectURL(nextUrl);$('artReferenceSummary').textContent='Image dimensions too large for this phone-friendly preview.';return}
+  if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl);
+  artReferenceUrl=nextUrl;artReferenceName=file.name;artReferencePinned=true;
+  $('artReferenceSummary').textContent='Local reference: '+file.name+' · '+img.width+'×'+img.height+'. Not uploaded. Share this image separately with your AI partner.';
+  updateArtReferenceDisplay();
+ };
+ img.onerror=()=>{URL.revokeObjectURL(nextUrl);$('artReferenceSummary').textContent='Could not read this image. Nothing was uploaded.'};
+ img.src=nextUrl;
+};
+$('artReferenceToggle').onclick=()=>{artReferencePinned=!artReferencePinned;updateArtReferenceDisplay()};
+$('artReferenceRemove').onclick=()=>{
+ if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl);
+ artReferenceUrl=null;artReferenceName='';artReferencePinned=false;
+ $('artReferenceFile').value='';$('artReferencePreview').removeAttribute('src');
+ $('artReferencePinImage').removeAttribute('src');
+ $('artReferenceSummary').textContent='Reference removed from this page. Your original image file was not deleted.';
+ updateArtReferenceDisplay();
+};
+window.addEventListener('pagehide',()=>{if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl)});
 function paintEligible(m){return !!m?.geometry?.attributes?.uv && !Array.isArray(m.material) && (baseMaterials.get(m)?.length===1)}
+function originalTextureSize(m){
+ const tex=baseMaterials.get(m)?.[0]?.map,im=tex?.image||tex?.source?.data;
+ return {width:im?.width||0,height:im?.height||0};
+}
+function paintTargetNotice(){
+ if(!paintTarget){
+  $('paintPickStatus').textContent='No paintable surface selected. Load a GLB and tap Choose surface.';return;
+ }
+ const name=paintTarget.name||'unnamed mesh',i=meshes.indexOf(paintTarget)+1;
+ const original=originalTextureSize(paintTarget),resolution=paintSessions.get(paintTarget)?.canvas?.width||Number($('paintResolution').value);
+ $('paintPickStatus').textContent='Surface selected: mesh '+i+' ('+name+'). Set a gentle brush color and tap Paint.';
+ $('paintQualityNote').textContent=(original.width>resolution||original.height>resolution)
+  ?'Texture resolution warning: source '+original.width+'×'+original.height+'; paint canvas '+resolution+'×'+resolution+'. Painting and exporting may reduce detail. CoLab will ask first. Keep your original GLB.'
+  :'Texture check: paint canvas '+resolution+'×'+resolution+'. Export a separate test GLB and compare against the original.';
+}
 function startPaintSession(m,sz){
   if(!paintEligible(m))throw Error('This mesh needs UV coordinates and one material for paint v0.1.');
   let p=paintSessions.get(m);if(p)return p;
@@ -442,6 +512,7 @@ function startPaintSession(m,sz){
 function updatePaintUI(){
  const enabled=!!paintTarget;
  for(const id of ['paintStart','paintUndo','paintClear','paintPNG','paintGLB','paintJSON','paintImport'])$(id).disabled=!enabled;
+ $('paintPickTarget').disabled=!root;
  paintCanvasPreview();
  const current=paintSessions.get(paintTarget);
  $('paintResolution').disabled=!!current;
@@ -452,22 +523,51 @@ function updatePaintUI(){
 function refreshPaintTargets(){
  const sel=$('paintTarget');sel.replaceChildren();const options=[];
  for(const m of meshes){const i=meshes.indexOf(m);const o=document.createElement('option');o.value=String(i);o.textContent=`Mesh ${i+1}: ${(m.name||'Unnamed mesh').slice(0,35)} ${paintEligible(m)?'· UV ready':'· view only'}`;sel.append(o);if(paintEligible(m))options.push(i)}
- if(options.length){sel.value=String(options[0]);paintTarget=meshes[options[0]];$('paintStatus').textContent=`Ready to paint mesh ${options[0]+1}. Select Paint to begin.`}
+ if(options.length){sel.value=String(options[0]);paintTarget=meshes[options[0]];$('paintStatus').textContent=`Ready to paint mesh ${options[0]+1}. Choose a surface or tap Paint to begin.`}
  else{paintTarget=null;const o=document.createElement('option');o.value='';o.textContent='No paint-compatible mesh';sel.append(o);paintMessage('This GLB remains inspectable. UV painting needs UVs and a single material per paint target.')}
- updatePaintUI();
+ updatePaintUI();paintTargetNotice();
 }
-$('paintTarget').onchange=()=>{if(paintDragging)finishPaint();const m=meshes[Number($('paintTarget').value)];paintTarget=paintEligible(m)?m:null;selectMode(false);updatePaintUI()};
+$('paintTarget').onchange=()=>{if(paintDragging)finishPaint();const m=meshes[Number($('paintTarget').value)];paintTarget=paintEligible(m)?m:null;selectMode(false);updatePaintUI();paintTargetNotice()};
 $('paintSize').oninput=updatePaintUI;$('paintOpacity').oninput=updatePaintUI;
+$('paintResolution').onchange=paintTargetNotice;
+$('paintPickTarget').onclick=()=>{
+ if(!root)return paintMessage('Load Finn or Sylvara first.');
+ finishPaint();selectMode(false);mode='paintPick';controls.enabled=false;
+ overlay.style.pointerEvents='auto';overlay.style.cursor='crosshair';
+ $('paintPickStatus').textContent='Now tap clothing or another visible area of the 3D character. No paint will be applied.';
+};
+overlay.addEventListener('pointerdown',e=>{
+ if(mode!=='paintPick'||!root)return;
+ try{
+  const r=overlay.getBoundingClientRect();
+  if(!r.width||!r.height)throw Error('Viewport not ready.');
+  pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));
+  ray.setFromCamera(pointer,camera);root.updateMatrixWorld(true);
+  const hit=ray.intersectObjects(meshes,true).find(h=>h.object?.isMesh&&h.object.visible);
+  if(!hit)throw Error('No visible surface under that touch. Tap the outfit or character again.');
+  if(!paintEligible(hit.object))throw Error('This surface is not UV-paintable in the test version. Try another.');
+  paintTarget=hit.object;$('paintTarget').value=String(meshes.indexOf(hit.object));
+  selectMode(false);overlay.style.cursor='';updatePaintUI();paintTargetNotice();
+  paintMessage('Surface selected. Choose the paint color and tap Paint to make a small test stroke.');
+ }catch(err){$('paintPickStatus').textContent=err.message}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
 function setPaintMode(on){
  if(!root||!paintTarget)return paintMessage('Load a UV-mapped model and select a paint target.');
  if(on){
    if(visibilityMode!=='all')setVisibility('all');
    if(viewStyle!=='solid'){$('solid').click()}
-   try{startPaintSession(paintTarget,Number($('paintResolution').value))}catch(err){return paintMessage(err.message)}
+   const size=Number($('paintResolution').value),original=originalTextureSize(paintTarget);
+   if(!paintSessions.has(paintTarget)&&(original.width>size||original.height>size)&&
+      !confirm('Texture quality warning: original is '+original.width+'×'+original.height+
+        ', but the phone paint canvas is '+size+'×'+size+
+        '. Previewing and exporting may reduce texture detail. Continue with a reversible TEST?'))
+     return paintMessage('Painting cancelled. Original artwork preserved; you can change resolution or select another model.');
+   try{startPaintSession(paintTarget,size)}catch(err){return paintMessage(err.message)}
    selectMode(false);mode='paint';controls.enabled=false;overlay.style.pointerEvents='auto';
  }else{finishPaint();selectMode(false)}
  $('paintStart').classList.toggle('active',on);$('paintNavigate').classList.toggle('active',!on);
- paintMessage(on?'Paint mode active. Draw on the surface.':'Navigation mode. Rotate or zoom your character.');updatePaintUI();
+ paintMessage(on?'Paint active: make ONE small stroke, then inspect. Undo is ready.':'Navigate: rotate or zoom your character.');updatePaintUI();paintTargetNotice();
 }
 $('paintStart').onclick=()=>setPaintMode(true);$('paintNavigate').onclick=()=>setPaintMode(false);
 function hitForPaint(e){
@@ -539,6 +639,8 @@ $('paintImport').onchange=async e=>{
 $('paintGLB').onclick=async()=>{
  if(!root)return paintMessage('Load a GLB first.');finishPaint();
  if(!paintSessions.size)return paintMessage('Paint at least one mesh before exporting.');
+ const large=meshes.filter(m=>{const x=originalTextureSize(m);return x.width>2048||x.height>2048});
+ if(large.length&&!confirm('TEST EXPORT WARNING: '+large.length+' mesh texture(s) exceed 2048 px. GLB export uses a maximum texture size of 2048, which can reduce original detail. Export a separate test file anyway?'))return paintMessage('Test export cancelled. Your original GLB and paint remain available.');
  if(candidateVisible)showCandidate(false);
  const previous=meshes.map(m=>({m,visible:m.visible,material:m.material}));
  try{
@@ -1093,7 +1195,7 @@ function directorPacketData(){
  if(!root)throw Error('Load a GLB first.');
  return {
   schema:'colab-director-packet-v1',version:'0.12-experimental',createdAt:new Date().toISOString(),
-  request:{task:$('directorTask').value,intention:$('directorIntent').value.trim(),
+  request:{task:$('directorTask').value,intention:$('directorIntent').value.trim(),referenceArt:artReferenceName||null,referenceNote:artReferenceName?'Reference image is local only: artist must attach the image separately to any AI conversation.':'No concept art reference loaded.',
     expectation:'Human director reviews a separate proposal before exporting or accepting; original GLB stays unchanged.'},
   source:{filename:originalName,sha256:fingerprint,sizeBytes:glbFileSize},
   selectedSlot:regionIndex,
@@ -1140,6 +1242,7 @@ function directorBrief(){
   'Selected region: '+selection.name+' (slot '+d.selectedSlot+') · '+selected,
   'Current bone: '+(d.motion.selectedBone||'none'),
   'I will share a screenshot of what I see and the Director JSON when relevant.',
+  'Local concept-art reference: '+(artReferenceName||'[not loaded]')+'. If I want you to see it, I must attach the image to our chat separately.',
   'First distinguish visual evidence from hypotheses, then suggest the smallest reversible change.',
   'For a supported local operation you may return ONLY JSON with schema colab-agent-recipe-v1, source.sha256 matching this file, task repair|paint|animate, operation normals|relax|tint|gesture, regionSlot, parameters.',
   'Repair normals recalculates mesh shading; relax needs an enclosed patch on a static mesh (strength 0.01-0.55).',

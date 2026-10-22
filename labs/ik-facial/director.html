@@ -7,7 +7,7 @@
 #autoConnected{width:24px;min-height:24px;height:24px;vertical-align:middle;accent-color:#49d9ff;margin-right:8px}
 
 [hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
-#directorPanel{background:#223a4c;border-color:#72cdb7}#directorPanel summary{padding:5px 0}#directorPanel h3{color:#a7ecdf}#directorPanel p{line-height:1.45}.directorFlow{margin:11px 0;padding:10px 12px;background:#122635;border:1px solid #476d7c;border-radius:10px}#directorPanel input[type=range]{padding:5px;min-height:32px;accent-color:#77e4cc}#directorPanel input[type=color]{padding:4px}#directorPanel output{font-variant-numeric:tabular-nums;color:#9af1d7}#directorPanel button:disabled{opacity:.4}
+#directorPanel{background:#223a4c;border-color:#72cdb7}#directorPanel summary{padding:5px 0}#directorPanel h3{color:#a7ecdf}#directorPanel p{line-height:1.45}.directorFlow{margin:11px 0;padding:10px 12px;background:#122635;border:1px solid #476d7c;border-radius:10px}#directorPanel input[type=range]{padding:5px;min-height:32px;accent-color:#77e4cc}#directorPanel input[type=color]{padding:4px}#directorPanel output{font-variant-numeric:tabular-nums;color:#9af1d7}#directorPanel button:disabled{opacity:.4}#allSkeletonPoints{border-color:#6689a3;background:#20384c}#allSkeletonPoints input[type=search]{min-height:40px}#allSkeletonPoints p{line-height:1.45}
 </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>One model · Four workspaces · Local first · Original GLB untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div></div><aside>
 <p class="hint" style="margin:3px 0 12px"><a href="https://mre369.github.io/foxfriend-motion-studio/colab/agent-guide.html" style="color:#91f0d8" target="_blank" rel="noopener">📷 New to collaborating with an AI agent? See our screenshot-first guide ↗</a></p>
 <label>1 · Load any GLB</label><input id="file" type="file" accept=".glb,model/gltf-binary"><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
@@ -21,6 +21,7 @@
  <textarea id="directorIntent" rows="3" placeholder="What should this character or object look like, feel like, or do? Your words are enough."></textarea>
  <div class="row"><button id="directorScreenshot" type="button">⬇ View PNG</button><button id="directorPacket" type="button">⬇ Agent JSON</button></div>
  <button id="directorCopy" type="button">Copy briefing for my AI partner</button>
+ <button id="directorPoseDots" type="button">🔵 Pose every skeleton joint · Grab the dots</button>
  <p id="directorStatus" class="hint" role="status">Load a GLB, select the part you mean in Inspect, then describe the change.</p>
  <div class="directorFlow" data-director-flow="repair">
   <h3>◈ Local repair proposal</h3>
@@ -110,6 +111,17 @@
 <p class="hint" id="paintStatus">Painting requires UV coordinates. Paint JSON includes sampled 3D hit positions; textured GLB is a new export, never an overwrite. A brush stroke can affect overlapping UV islands.</p>
 </section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
 <p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
+<div id="allSkeletonPoints" class="subpanel" aria-label="Grab every skeleton joint">
+ <h3>🔵 Pose every joint</h3>
+ <p class="hint">Grab any small blue dot directly on your character; the selected one turns yellow. Pull it to pose connected bones. Drag empty space to rotate the camera. Every detected joint can also be chosen by name.</p>
+ <div class="row"><button id="jointDotToggle" type="button">🔵 Show all joint dots · On</button><button id="jointCapturePose" type="button">Capture pose</button></div>
+ <label for="jointSearch">Find a joint (optional)</label><input id="jointSearch" type="search" placeholder="Head, spine, tripo, arm, leg…">
+ <label for="jointSelect">All detected skeleton joints</label>
+ <select id="jointSelect" aria-label="Every detected skeleton joint"><option value="">Load a rigged GLB</option></select>
+ <div class="row"><button id="jointPick" type="button">Select highlighted joint</button><button id="jointResetPose" type="button">Reset whole pose</button></div>
+ <p id="jointStatus" class="hint" role="status">Load a rigged GLB, then tap any blue dot.</p>
+ <p class="hint">Local experimental IK: nearest connected parent joints rotate to follow your drag. Skeleton roots move as a whole. This does not enforce anatomical limits or keep every foot planted yet.</p>
+ </div>
 <div id="motionRigControls"><label for="animBone">Joint</label><select id="animBone"><option>Load a rigged model</option></select><div id="animAxes"></div>
 <div class="row"><button id="animReset">Reset joint</button><button id="animResetAll">Reset pose</button></div>
 <details class="subpanel" id="animIkPanel"><summary>IK · Move a paw, hand or foot (experimental)</summary>
@@ -159,6 +171,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
 import {relaxSelectedSurface} from './director-tools.js';
+import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
 const $=id=>document.getElementById(id),view=$('view'),scene=new THREE.Scene();scene.background=new THREE.Color('#263648');
 const camera=new THREE.PerspectiveCamera(35,1,.001,1e5),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.domElement.style.touchAction='none';view.append(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;scene.add(new THREE.HemisphereLight(0xffffff,0x74869c,2.5));for(const [x,y,z,k] of [[3,5,6,2.1],[-4,2,-3,1.1]]){let l=new THREE.DirectionalLight(0xffffff,k);l.position.set(x,y,z);scene.add(l)}

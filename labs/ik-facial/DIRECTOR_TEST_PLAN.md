@@ -12,6 +12,25 @@
 - Repainting: selected-region UV tint using the imported texture as the starting surface. Current imported texture/transparency is retained; you can undo, paint further, save paint JSON/PNG, and export a new textured GLB.
 - Animation: turn the currently selected bone a gentle locally configurable amount between two copies of its current pose, producing three editable keyframes. The existing Motion Studio can refine and export an animated GLB.
 
+## Full-skeleton dot posing (new)
+
+- Enter **Director's Desk → Pose every skeleton joint** or open **Animate** directly. A rigged asset automatically displays a small blue marker for every detected bone. Selecting one turns it yellow.
+- Marker radius remains around 5 screen pixels (7 when selected), with an invisible 29-pixel finger-friendly selection zone.
+- Drag a dot: linked parent bones participate in a bounded local CCD solve; choosing a skeleton-root marker instead translates the root. For named head/neck joints, a short parent chain keeps shoulders from moving unnecessarily.
+- Touch empty canvas to orbit as usual; use **Hide joint dots** for a completely clear view. Filter the **All detected skeleton joints** list for coincident or hidden points.
+- **Capture pose** retains rotations AND positions. Animate between captured poses and export to GLB. Pose JSON v0.6 and local recovery also preserve positions; v0.5 rotational JSON still imports.
+- This is artistic pose manipulation, **not** a physical or anatomically constrained IK solver. Large movements can bend joints unnaturally; grounded feet are not promised.
+
+### Blue Toro acceptance test
+
+1. Import **Blue Toro** and tap **Pose every skeleton joint** in Director's Desk.
+2. Confirm **29 blue dots** are available (even if some overlap) and the entire 29-bone rig can be browsed by name.
+3. Drag a front hoof dot and confirm connected foreleg bones respond. Drag the `Head_1` joint and confirm the shoulders do not travel wildly.
+4. Find `Root`, drag its dot, and capture Pose 1. Drag another dot, capture Pose 2. Press **Play**, then export Animated GLB.
+5. Reimport exported animation, check root motion persists and the new clip exists. Try **Reset whole pose** after experimenting.
+6. Tap **Hide joint dots**; dragging the empty model view should rotate the camera again. Enable the older green IK tool to ensure it does not conflict with blue markers.
+7. On another rig, verify the markers count follows the detected bone count without assuming Tripo or VRM naming.
+
 ## Quick tests on Android or laptop
 
 1. Load an original GLB you already own and verify that the whole character appears in the viewport. Change the **Director's Desk** experience selector; only the relevant tool panel should appear.

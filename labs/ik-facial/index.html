@@ -174,17 +174,25 @@ $('bowPreset').onclick=()=>{
  if(target&&activeBody)target.position.copy(activeBody.mesh.position);
 };
 $('standTall').onclick=()=>{
- $('reset').click();
- $('bodyStatus').textContent='Standing pose restored.';
+ if(bodySession){
+  bodySession.controller.reset();
+  refreshBodyMarkers();syncBodySliders();
+  if(target&&activeBody)target.position.copy(activeBody.mesh.position);
+  $('bodyStatus').textContent='Body returned to its starting posture; earlier leg poses are preserved.';
+ }else{
+  $('reset').click();$('bodyStatus').textContent='Original standing pose restored.';
+ }
 };
 $('bowDepth').oninput=()=>{
+ const requested=Number($('bowDepth').value)/100;
  if(!bodySession)selectBody(bodyHandles.find(x=>x.kind==='chest'));
- if(bodySession)applyBodyValues(Number($('bowDepth').value)/100,bodySession.controller.sway);
+ if(bodySession)applyBodyValues(requested,bodySession.controller.sway);
  if(target&&activeBody)target.position.copy(activeBody.mesh.position);
 };
 $('hipSway').oninput=()=>{
+ const requested=Number($('hipSway').value)/100;
  if(!bodySession)selectBody(bodyHandles.find(x=>x.kind==='hips'));
- if(bodySession)applyBodyValues(bodySession.controller.bow,Number($('hipSway').value)/100);
+ if(bodySession)applyBodyValues(bodySession.controller.bow,requested);
  if(target&&activeBody)target.position.copy(activeBody.mesh.position);
 };
 function selectHoof(h){activeHoof=h;['root','mid','end'].forEach((id,i)=>$(id).value=String(h.indexes[i]));activateChain(false);hoofHandles.forEach(x=>{x.mesh.visible=x!==h;x.button.classList.toggle('active',x===h)});if(headHandle){headHandle.mesh.visible=true;headHandle.button.classList.remove('active')}$('poseStatus').textContent=h.label+': drag the yellow point. Drag outside it to rotate the character.';}

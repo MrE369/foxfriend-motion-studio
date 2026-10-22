@@ -714,6 +714,7 @@ function ikHandleRefresh(){ikHandle.visible=ikDragging&&!!ikPoint&&workspace==='
 function ikDragStop(){ikDragging=false;ikDragPointer=null;ikHandle.visible=false;controls.enabled=true;$('animIkDrag').textContent='✋ Drag IK target · Off'}
 $('animIkDrag').onclick=()=>{
  if(ikDragging){ikDragStop();return}
+ jointDotsOn=false;refreshJointDots();
  if(!ikUpper&&!ikChainPick())return;
  if(!ikPoint)ikTargetFromEnd();
  if(!ikPoint)return;
@@ -1330,7 +1331,7 @@ function clearJointPoints(){
  if(jointPointer)endJointDrag(null,true);
  jointDotGroup.clear();jointMarkers=[];jointSelected=-1;
  $('jointSearch').value='';$('jointSelect').replaceChildren();
- $('jointDotToggle').textContent='🔵 Show all joint dots · On';
+ jointDotsOn=true;$('jointDotToggle').textContent='🔵 Show all joint dots · On';
  $('jointStatus').textContent='Load a rigged GLB, then tap any blue dot.';
  jointDotGroup.visible=false;
 }
@@ -1345,8 +1346,7 @@ function refreshJointList(){
    list.add(new Option(label,String(i)));match++;
   }
  });
- if(match)list.value=String([...list.options].some(opt=>opt.value===String(jointSelected))?jointSelected:prev);
- if(!list.value&&match)list.selectedIndex=0;
+ if(match){list.value=String([...list.options].some(opt=>opt.value===String(jointSelected))?jointSelected:prev);if(list.selectedIndex<0)list.selectedIndex=0;}
  if(!match)list.add(new Option('No matching joints',''));
 }
 function setupJointPoints(){
@@ -1392,7 +1392,7 @@ function selectSkeletonJoint(index){
  $('jointSearch').value='';
  refreshJointList();$('jointSelect').value=String(index);
  const bone=animBones[index];
- const parents=skeletonAncestors(bone,3);
+ const parents=skeletonAncestors(bone,/(?:head|neck)/i.test(bone.name||'')?1:3);
  $('jointStatus').textContent=(bone.name||'Unnamed joint '+(index+1))
   +(parents.length?' · moving '+parents.length+' connected parent joint(s)':' · skeleton root: movable body anchor')
   +'. Drag the yellow dot. Blue dots are other available joints.';
@@ -1460,7 +1460,7 @@ function endJointDrag(event,cancelled=false){
  }else $('jointStatus').textContent=(state.bone.name||'Joint')+' moved. Capture pose to save the result as an animation keyframe.';
  controls.enabled=true;
  const canvas=renderer.domElement;
- if(event&&canvas.hasPointerCapture?.(state.id))canvas.releasePointerCapture(state.id);
+ if(canvas.hasPointerCapture?.(state.id))canvas.releasePointerCapture(state.id);
  refreshJointDots();
  if(!cancelled)scheduleAutosave();
 }
@@ -1495,7 +1495,7 @@ renderer.domElement.addEventListener('pointermove',event=>{
  if(delta.length()>state.maxMove)goal.copy(state.start).add(delta.setLength(state.maxMove));
  try{
   const result=poseSkeletonPoint(THREE,state.bone,goal,
-   {maxParents:3,iterations:12,maxStep:.24,tolerance:Math.max(.001,state.maxMove*.002),allowCoincidentTranslation:true,maxTranslate:state.maxMove});
+   {maxParents:/(?:head|neck)/i.test(state.bone.name||'')?1:3,iterations:12,maxStep:.24,tolerance:Math.max(.001,state.maxMove*.002),allowCoincidentTranslation:true,maxTranslate:state.maxMove});
   $('jointStatus').textContent=(state.bone.name||'Joint')+' · '+(result.mode==='root-translation'?'moving body root':result.mode==='coincident-joint-translation'?'moving coincident joint':'posing connected joints')
    +' · reach error '+result.error.toFixed(3);
  }catch(err){$('jointStatus').textContent='Joint motion stopped: '+err.message;endJointDrag(event,true)}

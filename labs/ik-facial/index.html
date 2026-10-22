@@ -4,17 +4,17 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#101925;color:#eef6ff;font:15px system-ui}header{padding:12px 18px;background:#1b2b3b}h1{margin:0;font-size:21px}small,.muted{color:#b5c9d8}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#viewport{position:relative;height:calc(100dvh - 78px);min-height:320px}aside{padding:15px;background:#182738;max-height:calc(100dvh - 78px);overflow:auto}button,input,select{width:100%;min-height:40px;background:#2b4358;border:1px solid #8096a9;border-radius:8px;color:white;padding:8px;font:inherit;margin:4px 0}button{cursor:pointer}button:hover{background:#376077}label{display:block;margin:12px 0 4px;font-weight:650}#viewport canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}#fitView{position:absolute;right:12px;top:12px;z-index:3;width:auto;min-height:36px;padding:6px 12px;background:#243d54dd;border-color:#93b6cd;font-size:14px}#advancedPanel{display:none}#advancedPanel.open{display:block}#quickLegs{display:grid;grid-template-columns:1fr 1fr;gap:6px}#quickLegs button{font-size:14px;min-width:0;margin:0}#quickLegs button.active{background:#876822;border-color:#f5dc84}#bodyPanel{margin:12px 0;padding:12px;border:1px solid #61788a;border-radius:12px;background:#233749}#bodyPanel[hidden]{display:none!important}#bodyPanel input[type=range]{accent-color:#78dce9;min-height:28px;padding:3px}#bodyPanel label{font-size:14px}#bodyPanel output{float:right;color:#b0e9f4}#simpleHelp{line-height:1.45;color:#c7dbeb}#advancedToggle{margin-top:14px;background:#23394b}button:disabled{opacity:.45;cursor:not-allowed}fieldset{border:1px solid #526a80;border-radius:10px;margin:12px 0;padding:12px}legend{font-weight:bold}#status{padding:9px;background:#234a43;border-radius:8px;white-space:pre-wrap}#bones{height:190px}#morphs{max-height:260px;overflow:auto}.morph{display:grid;grid-template-columns:1fr 85px;gap:6px;align-items:center}.morph input{min-height:20px}#notes{font-size:13px;line-height:1.5;color:#c6d5e1}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}@media(max-width:760px){main{display:flex;flex-direction:column;height:calc(100dvh - 78px);height:calc(100svh - 78px);min-height:0;overflow:hidden}#viewport{position:relative;flex:0 0 43%;height:43%;min-height:180px;max-height:50%;overflow:hidden}aside{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}header{padding:9px 12px}h1{font-size:18px}}
 </style></head><body>
-<header><h1>CoLab · Easy Pose Lab <small>0.7 · experimental</small></h1><small>Isolated prototype — no changes to Unified Studio</small></header>
+<header><h1>CoLab · Easy Pose Lab <small>0.8 · experimental</small></h1><small>Isolated prototype — no changes to Unified Studio</small></header>
 <main><div id="viewport"><button type="button" id="fitView" title="Center the whole character">⊡ Center view</button></div><aside>
 <label for="file">Load rigged GLB / GLTF</label><input id="file" type="file" accept=".glb,.gltf,.vrm">
 <div id="status" role="status">Ready. Import a rigged GLB such as Blue Toro.</div>
 <section aria-label="Easy pose controls"><h2 style="font-size:18px;margin-bottom:6px">Easy Pose</h2><div id="rigSummary" role="status" style="padding:9px;border-radius:8px;background:#264456;margin:8px 0">Load a rigged GLB to identify its skeleton.</div><p id="simpleHelp">1. Load a rigged character.<br>2. Tap a glowing joint point or choose a body-part button.<br>3. Drag the yellow point to pose it. Drag elsewhere to rotate the view.</p><div id="quickLegs" aria-label="Body-part picker"></div>
 <div id="bodyPanel" hidden><strong>Blue Toro · Body posing</strong>
-<p class="muted">Try a playful bow, or drag the chest and hip markers. CoLab will attempt to keep his hooves planted.</p>
+<p class="muted">Try a playful bow, or drag his chest and hips. His upper legs now bend while his hoof positions and orientation are held steady.</p>
 <div class="row"><button id="bowPreset" type="button">Playful bow</button><button id="standTall" type="button">Stand tall</button></div>
 <label for="bowDepth">Lower chest <output id="bowValue">0%</output></label><input type="range" id="bowDepth" min="0" max="100" step="1" value="0">
 <label for="hipSway">Shift hips <output id="hipValue">Center</output></label><input type="range" id="hipSway" min="-100" max="100" step="1" value="0">
-<p id="bodyStatus" class="muted">Experimental body IK · avoid extreme joint angles.</p></div>
+<p id="bodyStatus" class="muted">Revised body IK · visually inspect hooves and knee bends.</p></div>
 <div class="row"><button id="simpleReset">Reset pose</button><button id="simpleClear">Stop posing</button></div><p class="muted" id="poseStatus">Load a rigged GLB to start posing.</p></section>
 <button id="advancedToggle" aria-expanded="false" aria-controls="advancedPanel">Advanced tools ▾</button><div id="advancedPanel">
 <fieldset><legend>Skeleton inspector</legend>
@@ -31,7 +31,7 @@
 </fieldset>
 <fieldset><legend>Facial morph targets</legend><div id="morphs">Load a model to inspect available face shapes.</div><button id="zeroMorphs">Reset expressions</button></fieldset>
 <fieldset><legend>Diagnostics</legend><pre id="diagnostics" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px"></pre><button id="export">Export diagnostic JSON</button></fieldset>
-<p id="notes">This first lab detects actual skeletons and morph targets, supports reversible limb posing and an experimental Blue Toro chest/hip bow with basic hoof planting. It does not create missing facial geometry, guarantee anatomical joint limits, or perform general-purpose full-body IK yet. For a .gltf with external files, convert to a self-contained .glb first.</p>
+<p id="notes">This first lab detects actual skeletons and morph targets, supports reversible limb posing and an experimental Blue Toro bow using shoulder-to-ankle IK and toe orientation locking. It does not create missing facial geometry, guarantee anatomical joint limits, or perform general-purpose full-body IK yet. For a .gltf with external files, convert to a self-contained .glb first.</p>
 </div></aside></main>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 <script type="module">
@@ -163,8 +163,8 @@ function applyBodyValues(bow,sway){
  const result=bodySession.controller.apply(bow,sway);
  refreshBodyMarkers();syncBodySliders();
  $('bodyStatus').textContent=result.footDrift>Math.max(.012,modelSize*.015)?
-  'Some hooves may shift at this pose depth. Reduce the bow or hip shift for a steadier stance.':
-  'Hoof planting assist active · movement is experimental.';
+  'Hoof movement exceeds the target tolerance. Try a shallower bow or reset pose.':
+  'Hoof pivots held steady · check the visible hooves and knees for natural movement.';
  return result;
 }
 $('bowPreset').onclick=()=>{

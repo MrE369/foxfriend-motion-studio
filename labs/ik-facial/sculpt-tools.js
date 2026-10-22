@@ -182,7 +182,25 @@ export function installSculptTools({THREE,renderer,camera,controls,getSelected,g
  function end(e){
    if(!gesture||(e&&e.pointerId!==gesture.id))return;
    const g=gesture;gesture=null;controls.enabled=true;onUpdate?.();
-   status('Sculpt stroke complete: '+g.changed+' vertex touches. Review from several angles. Undo is available.');
+   // Measure real displacement, not just brush candidates (which may not move).
+   const last=history[history.length-1],p=g.mesh.geometry.getAttribute('position');
+   let changed=0,maxM=0;
+   if(last?.mesh===g.mesh&&last.position.length===p.array.length){
+     g.mesh.updateMatrixWorld(true);
+     const linear=new THREE.Matrix3().setFromMatrix4(g.mesh.matrixWorld);
+     const world=new THREE.Vector3();
+     for(let i=0;i<p.count;i++){
+       const j=3*i,dx=p.array[j]-last.position[j],dy=p.array[j+1]-last.position[j+1],dz=p.array[j+2]-last.position[j+2];
+       if(dx===0&&dy===0&&dz===0)continue;
+       const d=world.set(dx,dy,dz).applyMatrix3(linear).length();
+       if(d>.00001)changed++;
+       if(d>maxM)maxM=d;
+     }
+   }
+   const mm=maxM*1000;
+   const detail=changed+' vertices moved; maximum change '+mm.toFixed(3)+' mm.';
+   if(mm<.05)status('Very subtle sculpt stroke: '+detail+' Try a few more passes or increase strength. Undo available.');
+   else status('Sculpt stroke complete: '+detail+' Review from several angles. Undo available.');
  }
  renderer.domElement.addEventListener('pointerdown',down,true);
  renderer.domElement.addEventListener('pointermove',move,true);
@@ -207,7 +225,15 @@ export function installSculptTools({THREE,renderer,camera,controls,getSelected,g
    $('sculptUndo').disabled=!history.length;onUpdate?.();status('Sculpt edits reset on selected GLB only.');
  };
  $('sculptRadius').oninput=e=>$('sculptRadiusLabel').textContent=Number(e.target.value).toFixed(3)+' m';
- $('sculptStrength').oninput=e=>$('sculptStrengthLabel').textContent=(Number(e.target.value)*1000).toFixed(1)+' mm';
+ function describeStrength(){
+  const inc=Number($('sculptStrength').value);
+  $('sculptStrengthLabel').textContent=$('sculptMode').value==='smooth'
+    ?(Math.min(.35,inc/.012*.25)*100).toFixed(1)+'% center blending per dab'
+    :(inc*1000).toFixed(1)+' mm per dab';
+ }
+ $('sculptStrength').oninput=describeStrength;
+ $('sculptMode').onchange=describeStrength;
+ describeStrength();
  $('sculptUndo').disabled=true;
  return {setActive(v){if(!v)setEnabled(false);},isEditing:()=>enabled,cancel:()=>{if(gesture)end();}};
 }

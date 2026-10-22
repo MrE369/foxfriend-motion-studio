@@ -531,9 +531,11 @@ $('paintGLB').onclick=async()=>{
  }catch(err){paintMessage('GLB export failed: '+err.message)}finally{for(const item of previous){item.m.material=item.material;item.m.visible=item.visible}}
 };
 // MOTION: keyframes and basic skeletal posing built from the working Motion Check grammar.
-let animBones=[],animInitial=[],animFrames=[],animChosen=0,animFrame=-1,animPlaying=false,animTime=0,animStarted=0,animMixer=null,animAction=null,animClips=[];
+let animBones=[],animInitial=[],animInitialPositions=[],animFrames=[],animPositionFrames=[],animChosen=0,animFrame=-1,animPlaying=false,animTime=0,animStarted=0,animMixer=null,animAction=null,animClips=[];
 const POSE_SEGMENT=1.5;
 function poseData(){return animBones.map(b=>b.quaternion.toArray())}
+function posePositions(){return animBones.map(b=>b.position.toArray())}
+function restorePosePositions(p){if(Array.isArray(p)&&p.length===animBones.length&&p.every(v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite)))animBones.forEach((b,i)=>b.position.fromArray(p[i]))}
 function syncJoint(){
  if(!animBones.length)return;
  const q=animInitial[animChosen].clone().invert().multiply(animBones[animChosen].quaternion),e=new THREE.Euler().setFromQuaternion(q,'XYZ');
@@ -544,7 +546,17 @@ function animateDuration(){return $('animClip').value&&animAction?animAction.get
 function animationAt(t){
  const duration=animateDuration();animTime=Math.min(duration,Math.max(0,t));
  if($('animClip').value&&animAction&&animMixer){animMixer.setTime(animTime)}
- else if(animFrames.length>=2){const segment=Math.min(animFrames.length-2,Math.floor(animTime/POSE_SEGMENT)),alpha=Math.max(0,Math.min(1,(animTime-segment*POSE_SEGMENT)/POSE_SEGMENT));animBones.forEach((b,j)=>b.quaternion.fromArray(animFrames[segment][j]).slerp(new THREE.Quaternion().fromArray(animFrames[segment+1][j]),alpha));syncJoint()}
+ else if(animFrames.length>=2){
+    const segment=Math.min(animFrames.length-2,Math.floor(animTime/POSE_SEGMENT)),alpha=Math.max(0,Math.min(1,(animTime-segment*POSE_SEGMENT)/POSE_SEGMENT));
+    animBones.forEach((b,j)=>b.quaternion.fromArray(animFrames[segment][j]).slerp(new THREE.Quaternion().fromArray(animFrames[segment+1][j]),alpha));
+    if(animPositionFrames.length===animFrames.length){
+      animBones.forEach((b,j)=>{
+       const p=animPositionFrames[segment]?.[j],next=animPositionFrames[segment+1]?.[j];
+       if(p&&next)b.position.fromArray(p).lerp(new THREE.Vector3().fromArray(next),alpha);
+      });
+    }else restorePosePositions(animInitialPositions);
+    syncJoint();
+   }
  updateAnimationUI();
 }
 function animationPause(){if(animPlaying){animPlaying=false;animationAt(((performance.now()-animStarted)/1000)%Math.max(animateDuration(),.001))}updateAnimationUI()}
@@ -561,11 +573,11 @@ for(const a of 'xyz'){
 }
 function applyJoint(){if(!animBones.length)return;const angle=['x','y','z'].map(a=>THREE.MathUtils.degToRad(Number($('anim'+a).value)));animBones[animChosen].quaternion.copy(animInitial[animChosen]).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...angle,'XYZ')));for(const a of 'xyz')$('anim'+a+'Val').textContent=$('anim'+a).value+'°'}
 $('animBone').onchange=()=>{animChosen=Number($('animBone').value);syncJoint()};
-$('animReset').onclick=()=>{if(!animBones.length)return;animationPause();animBones[animChosen].quaternion.copy(animInitial[animChosen]);syncJoint()};
-$('animResetAll').onclick=()=>{if(!animBones.length)return;animationPause();animBones.forEach((b,i)=>b.quaternion.copy(animInitial[i]));syncJoint()};
-$('animCapture').onclick=()=>{if(!animBones.length)return;animationPause();$('animClip').value='';animFrames.push(poseData());animFrame=animFrames.length-1;animTime=animateDuration();drawPoseFrames();updateAnimationUI()};
-$('animReplace').onclick=()=>{if(animFrame<0)return status('Choose a captured pose first.');animFrames[animFrame]=poseData();drawPoseFrames();status('Pose replaced.')};
-$('animDelete').onclick=()=>{if(animFrame<0)return;animationPause();animFrames.splice(animFrame,1);animFrame=-1;animTime=0;drawPoseFrames();updateAnimationUI()};
+$('animReset').onclick=()=>{if(!animBones.length)return;animationPause();animBones[animChosen].quaternion.copy(animInitial[animChosen]);if(animInitialPositions[animChosen])animBones[animChosen].position.fromArray(animInitialPositions[animChosen]);syncJoint()};
+$('animResetAll').onclick=()=>{if(!animBones.length)return;animationPause();animBones.forEach((b,i)=>{b.quaternion.copy(animInitial[i]);if(animInitialPositions[i])b.position.fromArray(animInitialPositions[i])});syncJoint()};
+$('animCapture').onclick=()=>{if(!animBones.length)return;animationPause();$('animClip').value='';if(animPositionFrames.length!==animFrames.length)animPositionFrames=animFrames.map(()=>animInitialPositions.map(p=>p.slice()));animFrames.push(poseData());animPositionFrames.push(posePositions());animFrame=animFrames.length-1;animTime=animateDuration();drawPoseFrames();updateAnimationUI()};
+$('animReplace').onclick=()=>{if(animFrame<0)return status('Choose a captured pose first.');animFrames[animFrame]=poseData();if(animPositionFrames.length!==animFrames.length)animPositionFrames=animFrames.map(()=>animInitialPositions.map(p=>p.slice()));animPositionFrames[animFrame]=posePositions();drawPoseFrames();status('Pose replaced.')};
+$('animDelete').onclick=()=>{if(animFrame<0)return;animationPause();animFrames.splice(animFrame,1);if(animPositionFrames.length)animPositionFrames.splice(animFrame,1);animFrame=-1;animTime=0;drawPoseFrames();updateAnimationUI()};
 $('animPlay').onclick=()=>{if(!animateDuration())return status('Capture two poses or select an embedded GLB animation clip.');if(animPlaying){animationPause();return}if(mode!=='nav')selectMode(false);animStarted=performance.now()-animTime*1000;animPlaying=true;updateAnimationUI()};
 $('animPause').onclick=animationPause;
 $('animTimeline').oninput=()=>{animPlaying=false;animationAt(Number($('animTimeline').value)/1000*animateDuration())};
@@ -573,8 +585,23 @@ $('animPrev').onclick=()=>{animationPause();animationAt(animTime-POSE_SEGMENT/12
 $('animNext').onclick=()=>{animationPause();animationAt(animTime+POSE_SEGMENT/12)};
 $('animClip').onchange=()=>{animationPause();animTime=0;if(animAction)animAction.stop();animAction=null;const index=Number($('animClip').value);if($('animClip').value!==''&&animMixer&&animClips[index]){animAction=animMixer.clipAction(animClips[index]);animAction.reset();animAction.play();animMixer.setTime(0)}updateAnimationUI()};
 $('animFreeze').onclick=()=>{animationPause();showWorkspace('inspect');status('Pose frozen at '+animTime.toFixed(2)+' s. Mark a region in Inspect; handoff still needs pose attachment for full animation interchange.')};
-$('animSave').onclick=()=>{if(!animBones.length)return status('Load a rigged model first.');download(originalName.replace(/\.glb$/i,'')+'_poses.json',{format:'better-together-poses-v0.5',fileName:originalName,bones:animBones.map(b=>b.name),frames:animFrames,current:poseData()})};
-$('animImport').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.format!=='better-together-poses-v0.5'||JSON.stringify(d.bones)!==JSON.stringify(animBones.map(b=>b.name)))throw Error('Pose project requires the matching GLB bones.');if(!Array.isArray(d.frames)||d.frames.length>1000||!d.frames.every(p=>Array.isArray(p)&&p.length===animBones.length&&p.every(q=>Array.isArray(q)&&q.length===4&&q.every(Number.isFinite))))throw Error('Invalid pose data.');animationPause();animFrames=d.frames;animTime=0;restorePose(d.current);drawPoseFrames();updateAnimationUI();status('Pose project restored.') }catch(err){status('Pose import failed: '+err.message)}finally{e.target.value=''}};
+$('animSave').onclick=()=>{if(!animBones.length)return status('Load a rigged model first.');download(originalName.replace(/\.glb$/i,'')+'_poses.json',{format:'better-together-poses-v0.6',fileName:originalName,source:{sha256:fingerprint,sizeBytes:glbFileSize},bones:animBones.map(b=>b.name),frames:animFrames,current:poseData(),positionFrames:animPositionFrames,currentPositions:posePositions()})};
+$('animImport').onchange=async e=>{
+ const f=e.target.files?.[0];if(!f)return;
+ try{
+  const d=JSON.parse(await f.text());
+  if(!['better-together-poses-v0.5','better-together-poses-v0.6'].includes(d.format)||JSON.stringify(d.bones)!==JSON.stringify(animBones.map(b=>b.name)))throw Error('Pose project requires matching GLB bones.');
+  if(d.source&&(d.source.sha256!==fingerprint||d.source.sizeBytes!==glbFileSize))throw Error('Pose source fingerprint mismatch.');
+  if(!Array.isArray(d.frames)||d.frames.length>1000||!d.frames.every(p=>Array.isArray(p)&&p.length===animBones.length&&p.every(q=>Array.isArray(q)&&q.length===4&&q.every(Number.isFinite))))throw Error('Invalid pose data.');
+  const safePositions=p=>Array.isArray(p)&&p.length===animBones.length&&p.every(v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite));
+  if(d.positionFrames!==undefined&&(!Array.isArray(d.positionFrames)||d.positionFrames.length!==d.frames.length||!d.positionFrames.every(safePositions)))throw Error('Invalid pose position tracks.');
+  if(d.currentPositions!==undefined&&!safePositions(d.currentPositions))throw Error('Invalid current position data.');
+  animationPause();animFrames=d.frames;animPositionFrames=d.positionFrames||[];
+  animTime=0;restorePose(d.current);restorePosePositions(d.currentPositions||animInitialPositions);drawPoseFrames();updateAnimationUI();
+  status('Pose project restored, including joint translations when present.');
+ }catch(err){status('Pose import failed: '+err.message)}
+ finally{e.target.value=''}
+};
 // Non-destructive animation export. Retains the loaded GLB's embedded clips.
 $('animExportGlb').onclick=async()=>{
  if(!root||animBones.length===0||animFrames.length<2)return status('Load a rigged GLB and capture at least two poses before exporting.');
@@ -595,7 +622,18 @@ $('animExportGlb').onclick=async()=>{
    }
    tracks.push(new THREE.QuaternionKeyframeTrack(names[j]+'.quaternion',times,values));
   }
-  const clip=new THREE.AnimationClip(clipName,times[times.length-1],tracks);
+  // Include bone translation tracks for skeleton-root point drags.
+   // Older pose JSON files with only quaternions remain compatible.
+   if(animPositionFrames.length===animFrames.length){
+    for(let j=0;j<animBones.length;j++){
+      const positions=animPositionFrames.map(frame=>frame[j]);
+      if(positions.some(v=>v.some((n,k)=>Math.abs(n-animInitialPositions[j][k])>1e-7))){
+        const values=positions.flat();
+        tracks.push(new THREE.VectorKeyframeTrack(names[j]+'.position',times,values));
+      }
+    }
+   }
+   const clip=new THREE.AnimationClip(clipName,times[times.length-1],tracks);
   const all=[...animClips,clip];
   // Export a temporary full-visibility view, without modifying the source model.
   const hidden=[];root.traverse(o=>{if(!o.visible){hidden.push(o);o.visible=true}});
@@ -713,9 +751,9 @@ for(const event of ['pointerup','pointercancel','lostpointercapture']){
  renderer.domElement.addEventListener(event,e=>{if(e.pointerId===ikDragPointer){ikDragPointer=null;ikDragPlane=null;ikDragOffset=null}},true);
 }
 function setupMotion(gltf){
- ikDragStop();animPlaying=false;animBones=[];animInitial=[];animFrames=[];animFrame=-1;animTime=0;
+ ikDragStop();animPlaying=false;animBones=[];animInitial=[];animInitialPositions=[];animFrames=[];animPositionFrames=[];animFrame=-1;animTime=0;
  if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=gltf.animations||[];
- root.traverse(o=>{if(o.isBone){animBones.push(o);animInitial.push(o.quaternion.clone())}});
+ root.traverse(o=>{if(o.isBone){animBones.push(o);animInitial.push(o.quaternion.clone());animInitialPositions.push(o.position.toArray())}});
  $('animBone').replaceChildren();if(animBones.length){animBones.forEach((b,i)=>{let opt=document.createElement('option');opt.value=i;opt.textContent=b.name||('Bone '+i);$('animBone').append(opt)})}
  else{$('animBone').add(new Option('Unrigged: no bones', ''))}
  $('animIkEnd').replaceChildren();animBones.forEach((b,i)=>$('animIkEnd').add(new Option(b.name||'Bone '+i,String(i))));
@@ -725,7 +763,7 @@ function setupMotion(gltf){
  $('animClip').replaceChildren();$('animClip').add(new Option('Captured keyframes',''));
  animClips.forEach((clip,i)=>$('animClip').add(new Option(clip.name||'Animation '+(i+1),String(i))));
  if(animClips.length)animMixer=new THREE.AnimationMixer(root);
- drawPoseFrames();syncJoint();updateAnimationUI();
+ drawPoseFrames();syncJoint();updateAnimationUI();setupJointPoints();
 }
 function updateAnimation(){
  if(animPlaying){const duration=animateDuration();if(!duration){animPlaying=false;return}const time=((performance.now()-animStarted)/1000)%duration;animationAt(time)}
@@ -745,6 +783,7 @@ $('candidateOriginal').onclick=()=>showCandidate(false);$('candidateView').oncli
 $('candidateFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;let url;try{url=URL.createObjectURL(f);const g=await new GLTFLoader().loadAsync(url);if(candidateRoot)scene.remove(candidateRoot);candidateRoot=g.scene;candidateName=f.name;directorRepairReady=false;directorRepairClips=g.animations||[];$('directorExportRepair').disabled=true;candidateRoot.visible=false;scene.add(candidateRoot);$('candidateStatus').textContent='Proposed GLB loaded: '+f.name+'. Tap Candidate to compare.'}catch(err){$('candidateStatus').textContent='Candidate failed: '+err.message}finally{if(url)URL.revokeObjectURL(url)}};
 $('candidateDecision').onclick=()=>{if(!candidateRoot)return status('Load proposed GLB before saving a decision.');download(originalName.replace(/\.glb$/i,'')+'_repair_review.json',{schema:'better-together-colab-repair-review-v1',original:originalName,originalSHA256:fingerprint,candidate:candidateName,decision:'reviewed-unapproved',camera:cameraData(),notes:$('note').value,warning:'Review JSON is a decision record, not a modified GLB.'});status('Review record saved; no file was modified.')};
 function clearUnifiedBeforeLoad(){
+ clearJointPoints();
  directorRepairReady=false;directorRepairClips=[];$('directorExportRepair').disabled=true;
  directorValidRecipe=null;$('agentPreview').disabled=true;$('agentRecipeStatus').textContent='Load the matching asset and validate the AI recipe again.';
  paintDragging=false;paintTarget=null;paintStroke=null;paintLast=null;paintBefore=null;
@@ -812,7 +851,7 @@ async function captureSession(){
   review:{showProposal,moveStep:$('moveStep').value,moveHistory:moveHistory.map(h=>({regionIndex:h.regionIndex,offset:h.offset.slice()}))},
   brush:{color:$('paintColor').value,size:Number($('paintSize').value),opacity:Number($('paintOpacity').value),resolution:Number($('paintResolution').value),targetIndex:paintTarget?meshes.indexOf(paintTarget):null},
   painting:[],
-  motion:{boneNames:animBones.map(b=>b.name),frames:animFrames.map(frame=>frame.map(q=>q.slice())),pose:animBones.length?poseData().map(q=>q.slice()):[],chosen:animChosen,frame:animFrame,time:animTime,clip:$('animClip').value||''}};
+  motion:{boneNames:animBones.map(b=>b.name),frames:animFrames.map(frame=>frame.map(q=>q.slice())),positionFrames:animPositionFrames.map(frame=>frame.map(p=>p.slice())),positions:animBones.length?posePositions().map(p=>p.slice()):[],pose:animBones.length?poseData().map(q=>q.slice()):[],chosen:animChosen,frame:animFrame,time:animTime,clip:$('animClip').value||''}};
  for(const [m,p] of paintSessions){const index=meshes.indexOf(m);if(index<0)continue;data.painting.push({meshIndex:index,meshName:m.name||'',width:p.canvas.width,texture:await canvasBlob(p.canvas),strokes:p.strokes});}
  return data;
 }
@@ -864,6 +903,9 @@ async function applyRecoveredSession(s){
  if(pose?.boneNames&&JSON.stringify(pose.boneNames)!==JSON.stringify(animBones.map(b=>b.name)))throw Error('Saved skeleton does not match.');
  if(pose?.frames&&!Array.isArray(pose.frames))throw Error('Invalid saved animation frames.');
  if(pose?.frames?.some(frame=>!Array.isArray(frame)||frame.length!==animBones.length||frame.some(q=>!safeQuaternion(q))))throw Error('Invalid saved keyframes.');
+  const safePositionFrame=p=>Array.isArray(p)&&p.length===animBones.length&&p.every(v=>safe3(v));
+  if(pose?.positionFrames!==undefined&&(!Array.isArray(pose.positionFrames)||pose.positionFrames.length!==pose.frames?.length||!pose.positionFrames.every(safePositionFrame)))throw Error('Invalid saved joint position tracks.');
+  if(pose?.positions!==undefined&&!safePositionFrame(pose.positions))throw Error('Invalid saved skeleton positions.');
  for(let i=0;i<6;i++){regions[i].name=checked[i].name;regions[i].parts=checked[i].parts;regions[i].offset=checked[i].offset;regions[i].hit=null}
  regionIndex=Number.isInteger(s.regionIndex)&&s.regionIndex>=0&&s.regionIndex<6?s.regionIndex:0;
  triSelections=regions[regionIndex].parts;lastHit=null;$('regionName').value=regions[regionIndex].name;
@@ -885,8 +927,8 @@ async function applyRecoveredSession(s){
  if(Number.isFinite(brush.opacity)&&brush.opacity>=5&&brush.opacity<=100)$('paintOpacity').value=String(brush.opacity);
  if([1024,2048].includes(brush.resolution))$('paintResolution').value=String(brush.resolution);
  if(Number.isInteger(brush.targetIndex)&&paintEligible(meshes[brush.targetIndex])){paintTarget=meshes[brush.targetIndex];$('paintTarget').value=String(brush.targetIndex)}
- animFrames=pose?.frames||[];animFrame=Number.isInteger(pose?.frame)&&pose.frame>=0&&pose.frame<animFrames.length?pose.frame:-1;animChosen=Number.isInteger(pose?.chosen)&&pose.chosen>=0&&pose.chosen<animBones.length?pose.chosen:0;
- if(animBones.length){$('animBone').value=String(animChosen);if(Array.isArray(pose?.pose)&&pose.pose.length===animBones.length&&pose.pose.every(safeQuaternion))restorePose(pose.pose)}
+ animFrames=pose?.frames||[];animPositionFrames=pose?.positionFrames||[];animFrame=Number.isInteger(pose?.frame)&&pose.frame>=0&&pose.frame<animFrames.length?pose.frame:-1;animChosen=Number.isInteger(pose?.chosen)&&pose.chosen>=0&&pose.chosen<animBones.length?pose.chosen:0;
+ if(animBones.length){$('animBone').value=String(animChosen);if(Array.isArray(pose?.pose)&&pose.pose.length===animBones.length&&pose.pose.every(safeQuaternion))restorePose(pose.pose);restorePosePositions(pose.positions||animInitialPositions)}
  animPlaying=false;animTime=Number.isFinite(pose?.time)?Math.max(0,pose.time):0;drawPoseFrames();syncJoint();updateAnimationUI();
  const chosenPaint=Number.isInteger(brush.targetIndex)?brush.targetIndex:null;
  refreshPaintTargets();if(chosenPaint!==null&&paintEligible(meshes[chosenPaint])){paintTarget=meshes[chosenPaint];$('paintTarget').value=String(chosenPaint)}updatePaintUI();
@@ -1209,7 +1251,7 @@ function directorGesturePreview(){
     axis==='x'?new THREE.Vector3(1,0,0):axis==='y'?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1),
     THREE.MathUtils.degToRad(angle));
   middle[animChosen]=new THREE.Quaternion().fromArray(base[animChosen]).multiply(turn).normalize().toArray();
-  animFrames=[base,middle,ending];animFrame=1;animTime=POSE_SEGMENT;
+  animFrames=[base,middle,ending];const basePositions=posePositions();animPositionFrames=[basePositions.map(p=>p.slice()),basePositions.map(p=>p.slice()),basePositions.map(p=>p.slice())];animFrame=1;animTime=POSE_SEGMENT;
   restorePose(middle);drawPoseFrames();showWorkspace('animate');updateAnimationUI();scheduleAutosave();
   $('directorGestureStatus').textContent='Three poses built using '+chosen.name+' (local '+axis.toUpperCase()+', '+angle+'°). Refine the middle pose, use Replace keyframe, then Play / Export Animated GLB.';
   directorMessage('Editable three-keyframe gesture created locally. No AI animation service or model regeneration used.');

@@ -18,7 +18,10 @@
 </nav>
 
 <p class="hint" style="margin:3px 0 12px"><a href="https://mre369.github.io/foxfriend-motion-studio/colab/agent-guide.html" style="color:#91f0d8" target="_blank" rel="noopener">📷 New to collaborating with an AI agent? See our screenshot-first guide ↗</a></p>
-<label>1 · Load any GLB</label><input id="file" type="file" accept=".glb,model/gltf-binary"><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
+<label>1 · Load any GLB</label><input id="file" type="file" accept=".glb,model/gltf-binary">
+<button id="fileBrowseAll" type="button">📁 Android: Browse all files for original GLB</button>
+<input id="fileUnfiltered" type="file" hidden aria-label="Browse Android files to choose original GLB without type filtering">
+<p class="hint">If an extracted GLB is greyed out in Android's picker, use Browse all files above. Only genuine GLB models are loaded; ZIPs must be extracted first.</p><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
 
 <details id="directorPanel" class="subpanel" open aria-label="Director's Desk">
  <summary>🎬 Director's Desk · describe, preview, collaborate</summary>
@@ -213,6 +216,9 @@
 <p class="hint">Open a separate proposed GLB and switch Original / Candidate, at the same camera position. This never changes the original model.</p>
 <p class="hint" id="reviewLoadGuide" role="status">For side-by-side comparison, first load the ORIGINAL Finn using "Load any GLB" near the top of the controls. Then choose the repaired model below. If you only have the repair file, CoLab can still show it by itself.</p>
 <label for="candidateFile">Proposed GLB</label><input id="candidateFile" type="file" accept=".glb,model/gltf-binary">
+<button id="candidateBrowseAll" type="button">📁 Android: Browse all files for repaired GLB</button>
+<input id="candidateUnfiltered" type="file" hidden aria-label="Browse Android files to choose repaired GLB without type filtering">
+<p class="hint">If Finn V3 is greyed out after extracting the ZIP, tap <strong>Browse all files</strong>, open the extracted folder, and select the file ending in <strong>.glb</strong> (not the ZIP or repair report). This button bypasses Android's unreliable file-type filtering.</p>
 <div class="row"><button id="candidateOriginal" class="active">Original</button><button id="candidateView">Candidate</button></div>
 <div class="row"><button id="reviewFaceFocus" type="button">👁 Focus on face</button><button id="reviewChangeDots" type="button" disabled>● Show changed points</button></div>
 <p id="reviewChangeStatus" class="hint" role="status">Load the matching original and candidate GLBs to measure actual geometry differences. For texture-only repairs, use Original / Candidate.</p>
@@ -437,7 +443,31 @@ async function loadGLBFile(f,fromRecovery=false){if(!f)return false;if(!fromReco
  }catch(err){status('Load failed: '+err.message);return false}
  finally{if(url)URL.revokeObjectURL(url)}
 }
-$('file').onchange=e=>loadGLBFile(e.target.files?.[0]);
+// Android sometimes labels .glb extracted from ZIP as a generic MIME type,
+ // making it unselectable through filtered input.accept. This explicit
+ // unrestricted picker uses the SAME model loader with a file signature check.
+async function verifyGLBFile(f){
+ if(!f)throw Error('No file selected.');
+ const header=await f.slice(0,12).arrayBuffer();
+ if(header.byteLength<12)throw Error('The selected file is too short to be a GLB.');
+ const h=new DataView(header);
+ if(h.getUint32(0,true)!==0x46546c67){
+  throw Error(/\.zip$/i.test(f.name)?'Select the extracted .glb file, not the ZIP. Open the extracted folder in My Files.':'Not a GLB file. Choose the model file ending in .glb, not a JSON report or ZIP.');
+ }
+ if(h.getUint32(4,true)!==2||h.getUint32(8,true)!==f.size){
+  throw Error('The GLB header is incomplete or damaged. Try extracting the ZIP again.');
+ }
+ return true;
+}
+$('fileBrowseAll').onclick=()=>$('fileUnfiltered').click();
+for(const id of ['file','fileUnfiltered']){
+ $(id).onchange=async e=>{
+  const selected=e.target.files?.[0];if(!selected)return;
+  try{await verifyGLBFile(selected);await loadGLBFile(selected)}
+  catch(err){status('Model not loaded: '+err.message)}
+  finally{e.target.value=''}
+ };
+}
 function cameraData(){return {position:camera.position.toArray(),target:controls.target.toArray(),up:camera.up.toArray()}}
 function selectionData(){return selections().map(({mesh:m,triangles})=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',nodePath:(()=>{let p=[],o=m;while(o&&o!==root){p.push(o.name||o.type);o=o.parent}return p.reverse().join('/')})(),triangleIndexing:'Three.js BufferGeometry faceIndex; triangles in source decoded geometry, indexed or non-indexed',triangles,representativeLocalPosition:triangles.length?triVerts(m,triangles[0])[0].toArray():null}))}
 $('export').onclick=()=>{if(!root)return status('Load a model first.');const data={schema:'better-together-3d-colab-geometry-selection-v2',groups:regions.map((r,i)=>({slot:i,color:r.color,label:r.name,selection:[...r.parts].filter(([,v])=>v.size).map(([m,a])=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',triangles:[...a].sort((x,y)=>x-y)}))})),app:'Better Together 3D CoLab',agentWorkflow:{guide:'https://github.com/MrE369/foxfriend-motion-studio/blob/main/docs/AGENT_WORKFLOW.md',screenshotFeedback:'Ask the artist for a real CoLab screenshot, the relevant parameter value and expected result. Diagnose first, use the smallest reversible fix and retest using a comparable screenshot.',costPrinciple:'Use AI for new reasoning and reusable deterministic local scripts for repeats. Savings are possible, not guaranteed; measure metered usage.'},createdAt:new Date().toISOString(),source:{filename:originalName,sizeBytes:glbFileSize,sha256:fingerprint},selection:selectionData(),lastHit:lastHit?{meshIndex:meshes.indexOf(lastHit.mesh),triangleIndex:lastHit.triangle,localPosition:lastHit.mesh.worldToLocal(new THREE.Vector3(...lastHit.point)).toArray(),worldPosition:lastHit.point,localNormal:lastHit.normal,uv:lastHit.uv}:null,view:{camera:cameraData(),style:viewStyle,contextTransparency:Number($('context').value)/100},annotation:{label:$('label').value,note:$('note').value},warning:'Triangle IDs are valid only for this exact GLB hash and its decoded geometry. They may change after re-export or topology changes.'};download(originalName.replace(/\.glb$/i,'')+'_geometry_selection.json',data);status('Selection JSON exported. Share it with the original GLB for analysis.')};
@@ -1143,11 +1173,14 @@ function showCandidate(show){
  syncReviewLoadGuide();
 }
 $('candidateOriginal').onclick=()=>showCandidate(false);$('candidateView').onclick=()=>showCandidate(true);
-$('candidateFile').onchange=async e=>{
+$('candidateBrowseAll').onclick=()=>$('candidateUnfiltered').click();
+async function loadCandidateFromPicker(e){
  const f=e.target.files?.[0];if(!f)return;
  let url;
- $('candidateStatus').textContent='Loading proposed model '+f.name+'…';
+ $('candidateStatus').textContent='Checking proposed model '+f.name+'…';
  try{
+  await verifyGLBFile(f);
+  $('candidateStatus').textContent='Loading proposed model '+f.name+'…';
   url=URL.createObjectURL(f);
   const g=await new GLTFLoader().loadAsync(url);
   let n=0;g.scene.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)n++});
@@ -1169,9 +1202,11 @@ $('candidateFile').onchange=async e=>{
    $('candidateStatus').textContent='Showing proposed Finn · '+candidateName+'. Tap Original to compare.';
   }
   syncReviewLoadGuide();
- }catch(err){$('candidateStatus').textContent='Candidate failed: '+err.message}
- finally{if(url)URL.revokeObjectURL(url)}
-};
+ }catch(err){$('candidateStatus').textContent='Candidate not loaded: '+err.message}
+ finally{if(url)URL.revokeObjectURL(url);e.target.value=''}
+}
+$('candidateFile').onchange=loadCandidateFromPicker;
+$('candidateUnfiltered').onchange=loadCandidateFromPicker;
 $('candidateDecision').onclick=()=>{if(!candidateRoot)return status('Load proposed GLB before saving a decision.');download(originalName.replace(/\.glb$/i,'')+'_repair_review.json',{schema:'better-together-colab-repair-review-v1',original:originalName,originalSHA256:fingerprint,candidate:candidateName,decision:'reviewed-unapproved',camera:cameraData(),notes:$('note').value,warning:'Review JSON is a decision record, not a modified GLB.'});status('Review record saved; no file was modified.')};
 function clearUnifiedBeforeLoad(){
  facePatchState.mesh=null;facePatchState.triangles=[];facePatchState.center=null;

@@ -383,13 +383,26 @@ function startPaintSession(m,sz){
   if(!paintEligible(m))throw Error('This mesh needs UV coordinates and one material for paint v0.1.');
   let p=paintSessions.get(m);if(p)return p;
   const canvas=document.createElement('canvas');canvas.width=canvas.height=sz;
-  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.fillStyle='white';ctx.fillRect(0,0,sz,sz);
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const base=baseMaterials.get(m)[0];
+  // Preserve the imported artwork. A new, white texture would silently
+  // erase an existing face, costume or bark texture during the first stroke.
+  if(base.map){
+    const image=base.map.image||base.map.source?.data;
+    if(!image?.width||!image?.height)throw Error('Source texture cannot be copied safely. No paint session was started.');
+    ctx.save();
+    if(base.map.flipY===false){ctx.translate(0,sz);ctx.scale(1,-1)}
+    try{ctx.drawImage(image,0,0,sz,sz)}catch(err){ctx.restore();throw Error('Source texture cannot be drawn locally: '+err.message)}
+    ctx.restore();
+  }else{ctx.fillStyle='white';ctx.fillRect(0,0,sz,sz)}
+  const baseCanvas=document.createElement('canvas');baseCanvas.width=baseCanvas.height=sz;
+  baseCanvas.getContext('2d').drawImage(canvas,0,0);
   const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
   tex.flipY=true;tex.wrapS=THREE.ClampToEdgeWrapping;tex.wrapT=THREE.ClampToEdgeWrapping;
-  const base=baseMaterials.get(m)[0];const material=base.clone();material.map=tex;material.color.set('#ffffff');material.side=THREE.DoubleSide;
+  const material=base.clone();material.map=tex;material.side=THREE.DoubleSide;
   // B3.3's solid / X-ray / wire view rebuilds materials from this baseline.
   baseMaterials.set(m,[material]);applyStyle();
-  p={canvas,ctx,tex,material,undo:[],strokes:[],painted:false};paintSessions.set(m,p);
+  p={canvas,ctx,tex,material,baseCanvas,undo:[],strokes:[],painted:false};paintSessions.set(m,p);
   return p;
 }
 function updatePaintUI(){
@@ -456,7 +469,7 @@ function finishPaint(){
 }
 overlay.addEventListener('pointerup',finishPaint);overlay.addEventListener('pointercancel',finishPaint);
 $('paintUndo').onclick=()=>{finishPaint();const p=paintSessions.get(paintTarget);if(!p?.undo.length)return paintMessage('No recent stroke to undo.');p.ctx.putImageData(p.undo.pop(),0,0);p.tex.needsUpdate=true;p.strokes.pop();paintCanvasPreview();paintMessage('Paint stroke undone.')};
-$('paintClear').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return;if(!confirm('Clear paint on the selected mesh? Original GLB is unchanged.'))return;p.ctx.fillStyle='white';p.ctx.globalAlpha=1;p.ctx.fillRect(0,0,p.canvas.width,p.canvas.height);p.tex.needsUpdate=true;p.strokes=[];p.undo=[];paintCanvasPreview();paintMessage('Paint on active mesh cleared.')};
+$('paintClear').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return;if(!confirm('Clear paint on the selected mesh? Original GLB is unchanged.'))return;p.ctx.globalAlpha=1;p.ctx.globalCompositeOperation='source-over';p.ctx.clearRect(0,0,p.canvas.width,p.canvas.height);p.ctx.drawImage(p.baseCanvas,0,0);p.tex.needsUpdate=true;p.strokes=[];p.undo=[];paintCanvasPreview();paintMessage('Paint on active mesh cleared.')};
 $('paintPNG').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return paintMessage('Paint on the mesh first.');p.canvas.toBlob(b=>b?downloadRaw(b,originalName.replace(/\.glb$/i,'')+'_paint.png'):paintMessage('PNG could not be exported.'),'image/png')};
 $('paintJSON').onclick=()=>{
  finishPaint();const p=paintSessions.get(paintTarget);if(!p)return paintMessage('Start painting first.');

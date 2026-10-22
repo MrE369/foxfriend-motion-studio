@@ -7,7 +7,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  const guides=new THREE.Group();guides.visible=false;scene.add(guides);
  guides.add(new THREE.GridHelper(2,20,0x69869b,0x3d5265));
  const loaded=[];const undo=[];let current=-1,active=false,busy=false,drag=null,outline=null;
- const sculpt=installSculptTools({THREE,renderer,camera,controls,getSelected:()=>selected(),getActive:()=>active,onUpdate:()=>{if(outline)outline.update();}});
+ const sculpt=installSculptTools({THREE,renderer,camera,controls,getSelected:()=>selected(),getActive:()=>active,onUpdate:()=>{if(outline){outline.update();outline.visible=!sculpt.isEditing();}}});
  const inputs=['asX','asY','asZ','asPitch','asYaw','asRoll','asScale'];
  const msg=t=>{$('asStatus').textContent=t};
  const selected=()=>loaded[current]||null;
@@ -25,7 +25,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
   $('asHeight').disabled=!loaded.length||busy;$('asPreset').disabled=loaded.length<2||busy;
   const b=bounds();$('asInfo').textContent=loaded.length+' GLB(s) · '+(b.isEmpty()?0:b.getSize(new THREE.Vector3()).y).toFixed(3)+' m high';
   if(outline){guides.remove(outline);outline.geometry.dispose();outline.material.dispose();outline=null;}
-  if(r){outline=new THREE.BoxHelper(r,0xffd566);guides.add(outline);}
+  if(r){outline=new THREE.BoxHelper(r,0xffd566);outline.visible=!sculpt.isEditing();guides.add(outline);}
  }
  function choose(n){sculpt.cancel();current=(Number.isInteger(n)&&n>=0&&n<loaded.length)?n:-1;update();}
  function save(){const r=selected()?.root;if(!r)return;undo.push({root:r,pos:r.position.toArray(),rot:[r.rotation.x,r.rotation.y,r.rotation.z],scale:r.scale.toArray()});if(undo.length>30)undo.shift();}

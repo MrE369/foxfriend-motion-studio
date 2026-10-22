@@ -76,6 +76,27 @@ export async function createRigAdapter(gltf) {
       else if(selected.every(Boolean))warnings.push(label+' needs a non-direct chain adapter before IK (VRM bones are not direct parent/child/child).');
     }
     if(!Object.keys(humanBones).length){warnings.push('VRM extension detected but no humanoid bones could be resolved.');confidence='low';}
+  } else if(get('J_Bip_C_Hips') && get('J_Bip_C_Head') && get('J_Bip_L_UpperArm') && get('J_Bip_R_UpperArm')) {
+    // Exports from some VRM humanoid pipelines retain J_Bip bones but strip
+    // VRMC_vrm metadata. This is a NAMING fallback, not proof of VRM 1.0 format.
+    kind='vrm-style-humanoid';layout='humanoid';confidence='medium';
+    const labels={hips:'C_Hips',spine:'C_Spine',chest:'C_Chest',upperChest:'C_UpperChest',neck:'C_Neck',head:'C_Head',
+      leftShoulder:'L_Shoulder',leftUpperArm:'L_UpperArm',leftLowerArm:'L_LowerArm',leftHand:'L_Hand',
+      rightShoulder:'R_Shoulder',rightUpperArm:'R_UpperArm',rightLowerArm:'R_LowerArm',rightHand:'R_Hand',
+      leftUpperLeg:'L_UpperLeg',leftLowerLeg:'L_LowerLeg',leftFoot:'L_Foot',leftToes:'L_ToeBase',
+      rightUpperLeg:'R_UpperLeg',rightLowerLeg:'R_LowerLeg',rightFoot:'R_Foot',rightToes:'R_ToeBase'};
+    for(const [role,suffix] of Object.entries(labels)){const b=get('J_Bip_'+suffix);if(b)humanBones[role]=b;}
+    for(const [id,label] of [['head','Head'],['neck','Neck'],['spine','Spine'],['chest','Chest'],['upperChest','Upper chest'],['hips','Hips'],
+      ['leftHand','Left hand'],['rightHand','Right hand'],['leftFoot','Left foot'],['rightFoot','Right foot']]){
+      if(humanBones[id])parts.push(part(id,label,humanBones[id],'medium'));
+    }
+    for(const [id,label,roles] of [
+      ['leftArm','Left arm',['leftUpperArm','leftLowerArm','leftHand']],
+      ['rightArm','Right arm',['rightUpperArm','rightLowerArm','rightHand']],
+      ['leftLeg','Left leg',['leftUpperLeg','leftLowerLeg','leftFoot']],
+      ['rightLeg','Right leg',['rightUpperLeg','rightLowerLeg','rightFoot']]
+    ]){const selected=roles.map(r=>humanBones[r]);if(selected.every(Boolean)&&connectedTriple(selected))chains.push(chain(id,label,selected,'medium','limb'));}
+    warnings.push('VRM-style naming inferred from J_Bip bones. This GLB contains no VRMC_vrm humanoid metadata; VRM 1.0 compliance is not verified.');
   } else {
     const tripoBones=bones.filter(b=>/^tripo(?:[:_]|Root|Head|Spine|\d)/i.test(b.name));
     if(tripoBones.length>=3){
@@ -88,8 +109,16 @@ export async function createRigAdapter(gltf) {
         if(!groups.has(key))groups.set(key,[]);
         groups.get(key).push({index:Number(match[3]),bone:b,group:match[1],side:match[2].toLowerCase()});
       }
+      let wingCandidates=0;
       for(const [key,group] of groups) {
         group.sort((a,b)=>a.index-b.index);
+        if(group.length>=5){
+          // Long branching distal chains in Tripo owl exports often represent
+          // wings. Do not drive them with a two-segment leg solver.
+          wingCandidates++;
+          parts.push(part('possibleWing-'+key,'Possible '+group[0].side+' wing',group[0].bone,'low','wing'));
+          continue;
+        }
         // A native Tripo limb may have an extra root bone: the distal 3 joints
         // form a direct two-segment IK candidate. Verify each actual hierarchy.
         for(let offset=group.length-3;offset>=0;offset--){
@@ -102,14 +131,16 @@ export async function createRigAdapter(gltf) {
           }
         }
       }
-      const head=get('tripoHead_1')||get('tripoHead_0');
+      const head=get('tripoHead_3')||get('tripoHead_2')||get('tripoHead_1')||get('tripoHead_0');
       if(head)parts.push(part('head','Head',head,'medium'));
       for(const [id,label,name] of [
         ['neck','Neck / upper spine','tripoSpine_2'],
         ['spine','Spine','tripoSpine_1'],
         ['hips','Spine base / hips','tripoSpine_0']
       ]){const b=get(name);if(b)parts.push(part(id,label,b,'low'));}
-      if(chains.length===4 && get('tripoHead_0') && get('tripoSpine_0')) layout='four-limbed creature (unverified anatomy)';
+      if(wingCandidates>=2)layout='possible winged creature';
+      else if(chains.length===4 && get('tripoHead_0') && get('tripoSpine_0'))layout='four-limbed creature (unverified anatomy)';
+      if(wingCandidates)warnings.push('Long Tripo limb chains may be wings. Excluded from ordinary leg IK until their anatomy is verified.');
       warnings.push('Tripo native rigs do not supply standard anatomical rotation limits or guaranteed leg/wing labels.');
       if(!chains.length)warnings.push('Native Tripo skeleton found, but no directly connected three-bone limb chains were identified.');
     } else if(bones.length){

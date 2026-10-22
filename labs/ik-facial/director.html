@@ -104,8 +104,11 @@
 <div class="subpanel" id="artReferencePanel">
 <h3>🖼 Concept art · paint together</h3>
 <p class="hint">Add your original drawing as a local visual reference. You can pin it to the 3D viewer without uploading it to anyone. To collaborate with an AI partner, share the art image in your conversation along with a CoLab screenshot and JSON.</p>
-<label for="artReferenceFile">Choose concept art (PNG, JPEG or WebP)</label>
-<input id="artReferenceFile" type="file" accept="image/png,image/jpeg,image/webp">
+<label for="artReferenceFile">Add concept art (PNG, JPEG or WebP)</label>
+<div class="row"><label class="smallFileLabel" style="margin:3px 0;flex:1;text-align:center">🖼 Choose from Photos<input id="artReferenceFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
+<button type="button" id="artReferenceBrowseButton" style="flex:1">📁 Browse Files / Drive</button></div>
+<input id="artReferenceBrowse" type="file" hidden aria-label="Choose a concept image through Android Files">
+<p class="hint">Photos opens the Android gallery. Browse Files / Drive requests the general document browser, where Drive may be offered. If not, download the image from Drive and select it from Downloads.</p>
 <img id="artReferencePreview" alt="Loaded concept art" hidden>
 <p id="artReferenceSummary" role="status">No reference loaded. Your artwork stays on this device until you choose to share it.</p>
 <div class="row"><button id="artReferenceToggle" type="button" disabled>Pin image over viewer</button><button id="artReferenceRemove" type="button" disabled>Remove reference</button></div>
@@ -437,9 +440,10 @@ function updateArtReferenceDisplay(){
  $('artReferencePreview').hidden=!has;
  if(has){$('artReferencePinImage').src=artReferenceUrl;$('artReferencePreview').src=artReferenceUrl}
 }
-$('artReferenceFile').onchange=e=>{
+$('artReferenceBrowseButton').onclick=()=>$('artReferenceBrowse').click();
+function chooseArtReference(e){
  const file=e.target.files?.[0];if(!file)return;
- if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>12*1024*1024){
+ if((!['image/png','image/jpeg','image/webp'].includes(file.type)&&!(/\.(png|jpe?g|webp)$/i).test(file.name||''))||file.size>12*1024*1024){
   $('artReferenceSummary').textContent='Choose a PNG, JPEG or WebP up to 12 MB. Nothing was uploaded.';
   e.target.value='';return;
  }
@@ -453,12 +457,14 @@ $('artReferenceFile').onchange=e=>{
  };
  img.onerror=()=>{URL.revokeObjectURL(nextUrl);$('artReferenceSummary').textContent='Could not read this image. Nothing was uploaded.'};
  img.src=nextUrl;
-};
+}
+$('artReferenceFile').onchange=chooseArtReference;
+$('artReferenceBrowse').onchange=chooseArtReference;
 $('artReferenceToggle').onclick=()=>{artReferencePinned=!artReferencePinned;updateArtReferenceDisplay()};
 $('artReferenceRemove').onclick=()=>{
  if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl);
  artReferenceUrl=null;artReferenceName='';artReferencePinned=false;
- $('artReferenceFile').value='';$('artReferencePreview').removeAttribute('src');
+ $('artReferenceFile').value='';$('artReferenceBrowse').value='';$('artReferencePreview').removeAttribute('src');
  $('artReferencePinImage').removeAttribute('src');
  $('artReferenceSummary').textContent='Reference removed from this page. Your original image file was not deleted.';
  updateArtReferenceDisplay();

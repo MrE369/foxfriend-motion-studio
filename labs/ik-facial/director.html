@@ -86,7 +86,17 @@
  <div id="updateReady" hidden><p class="hint">An approved update is ready. Save your project before restarting the app.</p><div class="row"><button id="applyUpdate">Save &amp; update</button><button id="laterUpdate">Later</button></div></div>
  <p id="updateStatus" class="hint" aria-live="polite">Updates never interrupt active work automatically.</p>
 </details>
-<p class="hint" id="workspaceHint">Six-color geometry selections and agent handoffs · B3.3 preserved</p><section id="tabInspect" class="workspace" role="tabpanel" aria-labelledby="tabButtonInspect"><label>2 · Surface selection</label><div class="row"><button id="nav" class="active">✋ Navigate</button><button id="select">◈ Select</button></div><div class="row"><button id="one">Triangle</button><button id="connected">Connected part</button><button id="mesh">Whole mesh</button></div><div class="row"><button id="clear">Clear selection</button><button id="frame">Frame selection</button></div><div id="picked">Tap a visible surface in Select mode.</div><label style="font-weight:500;display:flex;align-items:center;gap:4px"><input id="autoConnected" type="checkbox" checked> Auto-select connected part when tapping</label><p class="hint">Uncheck for individual triangles. A numbered, color-coded marker shows the exact surface tap even if a tiny triangle is hard to see. Use Connected part to expand the active region again.</p>
+<p class="hint" id="workspaceHint">Six-color geometry selections and agent handoffs · B3.3 preserved</p><section id="tabInspect" class="workspace" role="tabpanel" aria-labelledby="tabButtonInspect"><label>2 · Surface selection</label><div class="row"><button id="nav" class="active">✋ Navigate</button><button id="select">◈ Select</button></div><div class="row"><button id="one">Triangle</button><button id="connected">Connected part</button><button id="mesh">Whole mesh</button></div><div class="row"><button id="clear">Clear selection</button><button id="frame">Frame selection</button></div><div id="picked">Tap a visible surface in Select mode.</div>
+<details class="subpanel" id="facePatchPanel">
+ <summary>🧑 Face repair lab · prepare a local patch for Aster</summary>
+ <p class="hint">For Finn's rigged mesh. This does NOT repair the face automatically. It marks a small, controllable 3D patch for investigation without touching the original geometry, UVs or skin weights.</p>
+ <p class="hint">Tap <strong>Select</strong>, uncheck Auto-select connected part, and touch Finn's cheek or forehead. Then tap <strong>Mark face patch</strong>.</p>
+ <label for="facePatchRadius">Patch radius around last touched point · <output id="facePatchRadiusValue">0.06</output> model units</label>
+ <input id="facePatchRadius" type="range" min="0.01" max="0.18" value="0.06" step="0.005">
+ <div class="row"><button id="facePatchMark" type="button">Mark face patch</button><button id="facePatchExport" type="button">⬇ Patch diagnostic JSON</button></div>
+ <p id="facePatchStatus" class="hint" role="status">Start by selecting a small facial surface in Inspect.</p>
+ <p class="hint">Exports only the selected mesh patch's positions, normals, UVs and skinning weights, plus the matching GLB fingerprint. It does not upload the model or make a sculpt automatically. Send this JSON and a close-up screenshot for a proposal.</p>
+</details><label style="font-weight:500;display:flex;align-items:center;gap:4px"><input id="autoConnected" type="checkbox" checked> Auto-select connected part when tapping</label><p class="hint">Uncheck for individual triangles. A numbered, color-coded marker shows the exact surface tap even if a tiny triangle is hard to see. Use Connected part to expand the active region again.</p>
 <label>3 · Six independent color selections</label><div id="slots" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div><label for="regionName">Active region name</label><input id="regionName" maxlength="100"><button id="clearAllRegions">Clear ALL six regions</button><p class="hint">Choose a color, tap geometry and expand to Connected part. Select another color to keep both regions visible. You can name each region. This is for inspection, not yet expression editing. B2.1/B3.1: tapping auto-expands connected geometry, and each color slot remembers its hit.</p><label>4 · Selection visibility</label><div class="row"><button id="showAll" class="active">Show all</button><button id="isolate">Isolate selected</button></div><div class="row"><button id="hideSelected">Hide selected</button><button id="contextOnly">Context + selected</button></div>
 <label for="isolateAlpha">Surrounding geometry visibility <output id="isolateAlphaValue">20%</output></label><input id="isolateAlpha" type="range" min="0" max="100" step="5" value="20">
 <p class="hint">Isolate shows selected triangles, optionally with faded surroundings. Hide selected shows all other triangles. Restore all to select another surface. Selection and original geometry remain intact.</p>
@@ -279,6 +289,80 @@ function download(name,json){const blob=new Blob([JSON.stringify(json,null,2)],{
 function triCount(m){return m.geometry.index?Math.floor(m.geometry.index.count/3):Math.floor(m.geometry.attributes.position.count/3)}
 function idx(m,tri,vertex){const g=m.geometry;return g.index?g.index.getX(3*tri+vertex):3*tri+vertex}
 function triVerts(m,t){let a=m.geometry.attributes.position;return [0,1,2].map(k=>new THREE.Vector3().fromBufferAttribute(a,idx(m,t,k)))}
+
+const facePatchState={mesh:null,triangles:[],center:null,radius:0};
+$('facePatchRadius').oninput=()=>$('facePatchRadiusValue').textContent=Number($('facePatchRadius').value).toFixed(3);
+function facePatchCollect(){
+ if(!root||!lastHit?.mesh||!meshes.includes(lastHit.mesh))throw Error('Select a point on the loaded 3D face first.');
+ const mesh=lastHit.mesh,g=mesh.geometry,position=g.attributes.position;
+ if(!position||!Number.isInteger(lastHit.triangle))throw Error('No valid model triangle is selected.');
+ const center=new THREE.Vector3(...lastHit.point);
+ mesh.updateWorldMatrix(true,false);
+ mesh.worldToLocal(center);
+ const radius=Number($('facePatchRadius').value);
+ if(!Number.isFinite(radius)||radius<.01||radius>.18)throw Error('Patch radius out of range.');
+ const limit=35000,triangles=[];
+ // Use the local coordinates to avoid picking the opposite side of a head
+ // solely due to projecting at the same pixel. Preview remains reviewable.
+ for(let t=0,n=triCount(mesh);t<n;t++){
+  const v=triVerts(mesh,t),centroid=v[0].clone().add(v[1]).add(v[2]).multiplyScalar(1/3);
+  if(centroid.distanceToSquared(center)<=radius*radius){
+   triangles.push(t);
+   if(triangles.length>limit)throw Error('Patch exceeds 35,000 triangles. Lower the radius.');
+  }
+ }
+ if(!triangles.length)throw Error('No nearby triangles. Tap the character surface again.');
+ return {mesh,center:center.toArray(),triangles,radius};
+}
+$('facePatchMark').onclick=()=>{
+ try{
+  const patch=facePatchCollect();
+  facePatchState.mesh=patch.mesh;
+  facePatchState.center=patch.center;facePatchState.triangles=patch.triangles;facePatchState.radius=patch.radius;
+  regions[regionIndex].parts.clear();
+  regions[regionIndex].parts.set(patch.mesh,new Set(patch.triangles));
+  triSelections=new Map([[patch.mesh,new Set(patch.triangles)]]);
+  renderMarks();
+  $('facePatchStatus').textContent='Marked '+patch.triangles.length+' triangles around the selected point. Inspect the colored area before exporting. Change radius and Mark again to adjust.';
+ }catch(err){$('facePatchStatus').textContent='Patch not marked: '+err.message;}
+};
+$('facePatchExport').onclick=()=>{
+ try{
+  const mesh=facePatchState.mesh;
+  if(!root||!mesh||!meshes.includes(mesh)||!facePatchState.triangles.length)throw Error('Mark a face patch first.');
+  const g=mesh.geometry,p=g.attributes.position,normal=g.attributes.normal,uv=g.attributes.uv,
+   joint=g.attributes.skinIndex,weight=g.attributes.skinWeight;
+  const unique=new Set();
+  for(const t of facePatchState.triangles){
+   if(t<0||t>=triCount(mesh))throw Error('Patch is no longer valid for this mesh.');
+   for(let k=0;k<3;k++)unique.add(idx(mesh,t,k));
+  }
+  if(unique.size>110000)throw Error('Patch is too large to safely export on this device.');
+  const vertexIds=[...unique].sort((a,b)=>a-b);
+  const vertices=vertexIds.map(id=>({
+   id,position:[p.getX(id),p.getY(id),p.getZ(id)],
+   normal:normal?[normal.getX(id),normal.getY(id),normal.getZ(id)]:null,
+   uv:uv?[uv.getX(id),uv.getY(id)]:null,
+   skinIndices:joint?Array.from({length:Math.min(4,joint.itemSize)},(_,i)=>joint.getComponent(id,i)):null,
+   skinWeights:weight?Array.from({length:Math.min(4,weight.itemSize)},(_,i)=>weight.getComponent(id,i)):null
+  }));
+  const mat=baseMaterials.get(mesh)?.[0],im=mat?.map?.image||mat?.map?.source?.data;
+  const packet={
+   schema:'colab-face-patch-diagnostic-v1',createdAt:new Date().toISOString(),
+   source:{file:originalName,sha256:fingerprint,sizeBytes:glbFileSize},
+   mesh:{index:meshes.indexOf(mesh),name:mesh.name||'',skinned:!!mesh.isSkinnedMesh,
+     vertexCount:p.count,triangleCount:triCount(mesh),textureSize:im?[im.width||0,im.height||0]:null,
+     hasUV:!!uv,hasNormals:!!normal,hasSkinIndices:!!joint,hasSkinWeights:!!weight},
+   patch:{centerLocal:facePatchState.center,radiusLocal:facePatchState.radius,
+     triangles:facePatchState.triangles,vertices},
+   camera:cameraData(),
+   safety:'READ-ONLY diagnostic of existing rigged mesh. Do not change vertex ordering, UVs or skin weights; use a reversible proposal on a copy.'
+  };
+  download(originalName.replace(/\.glb$/i,'')+'_face_patch.json',packet);
+  $('facePatchStatus').textContent='Exported diagnostic: '+facePatchState.triangles.length+' triangles, '+vertices.length+' unique vertices. Send it with a facial close-up and approved reference.';
+ }catch(err){$('facePatchStatus').textContent='Export not completed: '+err.message;}
+};
+
 function meshId(m){return String(meshes.indexOf(m))} // deterministic pre-order mesh enumeration for the identical source GLB
 function clearMarks(){markGroup.children.forEach(m=>m.geometry?.dispose());markGroup.clear()}
 function selections(){return [...combined()].filter(([,v])=>v.size).map(([mesh,ids])=>({mesh,triangles:[...ids].sort((a,b)=>a-b)}))}
@@ -931,6 +1015,8 @@ $('candidateOriginal').onclick=()=>showCandidate(false);$('candidateView').oncli
 $('candidateFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;let url;try{url=URL.createObjectURL(f);const g=await new GLTFLoader().loadAsync(url);if(candidateRoot)scene.remove(candidateRoot);candidateRoot=g.scene;candidateName=f.name;directorRepairReady=false;directorRepairClips=g.animations||[];$('directorExportRepair').disabled=true;candidateRoot.visible=false;scene.add(candidateRoot);$('candidateStatus').textContent='Proposed GLB loaded: '+f.name+'. Tap Candidate to compare.'}catch(err){$('candidateStatus').textContent='Candidate failed: '+err.message}finally{if(url)URL.revokeObjectURL(url)}};
 $('candidateDecision').onclick=()=>{if(!candidateRoot)return status('Load proposed GLB before saving a decision.');download(originalName.replace(/\.glb$/i,'')+'_repair_review.json',{schema:'better-together-colab-repair-review-v1',original:originalName,originalSHA256:fingerprint,candidate:candidateName,decision:'reviewed-unapproved',camera:cameraData(),notes:$('note').value,warning:'Review JSON is a decision record, not a modified GLB.'});status('Review record saved; no file was modified.')};
 function clearUnifiedBeforeLoad(){
+ facePatchState.mesh=null;facePatchState.triangles=[];facePatchState.center=null;
+ $('facePatchStatus').textContent='Start by selecting a facial surface in Inspect.';
  clearJointPoints();
  directorRepairReady=false;directorRepairClips=[];$('directorExportRepair').disabled=true;
  directorValidRecipe=null;$('agentPreview').disabled=true;$('agentRecipeStatus').textContent='Load the matching asset and validate the AI recipe again.';

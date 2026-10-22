@@ -6,7 +6,7 @@
 </style></head><body>
 <header><h1>CoLab · Easy Pose Lab <small>0.4 · experimental</small></h1><small>Isolated prototype — no changes to Unified Studio</small></header>
 <main><div id="viewport"></div><aside>
-<label for="file">Load rigged GLB / GLTF</label><input id="file" type="file" accept=".glb,.gltf">
+<label for="file">Load rigged GLB / GLTF</label><input id="file" type="file" accept=".glb,.gltf,.vrm">
 <div id="status" role="status">Ready. Import a rigged GLB such as Blue Toro.</div>
 <section aria-label="Easy pose controls"><h2 style="font-size:18px;margin-bottom:6px">Easy Pose</h2><div id="rigSummary" role="status" style="padding:9px;border-radius:8px;background:#264456;margin:8px 0">Load a rigged GLB to identify its skeleton.</div><p id="simpleHelp">1. Load a rigged character.<br>2. Tap a glowing joint point or choose a body-part button.<br>3. Drag the yellow point to pose it. Drag elsewhere to rotate the view.</p><div id="quickLegs" aria-label="Leg picker"></div><div class="row"><button id="simpleReset">Reset pose</button><button id="simpleClear">Stop posing</button></div><p class="muted" id="poseStatus">Load a rigged GLB to start posing.</p></section>
 <button id="advancedToggle" aria-expanded="false" aria-controls="advancedPanel">Advanced tools ▾</button><div id="advancedPanel">
@@ -80,7 +80,7 @@ function refreshPresets(){
    if(!head)quick.textContent='No directly movable parts found for this rig.'}
  $('usePreset').disabled=!found;
  const kind=rigAdapter?.kind||'unknown';
- const rigLabel=kind==='vrm1-humanoid'?'VRM 1.0 humanoid':kind==='tripo-native'?'Tripo native creature':kind==='generic-skeleton'?'Unrecognized skeleton':kind==='unrigged'?'Unrigged mesh':'Unknown';
+ const rigLabel=kind==='vrm1-humanoid'?'VRM 1.0 humanoid':kind==='vrm-style-humanoid'?'VRM-style humanoid (metadata absent)':kind==='tripo-native'?(rigAdapter.layout==='possible winged creature'?'Tripo native · possible wings':'Tripo native creature'):kind==='generic-skeleton'?'Unrecognized skeleton':kind==='unrigged'?'Unrigged mesh':'Unknown';
  $('rigSummary').textContent='Detected: '+rigLabel+' · '+(rigAdapter?.bones.length||0)+' bones · '+found+' IK chains';
  $('poseStatus').textContent=found?'Choose a body part and drag its point. Rotation limits are still experimental.':head?'Head control available, but no limb chains were verified.':'Open Advanced tools to inspect the model.';
 }
@@ -110,7 +110,7 @@ function load(buffer){
    const d=Math.max(size.length(),1);modelSize=d;
    ['bones','root','mid','end'].forEach(fill);refreshPresets();refreshMorphs();refreshDiagnostics();
    orbit.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(d*.85,d*.55,d*.85));camera.near=Math.max(.001,d/1000);camera.far=d*100;camera.updateProjectionMatrix();orbit.update();
-   status(rigAdapter.kind==='vrm1-humanoid'?'VRM 1.0 rig recognized. Choose a body part below.':rigAdapter.kind==='tripo-native'?'Tripo native rig recognized. Choose a body part below.':'Rig inspected. Advanced options are available.');
+   status(rigAdapter.kind==='vrm1-humanoid'?'VRM 1.0 rig recognized. Choose a body part below.':rigAdapter.kind==='vrm-style-humanoid'?'Humanoid bone convention recognized (VRM metadata absent). Choose a body part below.':rigAdapter.kind==='tripo-native'?'Tripo native rig recognized. Choose a body part below.':'Rig inspected. Advanced options are available.');
   }catch(e){console.error(e);status('Rig analysis failed: '+e.message)}
  },e=>status('Import failed: '+e.message));
 }

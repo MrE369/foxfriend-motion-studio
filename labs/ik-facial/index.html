@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CoLab IK & Facial Lab 0.1</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101925;color:#eef6ff;font:15px system-ui}header{padding:12px 18px;background:#1b2b3b}h1{margin:0;font-size:21px}small,.muted{color:#b5c9d8}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#viewport{height:calc(100dvh - 78px);min-height:320px}aside{padding:15px;background:#182738;max-height:calc(100dvh - 78px);overflow:auto}button,input,select{width:100%;min-height:40px;background:#2b4358;border:1px solid #8096a9;border-radius:8px;color:white;padding:8px;font:inherit;margin:4px 0}button{cursor:pointer}button:hover{background:#376077}label{display:block;margin:12px 0 4px;font-weight:650}fieldset{border:1px solid #526a80;border-radius:10px;margin:12px 0;padding:12px}legend{font-weight:bold}#status{padding:9px;background:#234a43;border-radius:8px;white-space:pre-wrap}#bones{height:190px}#morphs{max-height:260px;overflow:auto}.morph{display:grid;grid-template-columns:1fr 85px;gap:6px;align-items:center}.morph input{min-height:20px}#notes{font-size:13px;line-height:1.5;color:#c6d5e1}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}@media(max-width:760px){main{display:block}#viewport{height:44dvh;min-height:260px}aside{max-height:none}}
+</style></head><body>
+<header><h1>CoLab · IK & Facial Lab <small>0.1 · experimental</small></h1><small>Isolated prototype — no changes to Unified Studio</small></header>
+<main><div id="viewport"></div><aside>
+<label for="file">Load rigged GLB / GLTF</label><input id="file" type="file" accept=".glb,.gltf">
+<div id="status" role="status">Ready. Import a rigged GLB such as Blue Toro.</div>
+<fieldset><legend>Skeleton inspector</legend>
+<div class="row"><button id="showBones">Toggle bones</button><button id="reset">Reset pose</button></div>
+<label for="bones">Bones detected</label><select id="bones" size="8" aria-label="Detected bones"></select>
+<label for="root">Chain root (hip / shoulder)</label><select id="root"></select>
+<label for="mid">Chain middle (knee / elbow)</label><select id="mid"></select>
+<label for="end">Chain end (ankle / wrist)</label><select id="end"></select>
+<button id="chain">Activate two-bone IK chain</button>
+<p class="muted">Choose three connected bones in parent → child → child order. Move the yellow target to pose the selected limb.</p>
+<div class="row"><button id="targetMode">Move target</button><button id="orbitMode">Orbit camera</button></div>
+<button id="clear">Clear IK chain</button>
+</fieldset>
+<fieldset><legend>Facial morph targets</legend><div id="morphs">Load a model to inspect available face shapes.</div><button id="zeroMorphs">Reset expressions</button></fieldset>
+<fieldset><legend>Diagnostics</legend><pre id="diagnostics" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px"></pre><button id="export">Export diagnostic JSON</button></fieldset>
+<p id="notes">This first lab detects actual skeletons and morph targets, supports reversible posing of a validated two-bone chain, and exports diagnostic data. It does not create missing facial geometry or perform full-body IK yet. For a .gltf with external files, convert to a self-contained .glb first.</p>
+</aside></main>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {TransformControls} from 'three/addons/controls/TransformControls.js';
+const $=id=>document.getElementById(id);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x283746);
+const camera=new THREE.PerspectiveCamera(48,1,.01,200);camera.position.set(3,2.2,4.8);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));$('viewport').append(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x667788,2.2));
+const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(4,8,5);scene.add(light);
+const grid=new THREE.GridHelper(12,24,0x678499,0x3b5163);scene.add(grid);
+const orbit=new OrbitControls(camera,renderer.domElement);orbit.enableDamping=true;
+const transform=new TransformControls(camera,renderer.domElement);transform.setSize(.85);scene.add(transform.getHelper());transform.addEventListener('dragging-changed',e=>orbit.enabled=!e.value);
+const loader=new GLTFLoader();const clock=new THREE.Clock();
+let model=null,bones=[],skinned=[],morphMeshes=[],helpers=[],chain=null,target=null,original=new Map(),show=true;
+const status=s=>$('status').textContent=s;
+function resize(){const el=$('viewport');renderer.setSize(el.clientWidth,el.clientHeight,false);camera.aspect=el.clientWidth/el.clientHeight;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe($('viewport'));resize();
+function clearScene(){transform.detach();if(target){scene.remove(target);target.geometry.dispose();target.material.dispose();target=null}if(model){scene.remove(model);model=null}helpers.forEach(h=>scene.remove(h));helpers=[];bones=[];skinned=[];morphMeshes=[];original.clear();chain=null;['bones','root','mid','end'].forEach(id=>$(id).replaceChildren());$('morphs').replaceChildren()}
+function fill(id){const el=$(id);el.replaceChildren();bones.forEach((b,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=b.name||'(unnamed bone '+i+')';el.append(o)})}
+function world(b){return b.getWorldPosition(new THREE.Vector3())}
+function refreshDiagnostics(){const info={bones:bones.map(b=>({name:b.name,parent:b.parent?.name||null})),skinnedMeshes:skinned.map(m=>({name:m.name,vertices:m.geometry.attributes.position?.count||0})),morphTargets:morphMeshes.map(m=>({mesh:m.name,names:Object.keys(m.morphTargetDictionary||{})}))};$('diagnostics').textContent=JSON.stringify({boneCount:info.bones.length,meshCount:info.skinnedMeshes.length,morphMeshCount:info.morphTargets.length,selectedChain:chain?.map(b=>b.name)||null},null,2);return info}
+function refreshMorphs(){const host=$('morphs');host.replaceChildren();let count=0;for(const mesh of morphMeshes){const dict=mesh.morphTargetDictionary||{};for(const [name,index] of Object.entries(dict)){count++;const row=document.createElement('div');row.className='morph';const label=document.createElement('label');label.textContent=(mesh.name||'Mesh')+' / '+name;const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='1';slider.step='.01';slider.value=String(mesh.morphTargetInfluences[index]||0);slider.addEventListener('input',()=>mesh.morphTargetInfluences[index]=Number(slider.value));row.append(label,slider);host.append(row)}}if(!count)host.textContent='No morph targets detected. Face expressions must be authored in the source mesh.'}
+function load(buffer){clearScene();loader.parse(buffer,'',gltf=>{model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isBone){bones.push(o);original.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()})}if(o.isSkinnedMesh)skinned.push(o);if(o.isMesh&&o.morphTargetInfluences?.length)morphMeshes.push(o)});bones.forEach(b=>{const h=new THREE.AxesHelper(.07);b.add(h);helpers.push(h)});['bones','root','mid','end'].forEach(fill);refreshMorphs();refreshDiagnostics();const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());const d=Math.max(size.length(),1);orbit.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(d*.85,d*.55,d*.85));camera.near=Math.max(.001,d/1000);camera.far=d*100;camera.updateProjectionMatrix();orbit.update();status('Imported '+bones.length+' bones, '+skinned.length+' skinned meshes, '+morphMeshes.length+' morph-enabled meshes.');},e=>status('Import failed: '+e.message))}
+$('file').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;status('Loading '+f.name+'…');try{load(await f.arrayBuffer())}catch(err){status('Import error: '+err.message)}});
+$('showBones').onclick=()=>{show=!show;helpers.forEach(h=>h.visible=show)};
+$('reset').onclick=()=>{for(const [b,p] of original){b.position.copy(p.position);b.quaternion.copy(p.quaternion);b.scale.copy(p.scale)}if(chain&&target)target.position.copy(world(chain[2]));status('Original bone transforms restored.')};
+function removeTarget(){transform.detach();if(target){scene.remove(target);target.geometry.dispose();target.material.dispose();target=null}chain=null;refreshDiagnostics()}
+$('clear').onclick=()=>{removeTarget();status('IK chain cleared.')};
+$('chain').onclick=()=>{const a=bones[Number($('root').value)],b=bones[Number($('mid').value)],c=bones[Number($('end').value)];if(!a||!b||!c||b.parent!==a||c.parent!==b){status('Choose directly connected root → middle → end bones.');return}removeTarget();chain=[a,b,c];target=new THREE.Mesh(new THREE.SphereGeometry(.07,14,10),new THREE.MeshBasicMaterial({color:0xffdc64,depthTest:false}));target.position.copy(world(c));scene.add(target);transform.attach(target);transform.setMode('translate');status('Two-bone IK active: '+chain.map(x=>x.name).join(' → '));refreshDiagnostics()};
+$('targetMode').onclick=()=>{if(target)transform.attach(target);status(target?'Drag the yellow IK target using the gizmo.':'Select an IK chain first.')};
+$('orbitMode').onclick=()=>{transform.detach();status('Orbit mode. Drag to rotate camera.')};
+$('zeroMorphs').onclick=()=>{morphMeshes.forEach(m=>m.morphTargetInfluences.fill(0));refreshMorphs()};
+$('export').onclick=()=>{const blob=new Blob([JSON.stringify(refreshDiagnostics(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='colab-rig-diagnostics.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+function solve(){if(!chain||!target)return;const [a,b,c]=chain;a.updateWorldMatrix(true,true);const p0=world(a),p1=world(b),p2=world(c),goal=target.position.clone();const l1=p0.distanceTo(p1),l2=p1.distanceTo(p2);if(l1<1e-5||l2<1e-5)return;
+const dir=goal.clone().sub(p0);const dist=Math.max(.0001,Math.min(dir.length(),l1+l2-1e-5));dir.normalize();
+const bend=p1.clone().sub(p0).addScaledVector(dir,-p1.clone().sub(p0).dot(dir));if(bend.lengthSq()<1e-8)bend.set(0,0,1).addScaledVector(dir,-dir.z);bend.normalize();
+const along=(l1*l1-l2*l2+dist*dist)/(2*dist),height=Math.sqrt(Math.max(0,l1*l1-along*along));const desiredMid=p0.clone().addScaledVector(dir,along).addScaledVector(bend,height);
+const oldUpper=p1.clone().sub(p0).normalize(),newUpper=desiredMid.clone().sub(p0).normalize();const qa=new THREE.Quaternion().setFromUnitVectors(oldUpper,newUpper);const parentRot=new THREE.Quaternion();a.getWorldQuaternion(parentRot);a.quaternion.premultiply(parentRot.clone().invert().multiply(qa).multiply(parentRot));a.updateWorldMatrix(true,true);
+const nowMid=world(b),nowEnd=world(c),oldLower=nowEnd.sub(nowMid).normalize(),newLower=goal.clone().sub(nowMid).normalize();const qb=new THREE.Quaternion().setFromUnitVectors(oldLower,newLower);b.getWorldQuaternion(parentRot);b.quaternion.premultiply(parentRot.clone().invert().multiply(qb).multiply(parentRot));b.updateWorldMatrix(true,true)}
+function tick(){requestAnimationFrame(tick);if(chain)solve();orbit.update();renderer.render(scene,camera)}tick();
+</script></body></html>

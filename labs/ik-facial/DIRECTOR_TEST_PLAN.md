@@ -31,6 +31,21 @@
 6. Tap **Hide joint dots**; dragging the empty model view should rotate the camera again. Enable the older green IK tool to ensure it does not conflict with blue markers.
 7. On another rig, verify the markers count follows the detected bone count without assuming Tripo or VRM naming.
 
+## Concept art reference + first repaint acceptance
+
+This experimental workflow allows artists to view private concept art beside a 3D character **without uploading the image**.
+
+1. Load Finn or Sylvara's original GLB; select **Paint** from the four-item bar.
+2. Choose a local concept-art PNG/JPEG/WebP under 12 MB. Verify the reference preview and filename, then test **Pin image over viewer** and **Hide image from viewer**. Confirm the original GLB remains loaded.
+3. Tap **Tap a surface to choose where to paint**, then touch a piece of clothing. Verify the chosen mesh is selected without changing artwork. If the target has multiple materials or missing UVs, a clear error must appear.
+4. Set a small brush with 35% default opacity and start painting. If the source texture is larger than the 1024/2048 paint canvas, a warning and explicit confirmation must appear **before a paint session is created**.
+5. Apply one small mark to clothing, inspect against the pinned illustration, then **Undo stroke**. Verify the original texture is restored locally. Avoid tests on the face until verified.
+6. Export **Paint JSON** for backup, then export a separate **Test GLB**. If any source textures exceed 2048, the exporter must ask permission before downscaling. Reimport and compare texture sharpness, mapping and mesh deformation against the original.
+7. Download **Agent JSON** from Director's Desk and verify it references the local artwork filename but **does not include the artwork bytes**. The user must explicitly attach the illustration in their chosen AI conversation.
+8. Repeat after switching from Paint to Animate and back; ensure hidden/pinned reference never prevents manipulating the model or using the workspace tabs.
+
+**Important limitation:** this is a local reference viewer and manually directed painter, **not** an AI image upload or an automated concept-art-to-texture system. Artist review and agent correspondence still take place in the user's separate chat. Painting from 4096×4096 originals currently risks a lower-resolution test texture: do not promise production-quality lossless texture editing until measured and confirmed.
+
 ## Quick tests on Android or laptop
 
 1. Load an original GLB you already own and verify that the whole character appears in the viewport. Change the **Director's Desk** experience selector; only the relevant tool panel should appear.

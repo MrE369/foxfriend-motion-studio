@@ -211,6 +211,7 @@
 <p class="hint">Movement data is a reversible agent handoff with source fingerprint; there is deliberately no edited GLB export. Connected edges may tear if only some triangles move. Use this preview to decide what should change before engineering a smooth deformation.</p>
 <div class="subpanel"><h3>Compare repaired GLB</h3>
 <p class="hint">Open a separate proposed GLB and switch Original / Candidate, at the same camera position. This never changes the original model.</p>
+<p class="hint" id="reviewLoadGuide" role="status">For side-by-side comparison, first load the ORIGINAL Finn using "Load any GLB" near the top of the controls. Then choose the repaired model below. If you only have the repair file, CoLab can still show it by itself.</p>
 <label for="candidateFile">Proposed GLB</label><input id="candidateFile" type="file" accept=".glb,model/gltf-binary">
 <div class="row"><button id="candidateOriginal" class="active">Original</button><button id="candidateView">Candidate</button></div>
 <button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></div></section></aside></main><script type="module">
@@ -1002,17 +1003,74 @@ function updateAnimation(){
 }
 // Repair Review: viewer comparison is independent from the geometry-shell preview.
 let candidateRoot=null,candidateVisible=false,candidateName='';
+function frameVisibleReviewModel(model){
+ if(!model)return;
+ model.updateMatrixWorld(true);
+ const bounds=new THREE.Box3().setFromObject(model);
+ if(bounds.isEmpty()||!Number.isFinite(bounds.min.x)||!Number.isFinite(bounds.max.x)){
+  $('candidateStatus').textContent='Model loaded, but its geometry could not be framed. Please send this status to Aster.';
+  return;
+ }
+ frameBounds(bounds);
+ controls.enabled=true;
+}
+function syncReviewLoadGuide(){
+ const hasOriginal=!!root,hasCandidate=!!candidateRoot;
+ $('candidateOriginal').disabled=!hasOriginal;
+ $('candidateView').disabled=!hasCandidate;
+ $('reviewLoadGuide').textContent=hasOriginal
+  ?'Original model loaded: '+originalName+'. Choose the repaired GLB below, then switch Original / Candidate.'
+  :hasCandidate
+   ?'Repair model is loaded and can be viewed alone. To compare, load the original Finn with "Load any GLB" near the top of the controls.'
+   :'No original model loaded. First use "Load any GLB" near the top, or choose a proposed GLB below to see it by itself.';
+}
 function showCandidate(show){
- if(show&&!candidateRoot)return status('Load a proposed GLB first.');candidateVisible=show;
+ if(show&&!candidateRoot)return status('Load a proposed GLB first.');
+ if(!show&&!root){
+  syncReviewLoadGuide();
+  $('candidateStatus').textContent='No ORIGINAL GLB loaded yet. Showing the candidate instead. Load original Finn using "Load any GLB" to compare.';
+  if(candidateRoot){candidateRoot.visible=true;candidateVisible=true;frameVisibleReviewModel(candidateRoot)}
+  $('candidateOriginal').classList.remove('active');$('candidateView').classList.add('active');
+  return;
+ }
+ candidateVisible=show;
  if(root)root.visible=!show;
  if(candidateRoot)candidateRoot.visible=show;
  if(show){previewGroup.visible=false;markGroup.visible=false;moveGroup.visible=false;hitMarker.style.display='none'}
  else{previewGroup.visible=visibilityMode!=='all';markGroup.visible=(workspace==='inspect'||workspace==='review')&&visibilityMode==='all';updateMovePreview();renderVisibility()}
  $('candidateOriginal').classList.toggle('active',!show);$('candidateView').classList.toggle('active',show);
- $('candidateStatus').textContent=show?'Showing '+candidateName+'. Original geometry is still untouched.':'Showing original GLB.';
+ $('candidateStatus').textContent=show?'Showing '+candidateName+(root?' · original preserved.':' · load original GLB for comparison.'):'Showing original: '+originalName;
+ syncReviewLoadGuide();
 }
 $('candidateOriginal').onclick=()=>showCandidate(false);$('candidateView').onclick=()=>showCandidate(true);
-$('candidateFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;let url;try{url=URL.createObjectURL(f);const g=await new GLTFLoader().loadAsync(url);if(candidateRoot)scene.remove(candidateRoot);candidateRoot=g.scene;candidateName=f.name;directorRepairReady=false;directorRepairClips=g.animations||[];$('directorExportRepair').disabled=true;candidateRoot.visible=false;scene.add(candidateRoot);$('candidateStatus').textContent='Proposed GLB loaded: '+f.name+'. Tap Candidate to compare.'}catch(err){$('candidateStatus').textContent='Candidate failed: '+err.message}finally{if(url)URL.revokeObjectURL(url)}};
+$('candidateFile').onchange=async e=>{
+ const f=e.target.files?.[0];if(!f)return;
+ let url;
+ $('candidateStatus').textContent='Loading proposed model '+f.name+'…';
+ try{
+  url=URL.createObjectURL(f);
+  const g=await new GLTFLoader().loadAsync(url);
+  let n=0;g.scene.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)n++});
+  if(!n)throw Error('GLB contains no renderable meshes.');
+  if(candidateRoot)scene.remove(candidateRoot);
+  candidateRoot=g.scene;candidateName=f.name;
+  directorRepairReady=false;directorRepairClips=g.animations||[];
+  $('directorExportRepair').disabled=true;
+  candidateRoot.visible=false;scene.add(candidateRoot);
+  // A freshly loaded candidate must be visible even when the original
+  // has not yet been loaded in this browser tab.
+  if(!root){
+   showCandidate(true);
+   frameVisibleReviewModel(candidateRoot);
+   $('candidateStatus').textContent='Showing '+candidateName+'. Load original Finn using "Load any GLB" for comparison.';
+  }else{
+   showCandidate(true);
+   $('candidateStatus').textContent='Showing proposed Finn · '+candidateName+'. Tap Original to compare.';
+  }
+  syncReviewLoadGuide();
+ }catch(err){$('candidateStatus').textContent='Candidate failed: '+err.message}
+ finally{if(url)URL.revokeObjectURL(url)}
+};
 $('candidateDecision').onclick=()=>{if(!candidateRoot)return status('Load proposed GLB before saving a decision.');download(originalName.replace(/\.glb$/i,'')+'_repair_review.json',{schema:'better-together-colab-repair-review-v1',original:originalName,originalSHA256:fingerprint,candidate:candidateName,decision:'reviewed-unapproved',camera:cameraData(),notes:$('note').value,warning:'Review JSON is a decision record, not a modified GLB.'});status('Review record saved; no file was modified.')};
 function clearUnifiedBeforeLoad(){
  facePatchState.mesh=null;facePatchState.triangles=[];facePatchState.center=null;
@@ -1025,8 +1083,9 @@ function clearUnifiedBeforeLoad(){
  animPlaying=false;if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=[];
  if(candidateRoot)scene.remove(candidateRoot);candidateRoot=null;candidateVisible=false;candidateName='';
  $('candidateOriginal').classList.add('active');$('candidateView').classList.remove('active');$('candidateStatus').textContent='No proposed GLB loaded.';
+ syncReviewLoadGuide();
 }
-function initializeUnified(gltf){refreshPaintTargets();setupMotion(gltf);showWorkspace(workspace)}
+function initializeUnified(gltf){refreshPaintTargets();setupMotion(gltf);showWorkspace(workspace);syncReviewLoadGuide()}
 updatePaintUI();updateAnimationUI();
 
 // ----- v0.11 local-first recovery --------------------------------------------

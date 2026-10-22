@@ -1568,8 +1568,14 @@ function jointPointHit(event){
 }
 function jointPointerRay(event){
  const rect=renderer.domElement.getBoundingClientRect();
+ if(!rect.width||!rect.height)throw Error('The 3D viewport has no touchable size.');
  const p=new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,1-(event.clientY-rect.top)/rect.height*2);
- return new THREE.Raycaster().setFromCamera(p,camera).ray;
+ // IMPORTANT: Three.js Raycaster.setFromCamera() returns VOID, not the raycaster!
+ // Never chain .ray on its return value: doing so crashes on every touch before
+ // the drag session can be recorded.
+ const picker=new THREE.Raycaster();
+ picker.setFromCamera(p,camera);
+ return picker.ray;
 }
 function endJointDrag(event,cancelled=false){
  const state=jointPointer;if(!state)return;

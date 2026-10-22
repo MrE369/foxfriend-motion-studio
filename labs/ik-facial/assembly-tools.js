@@ -1,3 +1,4 @@
+import {installSculptTools} from './sculpt-tools.js';
 // CoLab Multi-GLB Assembly Lab — isolated experimental workspace.
 // Original GLBs are never overwritten. Nothing is uploaded to a server.
 export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal,getCandidate}){
@@ -6,6 +7,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  const guides=new THREE.Group();guides.visible=false;scene.add(guides);
  guides.add(new THREE.GridHelper(2,20,0x69869b,0x3d5265));
  const loaded=[];const undo=[];let current=-1,active=false,busy=false,drag=null,outline=null;
+ const sculpt=installSculptTools({THREE,renderer,camera,controls,getSelected:()=>selected(),getActive:()=>active,onUpdate:()=>{if(outline)outline.update();}});
  const inputs=['asX','asY','asZ','asPitch','asYaw','asRoll','asScale'];
  const msg=t=>{$('asStatus').textContent=t};
  const selected=()=>loaded[current]||null;
@@ -25,7 +27,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
   if(outline){guides.remove(outline);outline.geometry.dispose();outline.material.dispose();outline=null;}
   if(r){outline=new THREE.BoxHelper(r,0xffd566);guides.add(outline);}
  }
- function choose(n){current=(Number.isInteger(n)&&n>=0&&n<loaded.length)?n:-1;update();}
+ function choose(n){sculpt.cancel();current=(Number.isInteger(n)&&n>=0&&n<loaded.length)?n:-1;update();}
  function save(){const r=selected()?.root;if(!r)return;undo.push({root:r,pos:r.position.toArray(),rot:[r.rotation.x,r.rotation.y,r.rotation.z],scale:r.scale.toArray()});if(undo.length>30)undo.shift();}
  function change(){update();}
  function setField(id,v){
@@ -116,7 +118,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
   point.set(2*(e.clientX-rect.left)/rect.width-1,1-2*(e.clientY-rect.top)/rect.height);ray.setFromCamera(point,camera);
  }
  function down(e){
-  if(!active||!loaded.length||e.button!==0)return;
+  if(sculpt.isEditing()||!active||!loaded.length||e.button!==0)return;
   aim(e);const hits=ray.intersectObjects(loaded.map(x=>x.root),true);if(!hits.length)return;
   let node=hits[0].object;while(node&&!loaded.some(x=>x.root===node))node=node.parent;
   const i=loaded.findIndex(x=>x.root===node);if(i<0)return;choose(i);
@@ -127,7 +129,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
   controls.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);e.preventDefault();e.stopPropagation();
  }
  function move(e){
-  if(!active||!drag||drag.id!==e.pointerId)return;
+  if(sculpt.isEditing()||!active||!drag||drag.id!==e.pointerId)return;
   aim(e);const p=ray.ray.intersectPlane(drag.plane,new THREE.Vector3());if(!p)return;
   const delta=p.sub(drag.start).divide(group.scale);drag.root.position.copy(drag.initial).add(delta);
   if(outline)outline.update();e.preventDefault();
@@ -149,5 +151,5 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  $('asUndo').onclick=()=>{while(undo.length){const h=undo.pop();const i=loaded.findIndex(x=>x.root===h.root);if(i<0)continue;choose(i);h.root.position.fromArray(h.pos);h.root.rotation.set(...h.rot);h.root.scale.fromArray(h.scale);update();msg('Undid placement change.');break;}};
  $('asReset').onclick=()=>{const r=selected()?.root;if(!r||!confirm('Reset this part’s transform?'))return;save();r.position.set(0,0,0);r.rotation.set(0,0,0);r.scale.setScalar(1);update();};
  update();
- return {setActive(flag){active=flag;group.visible=flag;guides.visible=flag;if(!flag){end();return;}const a=getOriginal(),b=getCandidate();if(a)a.visible=false;if(b)b.visible=false;controls.enabled=true;if(loaded.length)frame();},isActive:()=>active};
+ return {setActive(flag){if(!flag)sculpt.setActive(false);active=flag;group.visible=flag;guides.visible=flag;if(!flag){end();return;}const a=getOriginal(),b=getCandidate();if(a)a.visible=false;if(b)b.visible=false;controls.enabled=true;if(loaded.length)frame();},isActive:()=>active};
 }

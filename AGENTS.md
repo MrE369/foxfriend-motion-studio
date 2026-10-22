@@ -9,6 +9,23 @@ Do not turn every geometry edit, rig analysis, animation frame, texture conversi
 
 Read [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md) before substantial modeling, rigging, animation, automation, or pipeline changes. That document is also suitable for agents receiving a CoLab selection or movement handoff JSON.
 
+## Screenshot-first collaboration (high priority)
+
+**Ask for screenshots or short screen recordings before commissioning costly or repeated 3D regeneration.** Artists often cannot describe joint orientation, misplaced meshes, framing, UV seams or unnatural movement in technical language. A real screenshot plus their plain-language judgment is actionable test evidence.
+
+For a visual issue:
+1. Ask the artist to show the current app/model, ideally with the active control and parameter value visible. Request a second view (side/front/back) only when it would resolve ambiguity.
+2. Compare the screenshot with the intended behavior. Identify what is **observed** versus a **hypothesis** about code, rigging or camera.
+3. Make the smallest reversible correction in an isolated experiment; change a reusable script or deterministic operation instead of repeatedly regenerating the complete asset.
+4. Ask for another screenshot of the same pose/view to compare. Preserve the version and known-good baseline; keep iterating only as needed.
+5. Explain what changed in everyday language. Do not require the artist to understand bone hierarchies, Blender scripting, API pricing or IK mathematics.
+
+**Observed CoLab example:** Blue Toro was only partly visible after import; phone screenshots revealed a canvas/viewport sizing problem. Fixing canvas layout preserved the existing rig and stopped pointless asset rework. Later comparison screenshots at 72% bow depth revealed upward-facing hooves; this motivated reworking the leg solver, not regenerating the bull.
+
+**Why this may save money:** screenshot-based diagnosis can prevent wasted paid generations, repeated AI reasoning/tool calls, wrong fixes and unnecessary rebuilds. It is **not automatically free**: AI image analysis, uploads, cloud services and coding-tool usage can be metered by the user's platform. Never promise an amount or ratio without measured comparable data. Prefer changes that can run locally for repeated use.
+
+**Consent and privacy:** The artist chooses what screenshots to share. Ask them to crop or obscure names, private files, account information and other unrelated content. Screenshots do not authorize publishing their models or images.
+
 ## Agent behavior
 
 1. **Classify the request before choosing tools.** Use AI reasoning for unfamiliar anatomy, new logic, ambiguous art direction, algorithm design, and novel failures. Use deterministic Blender Python, Three.js, Godot, or local scripts for established operations and batches.

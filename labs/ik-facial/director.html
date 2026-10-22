@@ -121,6 +121,7 @@
  <label for="jointSelect">All detected skeleton joints</label>
  <select id="jointSelect" aria-label="Every detected skeleton joint"><option value="">Load a rigged GLB</option></select>
  <div class="row"><button id="jointPick" type="button">Select highlighted joint</button><button id="jointResetPose" type="button">Reset whole pose</button></div>
+ <button id="jointExportReport" type="button">⬇ Pose diagnostic JSON · send to your AI partner</button>
  <p id="jointStatus" class="hint" role="status">Load a rigged GLB, then tap any blue dot.</p>
  <p class="hint">Local experimental IK: nearest connected parent joints rotate to follow your drag. Skeleton roots move as a whole. This does not enforce anatomical limits or keep every foot planted yet.</p>
  </div>
@@ -1330,7 +1331,7 @@ const jointDotGeometry=new THREE.SphereGeometry(1,14,10);
 const jointDotBlue=new THREE.MeshBasicMaterial({color:0x72e3fa,depthTest:false,depthWrite:false,transparent:true,opacity:.93});
 const jointDotYellow=new THREE.MeshBasicMaterial({color:0xffdc64,depthTest:false,depthWrite:false});
 let jointMarkers=[],jointDotsOn=true,jointSelected=-1,jointPointer=null;
-let jointInteractionMode='pose',jointSurfacePin=false;
+let jointInteractionMode='pose',jointSurfacePin=false,lastJointDrag=null;
 const jointModeBanner=document.createElement('div');
 jointModeBanner.style.cssText='position:absolute;left:8px;bottom:9px;z-index:5;pointer-events:none;border-radius:8px;padding:6px 10px;background:#123c3bef;color:#d1ffee;font-size:12px;border:1px solid #63ae9a;display:none';
 view.append(jointModeBanner);
@@ -1363,7 +1364,7 @@ $('jointPoseMode').onclick=()=>setJointInteraction('pose');
 $('jointOrbitMode').onclick=()=>setJointInteraction('orbit');
 function clearJointPoints(){
  if(jointPointer)endJointDrag(null,true);
- jointDotGroup.clear();jointMarkers=[];jointSelected=-1;jointSurfacePin=false;
+ jointDotGroup.clear();jointMarkers=[];jointSelected=-1;jointSurfacePin=false;lastJointDrag=null;
  $('jointSearch').value='';$('jointSelect').replaceChildren();
  jointDotsOn=true;$('jointDotToggle').textContent='🔵 Show all joint dots · On';
  $('jointStatus').textContent='Load a rigged GLB, then tap any blue dot.';
@@ -1463,6 +1464,31 @@ $('jointCapturePose').onclick=()=>{
  $('animCapture').click();
  $('jointStatus').textContent='Pose '+animFrames.length+' captured. Move other dots, then Capture pose again. Play in Motion Studio.';
 };
+
+$('jointExportReport').onclick=()=>{
+ if(!root||!animBones.length)return $('jointStatus').textContent='Load Blue Toro or another rigged character first.';
+ const details={
+  schema:'colab-skeleton-pose-diagnostic-v1',
+  app:'CoLab Director Lab · skeleton touch test',
+  source:{filename:originalName,sha256:fingerprint,sizeBytes:glbFileSize},
+  recordedAt:new Date().toISOString(),
+  interaction:{mode:jointInteractionMode,dotsOn:jointDotsOn,
+    jointSelected,jointName:animBones[jointSelected]?.name||null,
+    jointSurfacePin,pointerSession:lastJointDrag},
+  rig:{boneCount:animBones.length,bones:animBones.map((bone,index)=>({
+    index,name:bone.name||'',parent:bone.parent?.isBone?bone.parent.name||'unnamed':null,
+    localPosition:bone.position.toArray(),
+    worldPosition:bone.getWorldPosition(new THREE.Vector3()).toArray(),
+    quaternion:bone.quaternion.toArray()
+  }))},
+  capturedKeyframes:animFrames.length,camera:cameraData(),
+  note:'This is a diagnostic skeleton pose JSON, NOT a geometry movement proposal. Contains no model mesh, textures or GLB bytes.'
+ };
+ download(originalName.replace(/\.glb$/i,'')+'_pose_diagnostic.json',details);
+ $('jointStatus').textContent='Correct pose diagnostic JSON exported. Send this with a screenshot after trying to drag a hoof.';
+ jointModeBanner.textContent='✓ Pose diagnostic JSON exported';
+};
+
 function jointPointHit(event){
  refreshJointDots();
  const rect=renderer.domElement.getBoundingClientRect();
@@ -1538,6 +1564,8 @@ function jointGestureDown(event){
   return;
  }
  const size=modelBounds?.getSize(new THREE.Vector3()).length()||1;
+ lastJointDrag={jointIndex:entry.index,jointName:entry.bone.name||'',source:hitMethod,pointerType:event.pointerType,
+  startWorld:world.toArray(),startAt:new Date().toISOString(),moveEvents:0,reachError:null,status:'captured'};
  jointPointer={
   id:event.pointerId,index:entry.index,bone:entry.bone,plane,surface:event.currentTarget,
   offset:world.clone().sub(intersection),start:world.clone(),
@@ -1569,9 +1597,11 @@ function jointGestureMove(event){
    {maxParents:/(?:head|neck)/i.test(state.bone.name||'')?1:3,iterations:12,maxStep:.24,
     tolerance:Math.max(.001,state.maxMove*.002),allowCoincidentTranslation:true,maxTranslate:state.maxMove});
   state.moves++;
+  if(lastJointDrag){lastJointDrag.moveEvents=state.moves;lastJointDrag.reachError=result.error;lastJointDrag.mode=result.mode;lastJointDrag.endWorld=state.bone.getWorldPosition(new THREE.Vector3()).toArray();}
   $('jointStatus').textContent='Dragging '+(state.bone.name||'joint')+' · '+state.moves+' touch updates · '+result.mode+' · remaining distance '+result.error.toFixed(3);
   jointModeBanner.textContent='✋ DRAG '+state.moves+' · remaining '+result.error.toFixed(3);
  }catch(err){
+  if(lastJointDrag){lastJointDrag.status='error';lastJointDrag.error=err.message;}
   $('jointStatus').textContent='Joint drag error: '+err.message;
   jointModeBanner.textContent='⚠ Drag error · see controls';
   endJointDrag(event,true);
@@ -1584,6 +1614,7 @@ function jointGestureEnd(event,cancelled=false){
  const state=jointPointer;
  // A clear banner signal remains even after your finger leaves the screen.
  const moves=state.moves,name=state.bone.name||'joint';
+ if(lastJointDrag){lastJointDrag.status=cancelled?'cancelled':moves?'moved':'captured-no-move';lastJointDrag.endedAt=new Date().toISOString();lastJointDrag.endWorld=state.bone.getWorldPosition(new THREE.Vector3()).toArray();}
  endJointDrag(event,cancelled);
  jointModeBanner.textContent=cancelled?'✋ POSE · cancelled':
   moves?'✓ '+name+' · '+moves+' drag updates':'✋ '+name+' selected · no drag movement';

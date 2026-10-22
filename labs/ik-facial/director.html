@@ -115,7 +115,7 @@
  <h3>🔵 Pose every joint</h3>
  <p class="hint">Choose Pose to drag any blue dot or touch a body part. The camera stays locked while posing. Choose Orbit when you want to rotate the model. Every detected joint can also be chosen by name.</p>
  <div class="row"><button id="jointPoseMode" type="button" class="active">✋ Pose · move body parts</button><button id="jointOrbitMode" type="button">↻ Orbit · rotate camera</button></div>
-<p id="jointModeHint" class="hint">Pose: camera locked. Drag a dot or the character itself. Switch to Orbit to rotate the camera.</p>
+<p id="jointModeHint" class="hint">Pose: camera locked. Orbit: move the camera, including while animation plays. Play automatically switches to Orbit.</p>
 <div class="row"><button id="jointDotToggle" type="button">🔵 Show all joint dots · On</button><button id="jointCapturePose" type="button">Capture pose</button></div>
  <label for="jointSearch">Find a joint (optional)</label><input id="jointSearch" type="search" placeholder="Head, spine, tripo, arm, leg…">
  <label for="jointSelect">All detected skeleton joints</label>
@@ -594,7 +594,18 @@ $('animResetAll').onclick=()=>{if(!animBones.length)return;animationPause();anim
 $('animCapture').onclick=()=>{if(!animBones.length)return;animationPause();$('animClip').value='';if(animPositionFrames.length!==animFrames.length)animPositionFrames=animFrames.map(()=>animInitialPositions.map(p=>p.slice()));animFrames.push(poseData());animPositionFrames.push(posePositions());animFrame=animFrames.length-1;animTime=animateDuration();drawPoseFrames();updateAnimationUI()};
 $('animReplace').onclick=()=>{if(animFrame<0)return status('Choose a captured pose first.');animFrames[animFrame]=poseData();if(animPositionFrames.length!==animFrames.length)animPositionFrames=animFrames.map(()=>animInitialPositions.map(p=>p.slice()));animPositionFrames[animFrame]=posePositions();drawPoseFrames();status('Pose replaced.')};
 $('animDelete').onclick=()=>{if(animFrame<0)return;animationPause();animFrames.splice(animFrame,1);if(animPositionFrames.length)animPositionFrames.splice(animFrame,1);animFrame=-1;animTime=0;drawPoseFrames();updateAnimationUI()};
-$('animPlay').onclick=()=>{if(!animateDuration())return status('Capture two poses or select an embedded GLB animation clip.');if(animPlaying){animationPause();return}if(mode!=='nav')selectMode(false);animStarted=performance.now()-animTime*1000;animPlaying=true;updateAnimationUI()};
+$('animPlay').onclick=()=>{
+ if(!animateDuration())return status('Capture two poses or select an embedded GLB animation clip.');
+ if(animPlaying){animationPause();return}
+ if(mode!=='nav')selectMode(false);
+ // Animation playback is a review activity, not an IK drag activity.
+ // Switch to free Orbit automatically without stopping the animation.
+ if(workspace==='animate'&&animBones.length)setJointInteraction('orbit');
+ if(ikDragging)ikDragStop();
+ animStarted=performance.now()-animTime*1000;
+ animPlaying=true;updateAnimationUI();
+ $('jointStatus').textContent='Animation playing. Orbit is enabled: drag the viewport to inspect Blue Toro from any angle.';
+}
 $('animPause').onclick=animationPause;
 $('animTimeline').oninput=()=>{animPlaying=false;animationAt(Number($('animTimeline').value)/1000*animateDuration())};
 $('animPrev').onclick=()=>{animationPause();animationAt(animTime-POSE_SEGMENT/12)};
@@ -727,7 +738,17 @@ ikHandle.visible=false;ikHandle.renderOrder=999;scene.add(ikHandle);
 const ikHitRay=new THREE.Raycaster();
 function ikHandleScale(){if(!ikPoint)return;ikHandle.scale.setScalar(Math.max(.015,camera.position.distanceTo(ikPoint)*.035))}
 function ikHandleRefresh(){ikHandle.visible=ikDragging&&!!ikPoint&&workspace==='animate'&&!!root;if(ikHandle.visible){ikHandle.position.copy(ikPoint);ikHandleScale()}}
-function ikDragStop(){ikDragging=false;ikDragPointer=null;ikHandle.visible=false;controls.enabled=true;$('animIkDrag').textContent='✋ Drag IK target · Off'}
+function ikDragStop(){
+ const pointer=ikDragPointer;
+ ikDragging=false;ikDragPointer=null;ikDragPlane=null;ikDragOffset=null;
+ ikHandle.visible=false;
+ const canvas=renderer.domElement;
+ if(pointer!==null&&canvas.hasPointerCapture?.(pointer)){
+  try{canvas.releasePointerCapture(pointer)}catch(err){/* A completed gesture may already have released capture. */}
+ }
+ controls.enabled=true;
+ $('animIkDrag').textContent='✋ Drag IK target · Off';
+}
 $('animIkDrag').onclick=()=>{
  if(ikDragging){ikDragStop();return}
  jointInteractionMode='orbit';jointDotsOn=false;syncJointInteraction();refreshJointDots();
@@ -1371,9 +1392,14 @@ function syncJointInteraction(){
 function setJointInteraction(which){
  if(which!=='pose'&&which!=='orbit')return;
  if(jointPointer)endJointDrag(null,true);
- if(which==='pose'&&ikDragging)ikDragStop();
+ // The older green IK handle captures the pointer and disables OrbitControls.
+ // Both explicit view modes must release that handle before claiming to switch.
+ if(ikDragging)ikDragStop();
  jointInteractionMode=which;
  if(which==='pose')jointDotsOn=true;
+ // Viewing and manipulating are mutually exclusive. Never leave the previous
+ // green IK handle active when the artist explicitly requests Orbit mode.
+ if(which==='orbit'&&mode!=='nav')selectMode(false);
  syncJointInteraction();refreshJointDots();
  $('jointStatus').textContent=which==='pose'?'Pose mode: drag Blue Toro’s head, a blue dot, or another body part. The camera will stay still.':'Orbit mode: drag anywhere to change the view. Tap Pose to grab body parts again.';
 }

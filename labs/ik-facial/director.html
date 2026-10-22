@@ -259,6 +259,26 @@
 <button type="button" id="asPreset">Fit Finn head to body · starting point</button>
 <button type="button" id="asHeight">Set overall height to 5'9" (1.753 m)</button>
 </div>
+<details id="sculptPanel" class="subpanel" open>
+<summary>🖌 Sculpt selected model · experimental</summary>
+<p class="hint">Fix an almost-right AI mesh directly in the 3D view. Select Finn's <strong>head</strong> from Loaded components. Touch the face to move actual vertices. This does <strong>not</strong> paint textures, add polygons, or automate expressions.</p>
+<div class="row"><button id="sculptToggle" type="button">🖌 Start sculpting selected GLB</button><button id="sculptOrbit" type="button">↻ Orbit camera</button></div>
+<label for="sculptMode">Brush action</label>
+<select id="sculptMode">
+<option value="grab">✋ Grab / drag shape · best for brows</option>
+<option value="smooth">◌ Smooth lumpiness · gentle</option>
+<option value="pull">＋ Pull surface outward</option>
+<option value="push">－ Push surface inward</option>
+</select>
+<p class="hint">**Grab** moves a patch in the camera plane. **Pull / Push** move the surface along its local normal. **Smooth** relaxes neighboring vertices. Zoom in and use short, light strokes around the brow, eyelids, and mouth.</p>
+<label for="sculptRadius">Brush size <output id="sculptRadiusLabel">0.025 m</output></label>
+<input id="sculptRadius" type="range" min=".006" max=".10" value=".025" step=".001">
+<label for="sculptStrength">Brush strength <output id="sculptStrengthLabel">2.0 mm</output> per dab</label>
+<input id="sculptStrength" type="range" min=".0005" max=".008" value=".002" step=".0005">
+<div class="row"><button id="sculptUndo" type="button">↶ Undo sculpt stroke</button><button id="sculptReset" type="button">Reset selected model sculpt</button></div>
+<p id="sculptStatus" class="hint" role="status">Select an unrigged GLB (such as Finn blank head) above, then tap Start sculpting. Orbit is available whenever sculpt is off.</p>
+<p class="hint warn">Safety pilot: static GLB meshes only; rigged/skinned and shape-key meshes are blocked. Existing UVs and textures stay as-is. Export a new combined GLB below; inspect its result before accepting. Sculpting cannot guarantee face likeness or automatically fix broken topology. Undo retains 12 strokes per active session.</p>
+</details>
 <p id="asInfo" class="hint" role="status">0 GLBs loaded</p>
 <div class="row"><button id="asExport" type="button">⬇ Export new combined GLB</button><button id="asRecipe" type="button">⬇ Placements JSON</button></div>
 <p class="hint" id="asStatus" role="status">Add a body and head GLB. Source meshes remain independent in the exported assembly; they are not welded or rigged. Reimport exports to verify textures and animation tracks.</p>

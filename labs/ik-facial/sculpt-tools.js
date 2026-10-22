@@ -18,7 +18,7 @@ export function installSculptTools({THREE,renderer,camera,controls,getSelected,g
    $('sculptToggle').classList.toggle('active',enabled);
    $('sculptToggle').textContent=enabled?'✋ Sculpt ON · touch model':'🖌 Start sculpting selected GLB';
    $('sculptOrbit').textContent=enabled?'↻ Orbit · stop sculpting':'↻ Orbit camera';
-   cursor.style.display='none';
+   cursor.style.display='none';onUpdate?.();
    status(enabled?'Sculpt active. Touch the selected mesh. Orbit mode is paused during a stroke.':'Orbit mode. Choose Sculpt to resume.');
  }
  function pointer(e){

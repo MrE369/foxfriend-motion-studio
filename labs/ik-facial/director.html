@@ -9,7 +9,7 @@
 [hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
 #directorPanel{background:#223a4c;border-color:#72cdb7}#directorPanel summary{padding:5px 0}#directorPanel h3{color:#a7ecdf}#directorPanel p{line-height:1.45}.directorFlow{margin:11px 0;padding:10px 12px;background:#122635;border:1px solid #476d7c;border-radius:10px}#directorPanel input[type=range]{padding:5px;min-height:32px;accent-color:#77e4cc}#directorPanel input[type=color]{padding:4px}#directorPanel output{font-variant-numeric:tabular-nums;color:#9af1d7}#directorPanel button:disabled{opacity:.4}#allSkeletonPoints{border-color:#6689a3;background:#20384c}#allSkeletonPoints input[type=search]{min-height:40px}#allSkeletonPoints p{line-height:1.45}
 #artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);max-height:62%;background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}#artReferencePin img{display:block;width:100%;max-height:calc(41dvh - 93px);object-fit:contain}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
-</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/","fflate":"https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
 <button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
 <button type="button" id="tabButtonPaint" role="tab" aria-selected="false" aria-controls="tabPaint" data-tab="paint">🖌<span>Paint</span></button>
@@ -226,8 +226,32 @@
 <button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></div></section><section id="tabAssemble" class="workspace" role="tabpanel" aria-labelledby="tabButtonAssemble" hidden>
 <h2>🧩 Assemble & Character Workshop <small>· experimental</small></h2>
 <p class="hint">Add original GLB or glTF characters and outfits into one scene. With glTF, choose its .gltf + .bin + texture files together. No ZIP, FBX or OBJ import yet. Nothing is uploaded or overwritten.</p>
-<button id="asAdd" type="button">➕ Add GLBs / glTFs and their textures</button>
-<input id="asFiles" type="file" multiple hidden aria-label="Add GLB files without restrictive Android MIME filtering">
+<details class="subpanel" id="uaImportPanel" open>
+<summary>📦 Import Assets · GLB / glTF / FBX / OBJ / ZIP / Images</summary>
+<p class="hint">Original files stay on your device. Select a complete ZIP pack, several related files, or a folder. Preview a model before adding it to the working scene.</p>
+<div id="uaDrop" role="group" aria-label="Drop files to catalog" style="padding:15px;border:2px dashed #7491a9;border-radius:12px;text-align:center;margin:8px 0">Drop assets or ZIP packs here (desktop)</div>
+<div class="row">
+<button id="asAdd" type="button">📁 Select files / ZIP</button>
+<button id="uaFolderButton" type="button">🗂 Select folder</button>
+</div>
+<input id="asFiles" type="file" multiple hidden aria-label="Select assets including ZIP, GLB, glTF, FBX, OBJ, images and companions">
+<input id="uaFolder" type="file" multiple webkitdirectory directory hidden aria-label="Select asset folder">
+<label for="uaCandidates">Models and images inside selected packs</label>
+<select id="uaCandidates" size="7" aria-label="Choose an asset to preview"></select>
+<p id="uaCount" class="hint">No import candidates.</p>
+<pre id="uaDetails" style="white-space:pre-wrap;font-size:12px;overflow-wrap:anywhere;padding:9px;background:#122437;border-radius:7px"></pre>
+<div class="row">
+<button id="uaPreview" type="button">👁 Preview selected</button>
+<button id="uaAccept" type="button" disabled>✓ Add preview to scene</button>
+</div>
+<button id="uaCancel" type="button">✕ Discard preview</button>
+<img id="uaImage" hidden alt="Reference image preview" style="display:block;max-width:100%;max-height:300px;object-fit:contain;margin:8px auto"/>
+<p id="uaMeta" class="hint">Preview stays separate until accepted.</p>
+<pre id="uaWarnings" class="hint" style="white-space:pre-wrap"></pre>
+<p id="uaReferences" class="hint">No reference images saved in this session.</p>
+<p id="uaStatus" role="status" class="hint">Waiting for asset selection. No files are uploaded.</p>
+<p class="hint warn">ZIP safety limits apply; very large archives may require smaller batches. BLEND needs an explicitly configured Blender worker (not available in browser). BIN/MTL files are dependencies, not standalone models.</p>
+</details>
 <p class="hint">Android: if selecting companion files together fails, use an exported .glb. Extract ZIP archives before importing. Compatible outfit pieces may have their own separate rigs; simply placing them together does not merge skinning.</p>
 <label for="asList">Loaded components · select one</label><select id="asList" size="4" aria-label="Select model to adjust"></select>
 <p id="asSelected" class="hint" role="status">Add a GLB to begin.</p><p class="hint"><a href="#cwPanel">🦴 Jump to character & animation inspection ↓</a></p>
@@ -308,6 +332,9 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
+import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
+import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
 import {relaxSelectedSurface} from './director-tools.js';
 import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
 import {installAssemblyLab} from './assembly-tools.js';
@@ -2261,6 +2288,6 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
  if(touch)jointGestureEnd(legacyJointEvent(e,touch,'end'),name!=='touchend');
 },{capture:true,passive:false});
 
-assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot});
+assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,FBXLoader,OBJLoader,MTLLoader,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot});
 let cwPreviousFrame=performance.now();function animate(){requestAnimationFrame(animate);const cwNow=performance.now();const cwDelta=(cwNow-cwPreviousFrame)/1000;cwPreviousFrame=cwNow;updateAnimation();assemblyLab?.tick(cwDelta);controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
 </script></body></html>

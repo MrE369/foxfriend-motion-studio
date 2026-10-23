@@ -1,6 +1,7 @@
 // CoLab Universal Import staging UI. The original File/ZIP objects are read-only.
 // Preview is isolated from the working scene until explicit user acceptance.
-import {unpackZipFile} from './zip-safe-import.js';
+import {openIndexedZip} from './zip-indexed-reader.js';
+import {hydrateAssetForPreview} from './asset-dependency-hydrate.js';
 import {classifyAsset} from './universal-loaders.js';
 import {sourcePath} from './gltf-local-intake.js';
 const supported=new Set(['model','image','needs-blender']);
@@ -52,8 +53,8 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
    for(const f of raw){
     if(/\.zip$/i.test(f.name)){
      status('Checking ZIP safety: '+f.name+'…');
-     const unpacked=await unpackZipFile(f,msg=>status(msg),SESSION_MAX-sessionBytes);
-     sessionBytes+=unpacked.manifest.uncompressedBytes;
+     const unpacked=await openIndexedZip(f);
+     status('Indexed '+unpacked.manifest.entries+' files without decompressing the whole ZIP.');
      if(archiveCount++>=8)throw Error('Import at most eight ZIPs at a time.');
      const entry={source:f.name,files:unpacked.files,manifest:unpacked.manifest};
      sets.push(entry);
@@ -102,10 +103,12 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
   try{
    if(choice.kind==='needs-blender')throw Error('.blend conversion requires an authorized Blender backend; browser decoding is unavailable.');
    status('Inspecting '+sourcePath(choice.file)+'…');
-   const item=await load(choice.file,choice.files);
+   const ready=await hydrateAssetForPreview(choice.file,choice.files);
+   const item=await load(ready.file,ready.files);
+   item.warnings=[...(ready.warnings||[]),...(item.warnings||[])];
    let sha256=null;
    try{
-     const digest=await crypto.subtle.digest('SHA-256',await choice.file.arrayBuffer());
+     const digest=await crypto.subtle.digest('SHA-256',await ready.file.arrayBuffer());
      sha256=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
    }catch{ /* Secure context or memory limit; preserve source filename/size. */ }
    preview={...item,choice,sha256};

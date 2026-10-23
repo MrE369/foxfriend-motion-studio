@@ -16,7 +16,7 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
   holder.clear();preview=null;
   if(previewURL){URL.revokeObjectURL(previewURL);previewURL=null;}
   $('uaImage').hidden=true;$('uaImage').removeAttribute('src');
-  $('uaAccept').disabled=true;
+  $('uaAccept').disabled=true;$('uaUseAnimations').disabled=true;
   workingGroup.visible=true;
  }
  function currentChoice(){return choices[current]||null;}
@@ -31,6 +31,7 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
   $('uaCount').textContent=choices.length+' candidates from '+sets.length+' intake(s)';
   $('uaPreview').disabled=!choices.length||busy;
   $('uaAccept').disabled=!preview||busy;
+  $('uaUseAnimations').disabled=!preview||busy||!preview.clips?.length;
  }
  function describe(){
   const x=currentChoice();
@@ -122,6 +123,7 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
       if(!meshCount&&!item.clips.length)throw Error('No geometry or animations found.');
    }
    $('uaAccept').textContent=preview.kind==='image'?'Keep reference image':preview.meshCount?'✓ Add preview to scene':'✓ Add animation to library';
+   $('uaUseAnimations').textContent=preview.clips?.length?'♫ Import '+preview.clips.length+' animations without mannequin':'♫ No animations to import';
    status('Preview ready; choose Add only if this is the asset you want.');
   }catch(e){
    cleanPreview();$('uaMeta').textContent='Preview failed.';
@@ -148,7 +150,20 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
  $('uaFolderButton').onclick=()=>$('uaFolder').click();
  $('uaFolder').onchange=async e=>{const fs=[...e.target.files];e.target.value='';await stage(fs,'Selected folder');};
  $('uaCandidates').onchange=e=>{cleanPreview();current=Number(e.target.value);describe();updateList();};
+ async function useAnimations(){
+   if(!preview?.clips?.length||busy)return status('This asset has no animation clips.');
+   busy=true;const item=preview;
+   try{
+     await onAnimation(item);
+     holder.remove(item.root);
+     preview=null;cleanPreview();
+     status('Added '+item.clips.length+' animations from '+sourcePath(item.choice.file)+
+       '. Its source mannequin was NOT inserted into the assembly.');
+   }catch(e){status('Animation library import failed: '+e.message);}
+   finally{busy=false;updateList();}
+ }
  $('uaPreview').onclick=showPreview;$('uaAccept').onclick=accept;
+ $('uaUseAnimations').onclick=useAnimations;
  $('uaCancel').onclick=()=>{cleanPreview();status('Preview discarded. Original assets stay available for selection.');};
  const target=$('uaDrop');
  for(const event of ['dragenter','dragover']){

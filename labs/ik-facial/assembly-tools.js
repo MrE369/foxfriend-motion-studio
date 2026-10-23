@@ -3,6 +3,7 @@ import {loadLocalGltf,inspectLocalAssetSet} from './gltf-local-intake.js';
 import {installCharacterWorkshop} from './character-workshop.js';
 import {installUniversalImport} from './universal-import-ui.js';
 import {loadPreparedAsset} from './universal-loaders.js';
+import {validateExport} from './export-roundtrip-check.js';
 // CoLab Multi-GLB Assembly Lab — isolated experimental workspace.
 // Original GLBs are never overwritten. Nothing is uploaded to a server.
 export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,FBXLoader,OBJLoader,MTLLoader,scene,camera,renderer,controls,getOriginal,getCandidate}){
@@ -10,7 +11,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,FBXLoader,OBJL
  const group=new THREE.Group();group.name='CoLab_MultiGLB_Assembly';group.visible=false;scene.add(group);
  const guides=new THREE.Group();guides.visible=false;scene.add(guides);
  guides.add(new THREE.GridHelper(2,20,0x69869b,0x3d5265));
- const loaded=[],references=[],undo=[];let current=-1,active=false,busy=false,drag=null,outline=null;
+ const loaded=[],references=[],undo=[];let current=-1,active=false,busy=false,drag=null,outline=null,lastExportReport=null;
  const sculpt=installSculptTools({THREE,renderer,camera,controls,getSelected:()=>selected(),getActive:()=>active,onUpdate:()=>{if(outline){outline.update();outline.visible=!sculpt.isEditing();}}});
  const inputs=['asX','asY','asZ','asPitch','asYaw','asRoll','asScale'];
  const msg=t=>{$('asStatus').textContent=t};
@@ -116,8 +117,18 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,FBXLoader,OBJL
    const selectedClip=workshop.validatedExportClip();
    if(selectedClip&&!clips.includes(selectedClip))clips.push(selectedClip);
    const bytes=await new GLTFExporter().parseAsync(group,{binary:true,onlyVisible:false,animations:clips,maxTextureSize:4096});
-   saveDownload('CoLab_MultiGLB_Assembly_TEST.glb',new Blob([bytes],{type:'model/gltf-binary'}));
-   msg('Candidate exported with '+clips.length+' animation clips. Reimport into Inspect, test the animation and verify materials and skeletons before accepting.');
+   msg('Checking exported GLB by reimporting it…');
+   lastExportReport=await validateExport(THREE,GLTFLoader,group,clips,bytes);
+   lastExportReport.sources=loaded.map(x=>({name:x.name,size:x.size,format:x.format||'GLB',
+     resources:x.resources||[],importWarnings:x.warnings||[]}));
+   $('uaExportReport').disabled=false;
+   if(!lastExportReport.ok){
+     msg('Export blocked: GLB roundtrip lost data. '+lastExportReport.errors.join(' · ')+'. Download diagnostic report.');
+     return;
+   }
+   saveDownload('CoLab_Universal_Assembly_CANDIDATE.glb',new Blob([bytes],{type:'model/gltf-binary'}));
+   msg('GLB roundtrip passed structural checks. '+lastExportReport.warnings.length+
+     ' material/texture warnings; check the downloaded report and visually test animation in the game.');
   }catch(e){msg('Export failed: '+e.message);}finally{busy=false;update();}
  }
  function recipe(){
@@ -158,6 +169,12 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,FBXLoader,OBJL
  $('asTiltLeft').onclick=()=>nudge('pitch',-1);$('asTiltRight').onclick=()=>nudge('pitch',1);
  $('asFrame').onclick=frame;$('asHeight').onclick=normalize;$('asPreset').onclick=preset;
  $('asExport').onclick=exportGLB;$('asRecipe').onclick=recipe;$('asRemove').onclick=remove;
+ $('uaExportReport').onclick=()=>{
+   if(!lastExportReport)return msg('Export a model first to generate a report.');
+   saveDownload('CoLab_Universal_Export_Audit.json',
+      new Blob([JSON.stringify({schema:'colab-universal-export-roundtrip-v1',...lastExportReport},null,2)],
+        {type:'application/json'}));
+ };
  $('asUndo').onclick=()=>{while(undo.length){const h=undo.pop();const i=loaded.findIndex(x=>x.root===h.root);if(i<0)continue;choose(i);h.root.position.fromArray(h.pos);h.root.rotation.set(...h.rot);h.root.scale.fromArray(h.scale);update();msg('Undid placement change.');break;}};
  $('asReset').onclick=()=>{const r=selected()?.root;if(!r||!confirm('Reset this part’s transform?'))return;save();r.position.set(0,0,0);r.rotation.set(0,0,0);r.scale.setScalar(1);update();};
  update();

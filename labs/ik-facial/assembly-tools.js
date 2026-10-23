@@ -66,7 +66,8 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
      const {gltf,resources}=await loadLocalGltf(THREE,GLTFLoader,file,input);
      let meshes=0;gltf.scene.traverse(o=>{if(o.isMesh)meshes++;});
      if(!meshes)throw Error('This file has animations but no meshes. Use Import Animation Library below.');
-     gltf.scene.name='Part_'+(loaded.length+1)+'_'+file.name.replace(/[^a-z0-9_-]/gi,'_');
+     // Preserve a scene/node name when animations may bind to it.
+     if(!gltf.scene.name)gltf.scene.name='Part_'+(loaded.length+1)+'_'+file.name.replace(/[^a-z0-9_-]/gi,'_');
      group.add(gltf.scene);
      loaded.push({name:file.name,root:gltf.scene,size:file.size,clips:gltf.animations,resources});
      choose(loaded.length-1);if(loaded.length===1)frame();

@@ -212,6 +212,13 @@ export function installCharacterWorkshop({THREE,GLTFLoader,loadLocalGltf,getSele
  $('cwReportDownload').onclick=downloadReport;
  options();inspect();
  return {onSelect:inspect,onAssetAdded:inspect,setActive(v){active=v;if(!v)stop();},tick:update,inspect,clear:stop,
+   addLibrarySource(item){
+     if(!item?.clips?.length)throw Error('This file contains no animation clips.');
+     library.push({name:item.name,scene:item.root,clips:item.clips});
+     if(library.length>16)library.shift();
+     options();
+     status('Animation library added: '+item.name+' ('+item.clips.length+' clips). Choose a character and animation.');
+   },
    validatedExportClip(){
      const target=getSelected(),r=resolve();
      if(!target||!r)return null;

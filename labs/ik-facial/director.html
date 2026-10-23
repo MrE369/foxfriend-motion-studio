@@ -301,6 +301,17 @@
 <label for="sculptStrength">Brush strength <output id="sculptStrengthLabel">2.0 mm</output> per dab</label>
 <input id="sculptStrength" type="range" min=".0005" max=".008" value=".002" step=".0005">
 <div class="row"><button id="sculptUndo" type="button">↶ Undo sculpt stroke</button><button id="sculptReset" type="button">Reset selected model sculpt</button></div>
+<details class="subpanel" id="bodySculptPanel">
+<summary>🧍 Body proportion sculpt · S-02 (static meshes)</summary>
+<p class="hint">Shapes the actual mesh vertices with smooth anatomical falloff—<strong>not</strong> whole-object scaling. Select an upright unrigged humanoid, then apply a measured variant. The original GLB is never overwritten.</p>
+<label for="bodyPreset">Shape goal</label>
+<select id="bodyPreset"><option value="athletic">Athletic: subtle shoulders and chest</option>
+<option value="lean">Lean: narrower waist</option><option value="heroic">Heroic: broader upper body</option><option value="original">Original (restore anatomy sculpt baseline)</option></select>
+<label for="bodyIntensity">Amount <output id="bodyIntensityLabel">100%</output></label>
+<input id="bodyIntensity" type="range" min="0" max="100" value="100" step="5">
+<button id="bodyApply" type="button">Apply reversible body sculpt</button>
+<p class="hint warn">This first anatomy preset works on static Y-up body meshes only. It explicitly refuses skinned characters and shape-key meshes. This is not rig-aware retargeting. Preview all angles and test a new GLB export. Undo via the sculpt controls above.</p>
+</details>
 <p id="sculptStatus" class="hint" role="status">Select an unrigged GLB (such as Finn blank head) above, then tap Start sculpting. Orbit is available whenever sculpt is off.</p>
 <p class="hint warn">Safety pilot: static GLB meshes only; rigged/skinned and shape-key meshes are blocked. Existing UVs and textures stay as-is. Export a new combined GLB below; inspect its result before accepting. Sculpting cannot guarantee face likeness or automatically fix broken topology. Undo retains 12 strokes per active session.</p>
 </details>

@@ -106,10 +106,21 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
    let tooLarge=false;
    group.traverse(o=>{const mats=Array.isArray(o.material)?o.material:[o.material];for(const m of mats)if(m)for(const key of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap']){const im=m[key]?.image||m[key]?.source?.data;if(im&&(im.width>4096||im.height>4096))tooLarge=true;}});
    if(tooLarge&&!confirm('Some textures are above 4096 px and may downsample on export. Continue?')){msg('Export cancelled.');return;}
+   // Separate skinned GLBs have independent skeletons. Exporting them together
+   // does not "equip" clothing, and could silently break its animation bindings.
+   const rigged=loaded.filter(entry=>{
+     let yes=false;entry.root.traverse(o=>{if(o.isSkinnedMesh)yes=true;});return yes;
+   });
+   if(rigged.length>1){
+     msg('Export blocked: multiple independent skinned GLBs. Clothing needs skeleton binding or verified retargeting before a combined animated export.');
+     return;
+   }
    const clips=loaded.flatMap(x=>x.clips);
+   const selectedClip=workshop.validatedExportClip();
+   if(selectedClip&&!clips.includes(selectedClip))clips.push(selectedClip);
    const bytes=await new GLTFExporter().parseAsync(group,{binary:true,onlyVisible:false,animations:clips,maxTextureSize:4096});
    saveDownload('CoLab_MultiGLB_Assembly_TEST.glb',new Blob([bytes],{type:'model/gltf-binary'}));
-   msg('Exported. Reimport into Inspect and check mesh positions, materials, and animations.');
+   msg('Candidate exported with '+clips.length+' animation clips. Reimport into Inspect, test the animation and verify materials and skeletons before accepting.');
   }catch(e){msg('Export failed: '+e.message);}finally{busy=false;update();}
  }
  function recipe(){

@@ -26,7 +26,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,FBXLoader,OBJL
      if(loaded.length>=12)throw Error('Assembly is limited to 12 model components.');
      entry.root.name ||= 'Imported_'+loaded.length;
      group.add(entry.root);
-     loaded.push({name:entry.name,root:entry.root,size:entry.size,format:entry.format,
+     loaded.push({name:entry.name,root:entry.root,size:entry.size,format:entry.format,sha256:entry.sha256,
        warnings:entry.warnings,resources:entry.resources,clips:entry.clips||[],release:entry.release});
      choose(loaded.length-1);
      frame();
@@ -119,7 +119,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,FBXLoader,OBJL
    const bytes=await new GLTFExporter().parseAsync(group,{binary:true,onlyVisible:false,animations:clips,maxTextureSize:4096});
    msg('Checking exported GLB by reimporting it…');
    lastExportReport=await validateExport(THREE,GLTFLoader,group,clips,bytes);
-   lastExportReport.sources=loaded.map(x=>({name:x.name,size:x.size,format:x.format||'GLB',
+   lastExportReport.sources=loaded.map(x=>({name:x.name,size:x.size,sha256:x.sha256||null,format:x.format||'GLB',
      resources:x.resources||[],importWarnings:x.warnings||[]}));
    $('uaExportReport').disabled=false;
    if(!lastExportReport.ok){

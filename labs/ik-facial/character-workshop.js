@@ -25,7 +25,6 @@ export function summarizeCharacter(entry){
    }
    meshes.push({name:o.name||'(unnamed)',vertices:count,triangles:tris,skinned:!!o.isSkinnedMesh,hasUV:!!g?.attributes?.uv,hasWeights:!!w,material:o.material?.name||'(multiple/default)'});
  });
- const b=new entry.root.constructor().constructor; // no operation; report uses browser's Box3 in caller
  return {source:entry.name,resources:entry.resources||[entry.name],meshes,vertices,triangles,skinnedMeshes:skinned,bones,boneCount:bones.length,materials:materials.size,textures:textures.size,clips:(entry.clips||[]).map(c=>({name:c.name,duration:c.duration,tracks:c.tracks.length})),nodes:nodes.slice(0,200),weightProblems,notes:[
  'Counts may include duplicated vertices across mesh primitives.',
  'Skin weights are checked for approximate normalization, not deformation quality.',

@@ -67,7 +67,11 @@ export async function unpackZipFile(zip,progress){
    const content=contents[name];
    if(!content||content.byteLength!==size)throw Error('ZIP entry length mismatch: '+name);
    const base=name.split('/').at(-1);
-   const file=new File([content],base,{type:'application/octet-stream'});
+   const ext=base.split('.').at(-1).toLowerCase();
+   const types={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',
+     gltf:'model/gltf+json',glb:'model/gltf-binary',obj:'text/plain',mtl:'text/plain',
+     bin:'application/octet-stream',fbx:'application/octet-stream'};
+   const file=new File([content],base,{type:types[ext]||'application/octet-stream'});
    Object.defineProperty(file,'relativePath',{value:name});
    result.push(file);
  }

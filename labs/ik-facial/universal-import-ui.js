@@ -95,8 +95,13 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
    if(choice.kind==='needs-blender')throw Error('.blend conversion requires an authorized Blender backend; browser decoding is unavailable.');
    status('Inspecting '+sourcePath(choice.file)+'…');
    const item=await load(choice.file,choice.files);
-   preview={...item,choice};
-   $('uaWarnings').textContent=(item.warnings||[]).join('\n');
+   let sha256=null;
+   try{
+     const digest=await crypto.subtle.digest('SHA-256',await choice.file.arrayBuffer());
+     sha256=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
+   }catch{ /* Secure context or memory limit; preserve source filename/size. */ }
+   preview={...item,choice,sha256};
+   $('uaWarnings').textContent=(item.warnings||[]).join('\n')+(sha256?'\nSource SHA-256: '+sha256:'\nHash not available in this browser.');
    if(item.kind==='image'){
       previewURL=URL.createObjectURL(item.file);
       $('uaImage').src=previewURL;$('uaImage').hidden=false;

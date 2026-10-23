@@ -66,6 +66,10 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
      sets.push(entry);
      for(const f of loose)if(supported.has(classifyAsset(f)))modelFiles.push({file:f,set:entry});
    }
+   // Show actual model candidates first; Quaternius archives can contain
+   // hundreds of texture images and must not hide their character files.
+   const rank={model:0,image:1,'needs-blender':2};
+   modelFiles.sort((a,b)=>(rank[classifyAsset(a.file)]??9)-(rank[classifyAsset(b.file)]??9));
    for(const {file,set} of modelFiles){
      if(choices.length>=450){status('Import catalogue capped at 450 candidate assets.');break;}
      choices.push({file,files:set.files,source:set.source,kind:classifyAsset(file)});

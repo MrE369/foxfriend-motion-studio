@@ -7,7 +7,8 @@ const supported=new Set(['model','image','needs-blender']);
 const mb=n=>(n/1048576).toFixed(1)+' MB';
 export function installUniversalImport({THREE,scene,camera,controls,workingGroup,load,onAccept,onAnimation,onReference,notify}){
  const $=id=>document.getElementById(id);
- const sets=[],choices=[];let preview=null,current=-1,busy=false,previewURL=null;
+ const sets=[],choices=[];let preview=null,current=-1,busy=false,previewURL=null,sessionBytes=0;
+ const SESSION_MAX=185*1024*1024;
  const holder=new THREE.Group();holder.name='CoLab_Import_Preview_Only';scene.add(holder);
  const status=s=>{$('uaStatus').textContent=s;notify?.(s);};
  function cleanPreview(){
@@ -50,7 +51,8 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
    for(const f of raw){
     if(/\.zip$/i.test(f.name)){
      status('Checking ZIP safety: '+f.name+'…');
-     const unpacked=await unpackZipFile(f,msg=>status(msg));
+     const unpacked=await unpackZipFile(f,msg=>status(msg),SESSION_MAX-sessionBytes);
+     sessionBytes+=unpacked.manifest.uncompressedBytes;
      if(archiveCount++>=8)throw Error('Import at most eight ZIPs at a time.');
      const entry={source:f.name,files:unpacked.files,manifest:unpacked.manifest};
      sets.push(entry);
@@ -61,7 +63,8 @@ export function installUniversalImport({THREE,scene,camera,controls,workingGroup
    }
    const loose=raw.filter(f=>!/\.zip$/i.test(f.name));
    if(loose.length){
-     if(total>185*1024*1024)throw Error('The loose file selection exceeds the 185 MB memory guard.');
+     if(sessionBytes+total>SESSION_MAX)throw Error('Session assets exceed the 185 MB mobile memory guard.');
+     sessionBytes+=total;
      const entry={source:origin,files:loose,manifest:null};
      sets.push(entry);
      for(const f of loose)if(supported.has(classifyAsset(f)))modelFiles.push({file:f,set:entry});

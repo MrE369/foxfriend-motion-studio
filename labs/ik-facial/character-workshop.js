@@ -211,5 +211,12 @@ export function installCharacterWorkshop({THREE,GLTFLoader,loadLocalGltf,getSele
  $('cwScrub').oninput=e=>scrub(e.target.value);
  $('cwReportDownload').onclick=downloadReport;
  options();inspect();
- return {onSelect:inspect,onAssetAdded:inspect,setActive(v){active=v;if(!v)stop();},tick:update,inspect,clear:stop};
+ return {onSelect:inspect,onAssetAdded:inspect,setActive(v){active=v;if(!v)stop();},tick:update,inspect,clear:stop,
+   validatedExportClip(){
+     const target=getSelected(),r=resolve();
+     if(!target||!r)return null;
+     const check=checkClipCompatibility(THREE,target,r.donor,r.clip);
+     return check.ok?r.clip:null;
+   }
+ };
 }

@@ -1,10 +1,11 @@
+import {presets,sculptBodyPositions,checkBodySculpt} from './anatomy-sculpt.js';
 // CoLab Sculpt Lab v0.1 — reversible local geometry edits to selected Assembly GLBs.
 // No network calls. Imported source bytes stay untouched. Static meshes only.
 // Brush units are WORLD meters, accounting for Assembly parent scales.
 export function installSculptTools({THREE,renderer,camera,controls,getSelected,getActive,onUpdate}){
  const $=id=>document.getElementById(id);
  const ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),inWorld=new THREE.Vector3();
- const history=[],baselines=new Map(),adjacencyCache=new WeakMap();
+ const history=[],baselines=new Map(),adjacencyCache=new WeakMap(),anatomyBase=new WeakMap();
  let enabled=false,gesture=null,lastCursor=null;
  const status=t=>$('sculptStatus').textContent=t;
  const cursor=document.createElement('div');
@@ -138,6 +139,7 @@ export function installSculptTools({THREE,renderer,camera,controls,getSelected,g
    const hit=getHit(e);updateCursor(e,hit);if(!hit)return;
    const mesh=hit.object;
    try{canEdit(mesh);}catch(error){status(error.message);return;}
+   anatomyBase.delete(mesh);
    snapshot(mesh);
    const face=hit.face?.normal?.clone()||new THREE.Vector3(0,0,1);
    face.applyMatrix3(new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld)).normalize();
@@ -213,14 +215,14 @@ export function installSculptTools({THREE,renderer,camera,controls,getSelected,g
  $('sculptUndo').onclick=()=>{
    if(gesture)end();const step=history.pop();if(!step)return status('No sculpt strokes to undo.');
    const p=step.mesh.geometry.getAttribute('position');
-   if(p?.count*3===step.position.length){p.array.set(step.position);normals(step.mesh);}
+   if(p?.count*3===step.position.length){p.array.set(step.position);normals(step.mesh);anatomyBase.delete(step.mesh);}
    $('sculptUndo').disabled=!history.length;onUpdate?.();
    status('Last sculpt stroke undone. Source files are unchanged.');
  };
  $('sculptReset').onclick=()=>{
    const part=getSelected();if(!part)return status('Choose a model to reset.');
    if(!confirm('Discard all sculpting on this selected GLB? Placement stays unchanged.'))return;
-   part.root.traverse(o=>{const b=baselines.get(o);if(b){o.geometry=b.original;b.editable.dispose();baselines.delete(o);}});
+   part.root.traverse(o=>{anatomyBase.delete(o);const b=baselines.get(o);if(b){o.geometry=b.original;b.editable.dispose();baselines.delete(o);}});
    for(let i=history.length-1;i>=0;i--)if(part.root.getObjectById(history[i].mesh.id))history.splice(i,1);
    $('sculptUndo').disabled=!history.length;onUpdate?.();status('Sculpt edits reset on selected GLB only.');
  };
@@ -235,5 +237,40 @@ export function installSculptTools({THREE,renderer,camera,controls,getSelected,g
  $('sculptMode').onchange=describeStrength;
  describeStrength();
  $('sculptUndo').disabled=true;
+ // S-02: True vertex deformation of an upright, static body mesh (no whole-object scale).
+ $('bodyApply').onclick=()=>{
+   if(!getActive())return status('Open Assemble and select a static upright humanoid body.');
+   const entry=getSelected();if(!entry)return status('Choose a body in Assemble first.');
+   const meshes=[];let rigged=false;
+   entry.root.traverse(o=>{
+     if(o.isSkinnedMesh||o.skeleton)rigged=true;
+     if(o.isMesh&&o.geometry?.attributes?.position)meshes.push(o);
+   });
+   if(rigged)return status('Body shaping is static-only in S-02. A skinned Quaternius or Finn body requires a rig-aware workflow.');
+   if(!meshes.length)return status('No mesh in selected asset.');
+   meshes.sort((a,b)=>b.geometry.attributes.position.count-a.geometry.attributes.position.count);
+   const mesh=meshes[0];
+   try{
+     const p=editable(mesh);
+     let baseline=anatomyBase.get(mesh);
+     if(!baseline){baseline=new Float32Array(p.array);anatomyBase.set(mesh,baseline);}
+     const preset=$('bodyPreset').value,config=presets()[preset];
+     if(!config)throw Error('Unknown body variant.');
+     const intensity=Number($('bodyIntensity').value)/100;
+     if(!Number.isFinite(intensity)||intensity<0||intensity>1)throw Error('Invalid intensity.');
+     const values=Object.fromEntries(Object.entries(config).map(([key,val])=>[key,val*intensity]));
+     const result=sculptBodyPositions(baseline,values);
+     const audit=checkBodySculpt(baseline,result.positions,mesh.geometry.index);
+     if(!audit.passed)throw Error(audit.message+' '+audit.flips+' flipped triangles.');
+     snapshot(mesh);
+     p.array.set(result.positions);
+     normals(mesh);
+     onUpdate?.();
+     status('Body '+preset+' at '+Math.round(intensity*100)+'%: '+result.changed+
+       ' vertices changed, max '+(1000*result.maxDisplacement).toFixed(1)+' mm. '+
+       audit.triangles+' triangles passed orientation/strain checks. Undo available. Skinning not tested.');
+   }catch(e){status('Body sculpt not applied: '+e.message);}
+ };
+ $('bodyIntensity').oninput=e=>$('bodyIntensityLabel').textContent=e.target.value+'%';
  return {setActive(v){if(!v)setEnabled(false);},isEditing:()=>enabled,cancel:()=>{if(gesture)end();}};
 }

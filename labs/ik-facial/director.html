@@ -224,11 +224,11 @@
 <div class="row"><button id="reviewFaceFocus" type="button">👁 Focus on face</button><button id="reviewChangeDots" type="button" disabled>● Show changed points</button></div>
 <p id="reviewChangeStatus" class="hint" role="status">Load the matching original and candidate GLBs to measure actual geometry differences. For texture-only repairs, use Original / Candidate.</p>
 <button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></div></section><section id="tabAssemble" class="workspace" role="tabpanel" aria-labelledby="tabButtonAssemble" hidden>
-<h2>🧩 Multi-GLB Assembly <small>· experimental</small></h2>
-<p class="hint">Add several original GLBs to one 3D scene. Choose a part to move, turn or resize while looking at the result. Nothing is uploaded or overwritten. Inspect, Paint, Animate and Review keep their original files and selections.</p>
-<button id="asAdd" type="button">➕ Add one or several GLBs · Android Browse Files</button>
+<h2>🧩 Assemble & Character Workshop <small>· experimental</small></h2>
+<p class="hint">Add original GLB or glTF characters and outfits into one scene. With glTF, choose its .gltf + .bin + texture files together. No ZIP, FBX or OBJ import yet. Nothing is uploaded or overwritten.</p>
+<button id="asAdd" type="button">➕ Add GLBs / glTFs and their textures</button>
 <input id="asFiles" type="file" multiple hidden aria-label="Add GLB files without restrictive Android MIME filtering">
-<p class="hint">On some Android file pickers you may need to add each GLB separately. Tap Add again; previously loaded parts stay in the scene.</p>
+<p class="hint">Android: if selecting companion files together fails, use an exported .glb. Extract ZIP archives before importing. Compatible outfit pieces may have their own separate rigs; simply placing them together does not merge skinning.</p>
 <label for="asList">Loaded components · select one</label><select id="asList" size="4" aria-label="Select model to adjust"></select>
 <p id="asSelected" class="hint" role="status">Add a GLB to begin.</p>
 <label style="display:flex;align-items:center;gap:9px"><input id="asDrag" type="checkbox" style="width:auto;min-height:auto"> ✋ Drag selected part on screen (orbit when tapping empty space)</label>
@@ -278,6 +278,27 @@
 <div class="row"><button id="sculptUndo" type="button">↶ Undo sculpt stroke</button><button id="sculptReset" type="button">Reset selected model sculpt</button></div>
 <p id="sculptStatus" class="hint" role="status">Select an unrigged GLB (such as Finn blank head) above, then tap Start sculpting. Orbit is available whenever sculpt is off.</p>
 <p class="hint warn">Safety pilot: static GLB meshes only; rigged/skinned and shape-key meshes are blocked. Existing UVs and textures stay as-is. Export a new combined GLB below; inspect its result before accepting. Sculpting cannot guarantee face likeness or automatically fix broken topology. Undo retains 12 strokes per active session.</p>
+</details>
+<details id="cwPanel" class="subpanel" open>
+<summary>🧍 Character Workshop · rig inspection and animation (CW-01/02)</summary>
+<p class="hint">Select a body or clothing model in Loaded components above. This reads the <strong>actual</strong> geometry, skeleton and clips, not guessed humanoid data.</p>
+<h3>Selected model · technical health</h3>
+<pre id="cwReport" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;padding:12px;border:1px solid #50697d;border-radius:8px;background:#122437;font-size:12px">Select a model to inspect its meshes and rig.</pre>
+<button id="cwReportDownload" type="button">⬇ Download model inspection JSON</button>
+<h3>Universal Animation Library</h3>
+<p class="hint">Import an animation .glb or .gltf, including companion files where applicable. The viewer only plays clips when all animated node names and bone-parent relationships match the selected character. This is <strong>not</strong> an automatic retargeter.</p>
+<label for="cwAnimFiles">Import animation files</label>
+<input id="cwAnimFiles" type="file" multiple aria-label="Import locally saved glTF or GLB animation file and companions">
+<label for="cwClip">Animation clip to preview</label>
+<select id="cwClip"><option value="">Choose an animation</option></select>
+<p id="cwClipCount" class="hint">0 available clips</p>
+<p id="cwCompat" class="hint" role="status">Choose an animation to check rig compatibility.</p>
+<div class="row"><button id="cwPlay" type="button">▶ Play animation</button><button id="cwStop" type="button">■ Stop / restore</button></div>
+<label for="cwScrub">Animation timeline <output id="cwClock">0.00 s</output></label>
+<input type="range" id="cwScrub" min="0" max="1" step=".01" value="0"/>
+<label style="display:flex;align-items:center;gap:8px"><input id="cwLoop" type="checkbox" checked style="width:auto;min-height:auto"> Loop playback</label>
+<p id="cwStatus" class="hint" role="status">Original GLB and rig remain untouched. Preview and inspect before exporting.</p>
+<p class="hint warn">CW-02 is a basic animation preview: attaching clothing to a separate rig and exporting a verified shared-skeleton animated outfit are not implemented yet. Do not interpret a visual overlap as successful skin binding.</p>
 </details>
 <p id="asInfo" class="hint" role="status">0 GLBs loaded</p>
 <div class="row"><button id="asExport" type="button">⬇ Export new combined GLB</button><button id="asRecipe" type="button">⬇ Placements JSON</button></div>
@@ -2241,5 +2262,5 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 },{capture:true,passive:false});
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot});
-function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
+let cwPreviousFrame=performance.now();function animate(){requestAnimationFrame(animate);const cwNow=performance.now();const cwDelta=(cwNow-cwPreviousFrame)/1000;cwPreviousFrame=cwNow;updateAnimation();assemblyLab?.tick(cwDelta);controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
 </script></body></html>

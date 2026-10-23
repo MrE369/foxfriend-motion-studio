@@ -1,4 +1,6 @@
 import {installSculptTools} from './sculpt-tools.js';
+import {loadLocalGltf,inspectLocalAssetSet} from './gltf-local-intake.js';
+import {installCharacterWorkshop} from './character-workshop.js';
 // CoLab Multi-GLB Assembly Lab — isolated experimental workspace.
 // Original GLBs are never overwritten. Nothing is uploaded to a server.
 export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal,getCandidate}){
@@ -11,6 +13,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  const inputs=['asX','asY','asZ','asPitch','asYaw','asRoll','asScale'];
  const msg=t=>{$('asStatus').textContent=t};
  const selected=()=>loaded[current]||null;
+ const workshop=installCharacterWorkshop({THREE,GLTFLoader,loadLocalGltf,getSelected:selected,getEntries:()=>loaded,getVisible:()=>active,notify:msg});
  const bounds=()=>new THREE.Box3().setFromObject(group);
  function update(){
   const list=$('asList');list.replaceChildren();
@@ -27,7 +30,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
   if(outline){guides.remove(outline);outline.geometry.dispose();outline.material.dispose();outline=null;}
   if(r){outline=new THREE.BoxHelper(r,0xffd566);outline.visible=!sculpt.isEditing();guides.add(outline);}
  }
- function choose(n){sculpt.cancel();current=(Number.isInteger(n)&&n>=0&&n<loaded.length)?n:-1;update();}
+ function choose(n){sculpt.cancel();current=(Number.isInteger(n)&&n>=0&&n<loaded.length)?n:-1;update();workshop.onSelect();}
  function save(){const r=selected()?.root;if(!r)return;undo.push({root:r,pos:r.position.toArray(),rot:[r.rotation.x,r.rotation.y,r.rotation.z],scale:r.scale.toArray()});if(undo.length>30)undo.shift();}
  function change(){update();}
  function setField(id,v){
@@ -47,26 +50,27 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
   controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(d*.38,d*.25,d));
   camera.up.set(0,1,0);camera.near=Math.max(.001,d/1000);camera.far=Math.max(100,d*100);camera.updateProjectionMatrix();controls.update();
  }
- async function check(file){
-  if(file.size<20||file.size>80*1024*1024)throw Error('GLB must be under 80 MB.');
-  const b=await file.slice(0,12).arrayBuffer(),d=new DataView(b);
-  if(d.getUint32(0,true)!==0x46546c67||d.getUint32(4,true)!==2||d.getUint32(8,true)!==file.size)
-   throw Error('Invalid GLB. If downloaded as ZIP, extract it first.');
- }
  async function add(files){
-  if(busy)return;busy=true;update();
+  if(busy)return;
+  const input=[...files],main=inspectLocalAssetSet(input).main;
+  if(!main.length)return msg('Select one or more .glb/.gltf files (and any .bin or texture companions).');
+  busy=true;update();
   try{
-   for(const file of [...files]){
+   for(const file of main){
     try{
      if(loaded.length>=12)throw Error('12-item safety limit');
-     if(file.size+loaded.reduce((n,x)=>n+x.size,0)>180*1024*1024)throw Error('180 MB project safety limit');
-     await check(file);msg('Loading '+file.name+'…');
-     const gltf=await new GLTFLoader().parseAsync(await file.arrayBuffer(),'');
-     let meshCount=0;gltf.scene.traverse(o=>{if(o.isMesh)meshCount++;});if(!meshCount)throw Error('Model has no meshes.');
+     if(file.size>80*1024*1024)throw Error('Main model exceeds 80 MB.');
+     const total=input.reduce((n,x)=>n+x.size,0);
+     if(total+loaded.reduce((n,x)=>n+x.size,0)>180*1024*1024)throw Error('Project input exceeds 180 MB safety limit.');
+     msg('Loading '+file.name+' locally…');
+     const {gltf,resources}=await loadLocalGltf(THREE,GLTFLoader,file,input);
+     let meshes=0;gltf.scene.traverse(o=>{if(o.isMesh)meshes++;});
+     if(!meshes)throw Error('This file has animations but no meshes. Use Import Animation Library below.');
      gltf.scene.name='Part_'+(loaded.length+1)+'_'+file.name.replace(/[^a-z0-9_-]/gi,'_');
-     group.add(gltf.scene);loaded.push({name:file.name,root:gltf.scene,size:file.size,clips:gltf.animations});
+     group.add(gltf.scene);
+     loaded.push({name:file.name,root:gltf.scene,size:file.size,clips:gltf.animations,resources});
      choose(loaded.length-1);if(loaded.length===1)frame();
-     msg('Added '+file.name+' alongside the other models.');
+     msg('Added '+file.name+' · '+meshes+' meshes, '+gltf.animations.length+' embedded animations. Inspect character diagnostics below.');
     }catch(e){msg('Could not load '+file.name+': '+e.message);}
    }
   }finally{busy=false;update();}
@@ -89,7 +93,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  }
  function remove(){
   const s=selected();if(!s||!confirm('Remove '+s.name+' from the assembly? Source file stays untouched.'))return;
-  group.remove(s.root);loaded.splice(current,1);undo.length=0;choose(Math.min(current,loaded.length-1));msg('Removed only from this workspace.');
+  workshop.clear();group.remove(s.root);loaded.splice(current,1);undo.length=0;choose(Math.min(current,loaded.length-1));msg('Removed only from this workspace.');
  }
  function saveDownload(name,blob){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),15000);
@@ -151,5 +155,5 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  $('asUndo').onclick=()=>{while(undo.length){const h=undo.pop();const i=loaded.findIndex(x=>x.root===h.root);if(i<0)continue;choose(i);h.root.position.fromArray(h.pos);h.root.rotation.set(...h.rot);h.root.scale.fromArray(h.scale);update();msg('Undid placement change.');break;}};
  $('asReset').onclick=()=>{const r=selected()?.root;if(!r||!confirm('Reset this part’s transform?'))return;save();r.position.set(0,0,0);r.rotation.set(0,0,0);r.scale.setScalar(1);update();};
  update();
- return {setActive(flag){if(!flag)sculpt.setActive(false);active=flag;group.visible=flag;guides.visible=flag;if(!flag){end();return;}const a=getOriginal(),b=getCandidate();if(a)a.visible=false;if(b)b.visible=false;controls.enabled=true;if(loaded.length)frame();},isActive:()=>active};
+ return {tick(delta){workshop.tick(delta);},setActive(flag){if(!flag){sculpt.setActive(false);workshop.setActive(false);}else workshop.setActive(true);active=flag;group.visible=flag;guides.visible=flag;if(!flag){end();return;}const a=getOriginal(),b=getCandidate();if(a)a.visible=false;if(b)b.visible=false;controls.enabled=true;if(loaded.length)frame();},isActive:()=>active};
 }

@@ -1,20 +1,42 @@
 import {installSculptTools} from './sculpt-tools.js';
 import {loadLocalGltf,inspectLocalAssetSet} from './gltf-local-intake.js';
 import {installCharacterWorkshop} from './character-workshop.js';
+import {installUniversalImport} from './universal-import-ui.js';
+import {loadPreparedAsset} from './universal-loaders.js';
 // CoLab Multi-GLB Assembly Lab — isolated experimental workspace.
 // Original GLBs are never overwritten. Nothing is uploaded to a server.
-export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal,getCandidate}){
+export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,FBXLoader,OBJLoader,MTLLoader,scene,camera,renderer,controls,getOriginal,getCandidate}){
  const $=id=>document.getElementById(id);
  const group=new THREE.Group();group.name='CoLab_MultiGLB_Assembly';group.visible=false;scene.add(group);
  const guides=new THREE.Group();guides.visible=false;scene.add(guides);
  guides.add(new THREE.GridHelper(2,20,0x69869b,0x3d5265));
- const loaded=[];const undo=[];let current=-1,active=false,busy=false,drag=null,outline=null;
+ const loaded=[],references=[],undo=[];let current=-1,active=false,busy=false,drag=null,outline=null;
  const sculpt=installSculptTools({THREE,renderer,camera,controls,getSelected:()=>selected(),getActive:()=>active,onUpdate:()=>{if(outline){outline.update();outline.visible=!sculpt.isEditing();}}});
  const inputs=['asX','asY','asZ','asPitch','asYaw','asRoll','asScale'];
  const msg=t=>{$('asStatus').textContent=t};
  const selected=()=>loaded[current]||null;
  const workshop=installCharacterWorkshop({THREE,GLTFLoader,loadLocalGltf,getSelected:selected,getEntries:()=>loaded,getVisible:()=>active,notify:msg});
  const bounds=()=>new THREE.Box3().setFromObject(group);
+ const importer=installUniversalImport({
+   THREE,scene,camera,controls,workingGroup:group,
+   load:(file,files)=>loadPreparedAsset({THREE,GLTFLoader,FBXLoader,OBJLoader,MTLLoader,file,files}),
+   notify:msg,
+   onAccept:async entry=>{
+     if(loaded.length>=12)throw Error('Assembly is limited to 12 model components.');
+     entry.root.name ||= 'Imported_'+loaded.length;
+     group.add(entry.root);
+     loaded.push({name:entry.name,root:entry.root,size:entry.size,format:entry.format,
+       warnings:entry.warnings,resources:entry.resources,clips:entry.clips||[],release:entry.release});
+     choose(loaded.length-1);
+     frame();
+     msg('Added '+entry.name+' to the working scene; inspect its skeleton and materials below.');
+   },
+   onAnimation:async entry=>workshop.addLibrarySource({name:entry.choice.file.name,root:entry.root,clips:entry.clips}),
+   onReference:async entry=>{
+     references.push({name:entry.choice.file.name,file:entry.file,size:entry.file.size});
+     $('uaReferences').textContent='Saved references (session only): '+references.map(x=>x.name).join(' · ');
+   }
+ });
  function update(){
   const list=$('asList');list.replaceChildren();
   for(let i=0;i<loaded.length;i++){const opt=document.createElement('option');opt.value=i;opt.textContent=(i+1)+' · '+loaded[i].name;list.append(opt);}
@@ -50,32 +72,6 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
   controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(d*.38,d*.25,d));
   camera.up.set(0,1,0);camera.near=Math.max(.001,d/1000);camera.far=Math.max(100,d*100);camera.updateProjectionMatrix();controls.update();
  }
- async function add(files){
-  if(busy)return;
-  const input=[...files],main=inspectLocalAssetSet(input).main;
-  if(!main.length)return msg('Select one or more .glb/.gltf files (and any .bin or texture companions).');
-  busy=true;update();
-  try{
-   for(const file of main){
-    try{
-     if(loaded.length>=12)throw Error('12-item safety limit');
-     if(file.size>80*1024*1024)throw Error('Main model exceeds 80 MB.');
-     const total=input.reduce((n,x)=>n+x.size,0);
-     if(total+loaded.reduce((n,x)=>n+x.size,0)>180*1024*1024)throw Error('Project input exceeds 180 MB safety limit.');
-     msg('Loading '+file.name+' locally…');
-     const {gltf,resources}=await loadLocalGltf(THREE,GLTFLoader,file,input);
-     let meshes=0;gltf.scene.traverse(o=>{if(o.isMesh)meshes++;});
-     if(!meshes)throw Error('This file has animations but no meshes. Use Import Animation Library below.');
-     // Preserve a scene/node name when animations may bind to it.
-     if(!gltf.scene.name)gltf.scene.name='Part_'+(loaded.length+1)+'_'+file.name.replace(/[^a-z0-9_-]/gi,'_');
-     group.add(gltf.scene);
-     loaded.push({name:file.name,root:gltf.scene,size:file.size,clips:gltf.animations,resources});
-     choose(loaded.length-1);if(loaded.length===1)frame();
-     msg('Added '+file.name+' · '+meshes+' meshes, '+gltf.animations.length+' embedded animations. Inspect character diagnostics below.');
-    }catch(e){msg('Could not load '+file.name+': '+e.message);}
-   }
-  }finally{busy=false;update();}
- }
  function normalize(){
   if(!loaded.length)return;
   group.scale.setScalar(1);group.position.set(0,0,0);const b=bounds(),h=b.max.y-b.min.y;
@@ -94,7 +90,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  }
  function remove(){
   const s=selected();if(!s||!confirm('Remove '+s.name+' from the assembly? Source file stays untouched.'))return;
-  workshop.clear();group.remove(s.root);loaded.splice(current,1);undo.length=0;choose(Math.min(current,loaded.length-1));msg('Removed only from this workspace.');
+  workshop.clear();group.remove(s.root);s.release?.();loaded.splice(current,1);undo.length=0;choose(Math.min(current,loaded.length-1));msg('Removed only from this workspace.');
  }
  function saveDownload(name,blob){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),15000);
@@ -155,8 +151,6 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  renderer.domElement.addEventListener('pointermove',move);
  renderer.domElement.addEventListener('pointerup',end);
  renderer.domElement.addEventListener('pointercancel',end);
- $('asAdd').onclick=()=>$('asFiles').click();
- $('asFiles').onchange=e=>{const fs=[...(e.target.files||[])];e.target.value='';add(fs);};
  $('asList').onchange=e=>choose(Number(e.target.value));
  for(const id of inputs)$(id).onchange=e=>setField(id,e.target.value);
  const step=()=>Number($('asStep').value)||.01;
@@ -167,5 +161,5 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  $('asUndo').onclick=()=>{while(undo.length){const h=undo.pop();const i=loaded.findIndex(x=>x.root===h.root);if(i<0)continue;choose(i);h.root.position.fromArray(h.pos);h.root.rotation.set(...h.rot);h.root.scale.fromArray(h.scale);update();msg('Undid placement change.');break;}};
  $('asReset').onclick=()=>{const r=selected()?.root;if(!r||!confirm('Reset this part’s transform?'))return;save();r.position.set(0,0,0);r.rotation.set(0,0,0);r.scale.setScalar(1);update();};
  update();
- return {tick(delta){workshop.tick(delta);},setActive(flag){if(!flag){sculpt.setActive(false);workshop.setActive(false);}else workshop.setActive(true);active=flag;group.visible=flag;guides.visible=flag;if(!flag){end();return;}const a=getOriginal(),b=getCandidate();if(a)a.visible=false;if(b)b.visible=false;controls.enabled=true;if(loaded.length)frame();},isActive:()=>active};
+ return {tick(delta){workshop.tick(delta);},setActive(flag){if(!flag){sculpt.setActive(false);workshop.setActive(false);importer.clearPreview();}else workshop.setActive(true);active=flag;group.visible=flag;guides.visible=flag;if(!flag){end();return;}const a=getOriginal(),b=getCandidate();if(a)a.visible=false;if(b)b.visible=false;controls.enabled=true;if(loaded.length)frame();},isActive:()=>active};
 }

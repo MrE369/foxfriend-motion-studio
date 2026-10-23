@@ -56,9 +56,11 @@ export function inspectZipBytes(bytes,limits=LIMITS){
  if(at!==centralOffset+centralSize)throw Error('Unexpected ZIP central-directory padding.');
  return {entries,compressedBytes:a.length,uncompressedBytes:total};
 }
-export async function unpackZipFile(zip,progress){
+export async function unpackZipFile(zip,progress,remainingBytes=LIMITS.totalBytes){
  const bytes=new Uint8Array(await zip.arrayBuffer());
- const manifest=inspectZipBytes(bytes);progress?.('Validated '+manifest.entries.length+' entries. Extracting locally…');
+ const manifest=inspectZipBytes(bytes);
+ if(manifest.uncompressedBytes>remainingBytes)throw Error('These ZIP files exceed the remaining mobile import memory budget. Import a smaller pack.');
+ progress?.('Validated '+manifest.entries.length+' entries. Extracting locally…');
  const {unzipSync}=await import('fflate');
  let contents;
  try{contents=unzipSync(bytes);}catch(e){throw Error('Could not decompress archive: '+e.message);}

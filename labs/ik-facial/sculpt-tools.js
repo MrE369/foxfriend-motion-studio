@@ -1,4 +1,5 @@
 import {presets,sculptBodyPositions,checkBodySculpt} from './anatomy-sculpt.js';
+import {riggedFemalePreview} from './rigged-female-s04.js';
 // CoLab Sculpt Lab v0.1 — reversible local geometry edits to selected Assembly GLBs.
 // No network calls. Imported source bytes stay untouched. Static meshes only.
 // Brush units are WORLD meters, accounting for Assembly parent scales.
@@ -215,7 +216,12 @@ export function installSculptTools({THREE,renderer,camera,controls,getSelected,g
  $('sculptUndo').onclick=()=>{
    if(gesture)end();const step=history.pop();if(!step)return status('No sculpt strokes to undo.');
    const p=step.mesh.geometry.getAttribute('position');
-   if(p?.count*3===step.position.length){p.array.set(step.position);normals(step.mesh);anatomyBase.delete(step.mesh);}
+   if(p?.count*3===step.position.length){
+     p.array.set(step.position);
+     if(step.mesh.isSkinnedMesh){p.needsUpdate=true;step.mesh.geometry.computeBoundingBox();step.mesh.geometry.computeBoundingSphere();}
+     else normals(step.mesh);
+     anatomyBase.delete(step.mesh);
+   }
    $('sculptUndo').disabled=!history.length;onUpdate?.();
    status('Last sculpt stroke undone. Source files are unchanged.');
  };
@@ -272,5 +278,39 @@ export function installSculptTools({THREE,renderer,camera,controls,getSelected,g
    }catch(e){status('Body sculpt not applied: '+e.message);}
  };
  $('bodyIntensity').oninput=e=>$('bodyIntensityLabel').textContent=e.target.value+'%';
+ // S-04: guarded rigged-asset pilot. Bone hierarchy, indices and weights
+ // never change; this operation writes only cloned POSITION attribute bytes.
+ $('riggedApply').onclick=()=>{
+   if(!getActive())return status('Switch to Assemble to shape a character.');
+   const entry=getSelected();if(!entry)return status('Choose a loaded rigged female Superhero.');
+   const bodies=[];
+   entry.root.traverse(o=>{if(o.isSkinnedMesh&&o.name==='Superhero_Female')bodies.push(o);});
+   if(bodies.length!==1)return status('S-04 only accepts one exact Quaternius Superhero_Female mesh.');
+   const mesh=bodies[0];
+   try{
+     const intensity=Number($('riggedIntensity').value)/100;
+     const existing=baselines.get(mesh),original=existing?.original||mesh.geometry;
+     // Preview against original position buffer for non-accumulating repeatability.
+     const proposal=riggedFemalePreview({
+       isSkinnedMesh:true,skeleton:mesh.skeleton,
+       name:mesh.name,geometry:original
+     },intensity);
+     if(!existing){
+       const g=original.clone();mesh.geometry=g;
+       baselines.set(mesh,{original,editable:g});
+     }
+     const position=mesh.geometry.getAttribute('position');
+     history.push({mesh,position:new Float32Array(position.array)});
+     if(history.length>12)history.shift();
+     position.array.set(proposal.positions);position.needsUpdate=true;
+     mesh.geometry.computeBoundingBox();mesh.geometry.computeBoundingSphere();
+     $('sculptUndo').disabled=false;
+     onUpdate?.();
+     status('S-04 rigged proposal at '+Math.round(intensity*100)+'%: '+
+       proposal.stats.verticesChanged+' vertices moved, max '+proposal.stats.maxDisplacementMm.toFixed(2)+
+       ' mm. Skin weights and bone transforms untouched. Undo available; ANIMATION VISUAL QUALITY NOT GUARANTEED.');
+   }catch(err){status('Rigged sculpt blocked: '+err.message);}
+ };
+ $('riggedIntensity').oninput=e=>$('riggedIntensityLabel').textContent=e.target.value+'%';
  return {setActive(v){if(!v)setEnabled(false);},isEditing:()=>enabled,cancel:()=>{if(gesture)end();}};
 }

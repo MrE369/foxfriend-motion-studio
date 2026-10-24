@@ -311,6 +311,7 @@
 <input id="bodyIntensity" type="range" min="0" max="100" value="100" step="5">
 <button id="bodyApply" type="button">Apply reversible body sculpt</button>
 <p class="hint warn">This first anatomy preset works on static Y-up body meshes only. It explicitly refuses skinned characters and shape-key meshes. This is not rig-aware retargeting. Preview all angles and test a new GLB export. Undo via the sculpt controls above.</p>
+</details>
 <details class="subpanel" id="riggedFemalePanel">
 <summary>🦴 S-04 · Rigged Female Superhero sculpt (experimental)</summary>
 <p class="hint">Only for the original 65-bone Quaternius <strong>Superhero_Female</strong> mesh. Proposes a subtle athletic torso adjustment based on existing skin weights, without moving any bones. It edits cloned positions rather than scaling the object.</p>
@@ -319,9 +320,8 @@
 <button id="riggedApply" type="button">🦴 Apply rigged female sculpt · reversible</button>
 <p class="hint warn">A guarded experimental geometry operation, not finished skinning or clothing adaptation. No skin weights, bone transforms, UVs or mesh indices are changed. Rest-mesh integrity is checked before applying. Visual movement, shading and fitted clothing must still be reviewed. Undo uses the Sculpt undo control.</p>
 </details>
-</details>
-<p id="sculptStatus" class="hint" role="status">Select an unrigged GLB (such as Finn blank head) above, then tap Start sculpting. Orbit is available whenever sculpt is off.</p>
-<p class="hint warn">Safety pilot: static GLB meshes only; rigged/skinned and shape-key meshes are blocked. Existing UVs and textures stay as-is. Export a new combined GLB below; inspect its result before accepting. Sculpting cannot guarantee face likeness or automatically fix broken topology. Undo retains 12 strokes per active session.</p>
+<p id="sculptStatus" class="hint" role="status">Select a static mesh for sculpt brushes, or open S-04 for the guarded rigged Superhero Female adjustment.</p>
+<p class="hint warn">Sculpt brushes are static-mesh only; S-04 is a separate narrowly tested rigged-character pilot. Shape-key meshes remain unsupported. Existing UVs and textures stay as-is. Export a new combined GLB below; inspect its result before accepting. Sculpting cannot guarantee face likeness or automatically fix broken topology. Undo retains 12 strokes per active session.</p>
 </details>
 <details id="cwPanel" class="subpanel" open>
 <summary>🧍 Character Workshop · rig inspection and animation (CW-01/02)</summary>

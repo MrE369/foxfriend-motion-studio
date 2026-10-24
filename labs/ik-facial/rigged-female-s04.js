@@ -25,7 +25,7 @@ export function riggedFemalePreview(mesh,intensity=1){
  for(let i=0;i<N;i++){
    let total=0,amount=0;
    for(let k=0;k<4;k++){
-     const id=joint.getComponent(i,k),w=weight.getComponent(i,k);
+     const axis=['getX','getY','getZ','getW'][k],id=joint[axis](i),w=weight[axis](i);
      if(!finite(w)||w<0||!Number.isInteger(id)||id<0||id>=bones.length)throw Error('Invalid skin influence.');
      total+=w;amount+=(boneFactor.get(names[id])||0)*w;
    }

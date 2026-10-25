@@ -136,7 +136,8 @@
 </div>
 <label for="paintTarget">Selected surface · advanced mesh choice</label><select id="paintTarget"><option value="">Load a model</option></select>
 <div class="row"><button id="paintNavigate" class="active">✋ Navigate</button><button id="paintStart">🖌 Paint</button></div>
-<label for="paintColor">Brush color</label><input type="color" id="paintColor" value="#e78b9c">
+<label for="paintColor">Brush color</label><div class="row"><input type="color" id="paintColor" value="#e78b9c" aria-label="Brush color"><button id="paintEyedropper" type="button">🎯 Eyedropper · tap model</button></div>
+<p class="hint" id="paintSampleStatus" role="status">Sample a color from the model's texture without applying paint.</p>
 <label for="paintSize">Brush size: <output id="paintSizeValue">16</output> texture pixels</label><input id="paintSize" type="range" min="1" max="110" value="16">
 <label for="paintOpacity">Opacity: <output id="paintOpacityValue">35%</output></label><input id="paintOpacity" type="range" min="5" max="100" value="35">
 <label for="paintResolution">Texture resolution</label><select id="paintResolution"><option value="1024">1024 × 1024 (phone-friendly)</option><option value="2048">2048 × 2048 (more detail)</option></select>
@@ -281,6 +282,8 @@
 </details>
 <p id="asInfo" class="hint" role="status">0 GLBs loaded</p>
 <div class="row"><button id="asExport" type="button">⬇ Export new combined GLB</button><button id="asRecipe" type="button">⬇ Placements JSON</button></div>
+<button id="asInspect" type="button" disabled>🔎 Save assembly backup + Send to Inspect</button>
+<p class="hint">Makes a local GLB backup before opening a copy in Inspect. Head and body remain independent inside the model and in Assemble. Verify textures and rigging before further editing.</p>
 <p class="hint" id="asStatus" role="status">Add a body and head GLB. Source meshes remain independent in the exported assembly; they are not welded or rigged. Reimport exports to verify textures and animation tracks.</p>
 </section></aside></main><script type="module">
 import * as THREE from 'three';
@@ -705,6 +708,7 @@ function updatePaintUI(){
  const enabled=!!paintTarget;
  for(const id of ['paintStart','paintUndo','paintClear','paintPNG','paintGLB','paintJSON','paintImport'])$(id).disabled=!enabled;
  $('paintPickTarget').disabled=!root;
+ $('paintEyedropper').disabled=!root;
  paintCanvasPreview();
  const current=paintSessions.get(paintTarget);
  $('paintResolution').disabled=!!current;
@@ -728,6 +732,53 @@ $('paintPickTarget').onclick=()=>{
  overlay.style.pointerEvents='auto';overlay.style.cursor='crosshair';
  $('paintPickStatus').textContent='Now tap clothing or another visible area of the 3D character. No paint will be applied.';
 };
+$('paintEyedropper').onclick=()=>{
+ if(!root)return paintMessage('Load a model first.');
+ finishPaint();selectMode(false);mode='paintEyedrop';controls.enabled=false;
+ overlay.style.pointerEvents='auto';overlay.style.cursor='crosshair';
+ $('paintSampleStatus').textContent='Tap a visible surface to sample its texture color. No paint will be applied.';
+};
+overlay.addEventListener('pointerdown',e=>{
+ if(mode!=='paintEyedrop'||!root)return;
+ try{
+  const rect=overlay.getBoundingClientRect();
+  pointer.set((e.clientX-rect.left)/rect.width*2-1,-((e.clientY-rect.top)/rect.height*2-1));
+  ray.setFromCamera(pointer,camera);root.updateMatrixWorld(true);
+  const hit=ray.intersectObjects(meshes,true).find(h=>h.object?.isMesh&&h.object.visible);
+  if(!hit)throw Error('No visible surface there. Try tapping the character.');
+  const mesh=hit.object,p=paintSessions.get(mesh),base=baseMaterials.get(mesh)?.[0];
+  let hex;
+  if(hit.uv&&(p||base?.map)){
+   let rgba;
+   if(p){
+    const x=Math.min(p.canvas.width-1,Math.max(0,Math.floor(hit.uv.x*p.canvas.width)));
+    const y=Math.min(p.canvas.height-1,Math.max(0,Math.floor((1-hit.uv.y)*p.canvas.height)));
+    rgba=p.ctx.getImageData(x,y,1,1).data;
+   }else{
+    const tex=base.map,img=tex.image||tex.source?.data;
+    if(!img?.width||!img?.height)throw Error('This texture is not ready for sampling.');
+    if(tex.offset.lengthSq()>1e-10||Math.abs(tex.repeat.x-1)>1e-9||Math.abs(tex.repeat.y-1)>1e-9||Math.abs(tex.rotation)>1e-9)
+      throw Error('This texture uses UV transforms and cannot be sampled precisely yet.');
+    const x=Math.min(img.width-1,Math.max(0,Math.floor(hit.uv.x*img.width)));
+    const v=tex.flipY===false?hit.uv.y:1-hit.uv.y;
+    const y=Math.min(img.height-1,Math.max(0,Math.floor(v*img.height)));
+    const c=document.createElement('canvas');c.width=c.height=1;
+    const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,x,y,1,1,0,0,1,1);
+    rgba=ctx.getImageData(0,0,1,1).data;
+   }
+   if(rgba[3]===0)throw Error('That texture pixel is transparent. Try a solid area.');
+   hex='#'+[rgba[0],rgba[1],rgba[2]].map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('');
+  }else{
+   const c=(Array.isArray(mesh.material)?mesh.material[0]:mesh.material)?.color;
+   if(!c)throw Error('This surface has no readable color.');
+   hex='#'+c.getHexString(THREE.SRGBColorSpace);
+  }
+  $('paintColor').value=hex;
+  $('paintSampleStatus').textContent='Sampled '+hex+' from '+(mesh.name||'the selected surface')+'. No paint applied.';
+  paintMessage('Eyedropper selected '+hex+'. Tap Paint when ready.');
+ }catch(err){$('paintSampleStatus').textContent=err.message;}
+ finally{mode='nav';controls.enabled=true;overlay.style.pointerEvents='none';overlay.style.cursor='';}
+});
 overlay.addEventListener('pointerdown',e=>{
  if(mode!=='paintPick'||!root)return;
  try{
@@ -2240,6 +2291,6 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
  if(touch)jointGestureEnd(legacyJointEvent(e,touch,'end'),name!=='touchend');
 },{capture:true,passive:false});
 
-assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot});
+assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
 function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
 </script></body></html>

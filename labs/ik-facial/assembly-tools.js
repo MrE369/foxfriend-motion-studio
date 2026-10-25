@@ -1,7 +1,7 @@
 import {installSculptTools} from './sculpt-tools.js';
 // CoLab Multi-GLB Assembly Lab — isolated experimental workspace.
 // Original GLBs are never overwritten. Nothing is uploaded to a server.
-export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal,getCandidate}){
+export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal,getCandidate,onInspectGLB}){
  const $=id=>document.getElementById(id);
  const group=new THREE.Group();group.name='CoLab_MultiGLB_Assembly';group.visible=false;scene.add(group);
  const guides=new THREE.Group();guides.visible=false;scene.add(guides);
@@ -22,6 +22,7 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
   inputs.forEach((id,i)=>{$(id).disabled=!r||busy;if(r)$(id).value=Number(vals[i].toFixed(4));});
   for(const id of ['asLeft','asRight','asUp','asDown','asBack','asForward','asTiltLeft','asTiltRight','asReset','asRemove'])$(id).disabled=!r||busy;
   $('asUndo').disabled=!undo.length||busy;$('asExport').disabled=!loaded.length||busy;
+  $('asInspect').disabled=!loaded.length||busy;
   $('asHeight').disabled=!loaded.length||busy;$('asPreset').disabled=loaded.length<2||busy;
   const b=bounds();$('asInfo').textContent=loaded.length+' GLB(s) · '+(b.isEmpty()?0:b.getSize(new THREE.Vector3()).y).toFixed(3)+' m high';
   if(outline){guides.remove(outline);outline.geometry.dispose();outline.material.dispose();outline=null;}
@@ -108,6 +109,21 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
    msg('Exported. Reimport into Inspect and check mesh positions, materials, and animations.');
   }catch(e){msg('Export failed: '+e.message);}finally{busy=false;update();}
  }
+ async function sendToInspect(){
+  if(!loaded.length||busy)return;
+  if(typeof onInspectGLB!=='function')return msg('Inspect handoff is unavailable.');
+  if(!confirm('Save a NEW combined GLB backup and open this assembly in Inspect? Original parts and their placements stay intact.'))return;
+  busy=true;update();msg('Preparing local backup and Inspect handoff…');
+  try{
+   const clips=loaded.flatMap(x=>x.clips);
+   const bytes=await new GLTFExporter().parseAsync(group,{binary:true,onlyVisible:false,animations:clips,maxTextureSize:4096});
+   const file=new File([bytes],'CoLab_Assembly_To_Inspect_BACKUP.glb',{type:'model/gltf-binary'});
+   saveDownload(file.name,file);
+   const success=await onInspectGLB(file);
+   msg(success?'Assembly copied into Inspect; original parts remain in Assemble.':'Inspect did not accept the assembly. The downloaded GLB backup is available.');
+  }catch(err){msg('Inspect handoff stopped safely: '+err.message);}
+  finally{busy=false;update();}
+ }
  function recipe(){
   const data={schema:'colab-multiglb-assembly-v1',parts:loaded.map(x=>({name:x.name,size:x.size,position:x.root.position.toArray(),rotation:[x.root.rotation.x,x.root.rotation.y,x.root.rotation.z],scale:x.root.scale.toArray()})),assembly:{position:group.position.toArray(),scale:group.scale.toArray()},sourceFilesRequired:true};
   saveDownload('CoLab_Assembly_Recipe.json',new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
@@ -147,9 +163,10 @@ export function installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,r
  for(const [id,axis,sign] of [['asLeft','x',-1],['asRight','x',1],['asDown','y',-1],['asUp','y',1],['asBack','z',-1],['asForward','z',1]])$(id).onclick=()=>nudge(axis,sign*step());
  $('asTiltLeft').onclick=()=>nudge('pitch',-1);$('asTiltRight').onclick=()=>nudge('pitch',1);
  $('asFrame').onclick=frame;$('asHeight').onclick=normalize;$('asPreset').onclick=preset;
- $('asExport').onclick=exportGLB;$('asRecipe').onclick=recipe;$('asRemove').onclick=remove;
+ $('asExport').onclick=exportGLB;$('asRecipe').onclick=recipe;$('asInspect').onclick=sendToInspect;$('asRemove').onclick=remove;
  $('asUndo').onclick=()=>{while(undo.length){const h=undo.pop();const i=loaded.findIndex(x=>x.root===h.root);if(i<0)continue;choose(i);h.root.position.fromArray(h.pos);h.root.rotation.set(...h.rot);h.root.scale.fromArray(h.scale);update();msg('Undid placement change.');break;}};
  $('asReset').onclick=()=>{const r=selected()?.root;if(!r||!confirm('Reset this part’s transform?'))return;save();r.position.set(0,0,0);r.rotation.set(0,0,0);r.scale.setScalar(1);update();};
  update();
  return {setActive(flag){if(!flag)sculpt.setActive(false);active=flag;group.visible=flag;guides.visible=flag;if(!flag){end();return;}const a=getOriginal(),b=getCandidate();if(a)a.visible=false;if(b)b.visible=false;controls.enabled=true;if(loaded.length)frame();},isActive:()=>active};
 }
+

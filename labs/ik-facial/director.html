@@ -113,7 +113,30 @@
 </details>
 <label for="label">Selection label</label><input id="label" placeholder="e.g. suspected upper eyelid"><label for="note">Instructions / observations</label><textarea id="note" placeholder="What is this surface? Is there geometry behind it?"></textarea><button id="export">⬇ Export selection JSON</button><label for="import">Restore selection JSON</label><label style="font-weight:400"><input id="mergeImport" type="checkbox" style="width:auto;min-height:0;margin-right:8px">Add to current selection instead of replacing (matching GLB only)</label><input id="import" type="file" accept=".json,application/json"><div id="importResult" role="status" aria-live="polite"></div><p class="hint">Handoff records a SHA-256 fingerprint of the original GLB, a mesh path, triangle indices, UVs when present, and 3D hit location. Import refuses a different file fingerprint. Original model data is never rewritten.</p>
 <details><summary>Scope and limitations</summary><p class="hint">Milestone A includes universal inspection, triangle selection, connected-component selection using shared geometric edges, mesh selection, display modes, camera presets, and JSON save/restore. Large selections may be slow on phones. Connected parts are determined by matching position edges within a small tolerance, so near-coincident seams may connect or stay separate depending on geometry. This test hides or isolates selected source triangles in the viewer without editing GLB geometry; previews are rebuilt as lightweight meshes and may not follow animated/skinned deformation. Painting and geometry edits remain future milestones.</p></details>
-</section><section id="tabPaint" class="workspace" role="tabpanel" aria-labelledby="tabButtonPaint" hidden><h2>Character Paint Studio <small>· integrated test</small></h2>
+<details id="geometryWorkshop" class="subpanel" aria-label="Geometry Workshop">
+<summary>🧩 Geometry Workshop · experimental draft tools</summary>
+<p class="hint">Add and shape separate geometry without changing the loaded model. Tap a surface in Inspect Select mode, then use it as a placement or brush reference. Preview and Undo before exporting.</p>
+<h3>1 · Add geometry</h3>
+<label for="gwPrimitive">Shape</label><select id="gwPrimitive"><option value="cylinder">Cylinder</option><option value="sphere">Sphere</option><option value="box">Box</option></select>
+<div class="row"><label>Radius / width <input id="gwRadius" type="number" min="0.002" max="2" step="0.005" value="0.035"></label><label>Height <input id="gwHeight" type="number" min="0.002" max="4" step="0.005" value="0.07"></label></div>
+<button type="button" id="gwAdd">＋ Add draft geometry</button>
+<label for="gwMeshes">Active draft piece</label><select id="gwMeshes"></select><p id="gwCount" class="hint">0 draft meshes</p>
+<div class="row"><label>X <input id="gwX" type="number" step="0.001" value="0"></label><label>Y <input id="gwY" type="number" step="0.001" value="0"></label><label>Z <input id="gwZ" type="number" step="0.001" value="0"></label><label>Scale <input id="gwScale" type="number" min="0.02" max="20" step="0.01" value="1"></label></div>
+<button type="button" id="gwApply">Apply draft position / scale</button>
+<h3>2 · Shape draft geometry</h3>
+<p class="hint">Select a surface in Inspect as the brush center. The brush changes only the active draft piece; source geometry is never sculpted in place.</p>
+<div class="row"><label>Brush radius <input id="gwBrushRadius" type="number" min="0.002" max="2" step="0.005" value="0.08"></label><label>Push / pull <input id="gwBrushStrength" type="number" min="-0.25" max="0.25" step="0.005" value="0.015"></label></div>
+<button type="button" id="gwShape">Shape draft near selected point</button>
+<h3>3 · Bridge surfaces (sleeve preview)</h3>
+<p class="hint">Tap a head surface in Select mode, save A; tap a body surface, save B. Create an adjustable bridging sleeve. This is not a welded seam and it has no bone weights yet.</p>
+<div class="row"><button type="button" id="gwPickA">Use current hit as A</button><button type="button" id="gwPickB">Use current hit as B</button></div>
+<p class="hint"><span id="gwA">A · not chosen</span> · <span id="gwB">B · not chosen</span></p>
+<div class="row"><label>A radius <input id="gwRingA" type="number" min="0.002" max="1" step="0.005" value="0.035"></label><label>B radius <input id="gwRingB" type="number" min="0.002" max="1" step="0.005" value="0.045"></label></div>
+<button type="button" id="gwBridge">Bridge A → B (preview)</button>
+<div class="row"><button type="button" id="gwUndo">↶ Undo draft</button><button type="button" id="gwDelete">Delete active piece</button><button type="button" id="gwClear">Clear draft</button></div>
+<div class="row"><button type="button" id="gwExport">⬇ Export patch only GLB</button><button type="button" id="gwExportCombined">⬇ Export combined candidate GLB</button></div>
+<p class="hint" role="status" id="gwStatus">Local draft only. Original model, textures, rig, and Assembly Lab stay unchanged. Reimport any exported candidate and visually test it.</p>
+</details></section><section id="tabPaint" class="workspace" role="tabpanel" aria-labelledby="tabButtonPaint" hidden><h2>Character Paint Studio <small>· integrated test</small></h2>
 <p class="hint">Experimental local painting. Original GLB remains untouched. Start on a small part of Finn or Sylvara's clothing, inspect the result, and use Undo whenever needed.</p>
 <div class="subpanel" id="artReferencePanel">
 <h3>🖼 Concept art · paint together</h3>
@@ -293,6 +316,7 @@ import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
 import {relaxSelectedSurface} from './director-tools.js';
 import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
 import {installAssemblyLab} from './assembly-tools.js';
+import {installGeometryWorkshop} from './geometry-workshop.js';
 const $=id=>document.getElementById(id),view=$('view'),scene=new THREE.Scene();scene.background=new THREE.Color('#263648');
 const camera=new THREE.PerspectiveCamera(35,1,.001,1e5),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.domElement.style.touchAction='none';view.append(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;scene.add(new THREE.HemisphereLight(0xffffff,0x74869c,2.5));for(const [x,y,z,k] of [[3,5,6,2.1],[-4,2,-3,1.1]]){let l=new THREE.DirectionalLight(0xffffff,k);l.position.set(x,y,z);scene.add(l)}
@@ -2292,5 +2316,6 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 },{capture:true,passive:false});
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
+const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,getOriginal:()=>root,getHit:()=>lastHit});
 function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
 </script></body></html>

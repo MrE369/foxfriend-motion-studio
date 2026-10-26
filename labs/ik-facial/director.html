@@ -2327,6 +2327,6 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 },{capture:true,passive:false});
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
-const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,getOriginal:()=>root,getHit:()=>lastHit});
+const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal:()=>root,getHit:()=>lastHit});
 function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
 </script></body></html>

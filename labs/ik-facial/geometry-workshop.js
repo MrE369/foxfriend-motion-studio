@@ -2,10 +2,10 @@
 // Draft meshes can be exported alone or in a separate combined candidate.
 import {clone as cloneSkeleton} from 'three/addons/utils/SkeletonUtils.js';
 
-export function installGeometryWorkshop({THREE,GLTFExporter,scene,getOriginal,getHit}){
+export function installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal,getHit}){
   const $=id=>document.getElementById(id);
   const draft=new THREE.Group();draft.name='Geometry_Workshop_Draft';scene.add(draft);
-  const history=[];let active=null,anchorA=null,anchorB=null;
+  const history=[];let active=null,anchorA=null,anchorB=null,dragEnabled=false,dragSession=null;
   const notice=s=>{$('gwStatus').textContent=s;};
   const material=()=>new THREE.MeshStandardMaterial({color:0x82dab9,roughness:.86,metalness:0,side:THREE.DoubleSide,transparent:true,opacity:.92});
   const finite=(id,min,max)=>{const n=Number($(id).value);if(!Number.isFinite(n)||n<min||n>max)throw Error(`${id} must be between ${min} and ${max}.`);return n;};
@@ -22,6 +22,14 @@ export function installGeometryWorkshop({THREE,GLTFExporter,scene,getOriginal,ge
     $('gwCount').textContent=`${draft.children.length} draft mesh(es)`;
     for(const id of ['gwX','gwY','gwZ','gwScale'])$(id).disabled=!active;
     if(active){$('gwX').value=active.position.x.toFixed(4);$('gwY').value=active.position.y.toFixed(4);$('gwZ').value=active.position.z.toFixed(4);$('gwScale').value=active.scale.x.toFixed(4);}
+    for(const [axis,value] of Object.entries({X:active?.position.x,Y:active?.position.y,Z:active?.position.z,Scale:active?.scale.x})){
+      const range=$('gwRange'+axis);range.disabled=!active;
+      if(active){range.value=String(Math.max(Number(range.min),Math.min(Number(range.max),value)));$('gwValue'+axis).textContent=value.toFixed(3);}
+      else $('gwValue'+axis).textContent='—';
+    }
+    for(const b of document.querySelectorAll('[data-gw-nudge]'))b.disabled=!active;
+    $('gwDrag').disabled=!active;$('gwDrag').setAttribute('aria-pressed',String(dragEnabled));
+    $('gwDrag').textContent=dragEnabled?'✋ Drag piece: ON':'✋ Drag piece: OFF';
     $('gwA').textContent=anchorA?'A ✓ '+anchorA.meshName:'A · not chosen';
     $('gwB').textContent=anchorB?'B ✓ '+anchorB.meshName:'B · not chosen';
   }
@@ -33,6 +41,47 @@ export function installGeometryWorkshop({THREE,GLTFExporter,scene,getOriginal,ge
     add(geo,'GW_'+kind,currentPoint());
   }catch(e){notice(e.message);}};
   $('gwMeshes').onchange=()=>{active=draft.children[Number($('gwMeshes').value)]||null;update();};
+  const sliders={X:'x',Y:'y',Z:'z',Scale:'scale'};
+  for(const [axis,key] of Object.entries(sliders)){
+    const el=$('gwRange'+axis);let started=false;
+    const begin=()=>{if(active&&!started){checkpoint();started=true;}};
+    el.addEventListener('pointerdown',begin);
+    el.addEventListener('input',()=>{if(!active)return;begin();const value=Number(el.value);
+      if(key==='scale')active.scale.setScalar(value);else active.position[key]=value;
+      $('gw'+axis).value=value.toFixed(4);$('gwValue'+axis).textContent=value.toFixed(3);
+    });
+    for(const event of ['pointerup','pointercancel','change','blur'])el.addEventListener(event,()=>{started=false;});
+  }
+  for(const button of document.querySelectorAll('[data-gw-nudge]'))button.addEventListener('click',()=>{
+    if(!active)return;const [axis,direction]=button.dataset.gwNudge.split(':');
+    const step=finite('gwStep',.0001,.5);checkpoint();active.position[axis]=Math.max(-10,Math.min(10,active.position[axis]+Number(direction)*step));
+    update();notice('Draft nudged '+axis.toUpperCase()+' by '+(Number(direction)*step).toFixed(4)+'.');
+  });
+  $('gwDrag').onclick=()=>{dragEnabled=!dragEnabled;update();notice(dragEnabled?'Drag enabled: touch the draft shape in the viewer and move it. Orbit is paused only while dragging the shape.':'Drag disabled: camera orbit works normally.');};
+  if(renderer?.domElement&&camera){
+    const canvas=renderer.domElement,raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2(),plane=new THREE.Plane(),hitPoint=new THREE.Vector3();
+    function setPointer(e){const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));raycaster.setFromCamera(pointer,camera);}
+    const surfaces=[canvas,...(overlay?[overlay]:[])];
+    const onDown=e=>{if(!dragEnabled||e.button>0||!draft.children.length)return;
+      setPointer(e);const hit=raycaster.intersectObjects(draft.children,false)[0];if(!hit)return;
+      active=hit.object;checkpoint();const normal=camera.getWorldDirection(new THREE.Vector3());
+      plane.setFromNormalAndCoplanarPoint(normal,hit.point);const offset=active.position.clone().sub(hit.point);
+      dragSession={id:e.pointerId,offset,surface:e.currentTarget};e.currentTarget.setPointerCapture(e.pointerId);update();
+      e.preventDefault();e.stopImmediatePropagation();
+    };
+    const onMove=e=>{if(!dragSession||e.pointerId!==dragSession.id)return;
+      setPointer(e);if(raycaster.ray.intersectPlane(plane,hitPoint)){
+        active.position.copy(hitPoint).add(dragSession.offset);update();
+      }
+      e.preventDefault();e.stopImmediatePropagation();
+    };
+    const finish=e=>{if(!dragSession||e.pointerId!==dragSession.id)return;dragSession=null;
+      if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
+      notice('Draft repositioned by touch. Undo is available.');e.preventDefault();e.stopImmediatePropagation();
+    };
+    for(const surface of surfaces){surface.addEventListener('pointerdown',onDown,true);surface.addEventListener('pointermove',onMove,true);
+      surface.addEventListener('pointerup',finish,true);surface.addEventListener('pointercancel',finish,true);}
+  }
   $('gwApply').onclick=()=>{if(!active)return;try{
     const x=finite('gwX',-10,10),y=finite('gwY',-10,10),z=finite('gwZ',-10,10),s=finite('gwScale',.02,20);
     checkpoint();active.position.set(x,y,z);active.scale.setScalar(s);update();notice('Draft mesh transformed. Undo is available.');

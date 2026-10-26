@@ -2,7 +2,7 @@
 // Draft meshes can be exported alone or in a separate combined candidate.
 import {clone as cloneSkeleton} from 'three/addons/utils/SkeletonUtils.js';
 
-export function installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,getOriginal,getHit}){
+export function installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal,getHit}){
   const $=id=>document.getElementById(id);
   const draft=new THREE.Group();draft.name='Geometry_Workshop_Draft';scene.add(draft);
   const history=[];let active=null,anchorA=null,anchorB=null,dragEnabled=false,dragSession=null;
@@ -61,24 +61,26 @@ export function installGeometryWorkshop({THREE,GLTFExporter,scene,camera,rendere
   if(renderer?.domElement&&camera){
     const canvas=renderer.domElement,raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2(),plane=new THREE.Plane(),hitPoint=new THREE.Vector3();
     function setPointer(e){const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));raycaster.setFromCamera(pointer,camera);}
-    canvas.addEventListener('pointerdown',e=>{if(!dragEnabled||e.button>0||!draft.children.length)return;
+    const surfaces=[canvas,...(overlay?[overlay]:[])];
+    const onDown=e=>{if(!dragEnabled||e.button>0||!draft.children.length)return;
       setPointer(e);const hit=raycaster.intersectObjects(draft.children,false)[0];if(!hit)return;
       active=hit.object;checkpoint();const normal=camera.getWorldDirection(new THREE.Vector3());
       plane.setFromNormalAndCoplanarPoint(normal,hit.point);const offset=active.position.clone().sub(hit.point);
-      dragSession={id:e.pointerId,offset};canvas.setPointerCapture(e.pointerId);update();
+      dragSession={id:e.pointerId,offset,surface:e.currentTarget};e.currentTarget.setPointerCapture(e.pointerId);update();
       e.preventDefault();e.stopImmediatePropagation();
-    },true);
-    canvas.addEventListener('pointermove',e=>{if(!dragSession||e.pointerId!==dragSession.id)return;
+    };
+    const onMove=e=>{if(!dragSession||e.pointerId!==dragSession.id)return;
       setPointer(e);if(raycaster.ray.intersectPlane(plane,hitPoint)){
         active.position.copy(hitPoint).add(dragSession.offset);update();
       }
       e.preventDefault();e.stopImmediatePropagation();
-    },true);
+    };
     const finish=e=>{if(!dragSession||e.pointerId!==dragSession.id)return;dragSession=null;
-      if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);
+      if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
       notice('Draft repositioned by touch. Undo is available.');e.preventDefault();e.stopImmediatePropagation();
     };
-    canvas.addEventListener('pointerup',finish,true);canvas.addEventListener('pointercancel',finish,true);
+    for(const surface of surfaces){surface.addEventListener('pointerdown',onDown,true);surface.addEventListener('pointermove',onMove,true);
+      surface.addEventListener('pointerup',finish,true);surface.addEventListener('pointercancel',finish,true);}
   }
   $('gwApply').onclick=()=>{if(!active)return;try{
     const x=finite('gwX',-10,10),y=finite('gwY',-10,10),z=finite('gwZ',-10,10),s=finite('gwScale',.02,20);

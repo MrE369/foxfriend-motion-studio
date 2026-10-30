@@ -19,10 +19,10 @@
 </nav>
 
 <p class="hint" style="margin:3px 0 12px"><a href="https://mre369.github.io/foxfriend-motion-studio/colab/agent-guide.html" style="color:#91f0d8" target="_blank" rel="noopener">📷 New to collaborating with an AI agent? See our screenshot-first guide ↗</a></p>
-<label>1 · Load any GLB</label><input id="file" type="file" accept=".glb,model/gltf-binary">
+<label>1 · Load any GLB</label><input id="file" type="file" accept=".glb,.fbx,model/gltf-binary,application/octet-stream">
 <button id="fileBrowseAll" type="button">📁 Android: Browse all files for original GLB</button>
 <input id="fileUnfiltered" type="file" hidden aria-label="Browse Android files to choose original GLB without type filtering">
-<p class="hint">If an extracted GLB is greyed out in Android's picker, use Browse all files above. Only genuine GLB models are loaded; ZIPs must be extracted first.</p><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
+<p class="hint">If an extracted GLB is greyed out in Android's picker, use Browse all files above. Only genuine GLB models are loaded; ZIPs must be extracted first.</p><button type="button" id="sendToUnified">Send current model to Unified Studio</button><p class="hint">When opened inside Unified Studio, this sends an editable GLB copy back after confirmation. Originals stay untouched. Animation clips may need separate reimport.</p><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
 
 <details id="directorPanel" class="subpanel" open aria-label="Director's Desk">
  <summary>🎬 Director's Desk · describe, preview, collaborate</summary>
@@ -324,6 +324,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {relaxSelectedSurface} from './director-tools.js';
 import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
 import {installAssemblyLab} from './assembly-tools.js';
@@ -529,7 +530,21 @@ $('resetAllMoves').onclick=()=>{if(!confirm('Reset all six proposed movements?')
 $('exportMoves').onclick=()=>{if(!root)return status('Load GLB first');const payload={schema:'better-together-3d-colab-movement-proposal-v1',agentWorkflow:{guide:'https://github.com/MrE369/foxfriend-motion-studio/blob/main/docs/AGENT_WORKFLOW.md',screenshotFeedback:'Ask the artist for a real CoLab screenshot, the relevant parameter value and expected result. Diagnose first, use the smallest reversible fix and retest using a comparable screenshot.',costPrinciple:'Use AI for new reasoning and reusable deterministic local scripts for repeats. Savings are possible, not guaranteed; measure metered usage.'},source:{filename:originalName,sizeBytes:glbFileSize,sha256:fingerprint},space:'mesh-local',units:'GLB model units',previewOnly:true,regions:regions.map((r,i)=>({slot:i,color:r.color,label:r.name,offset:r.offset.slice(),selection:[...r.parts.entries()].map(([m,ids])=>({meshIndex:meshes.indexOf(m),meshName:m.name||'',triangles:[...ids].sort((a,b)=>a-b)})),sharedVertexCount:borderWarning(r).shared})),camera:cameraData(),note:$('note').value,warning:'Non-destructive preview. The proposal does not stitch or deform adjacent geometry. Triangle IDs require the exact original GLB.'};download(originalName.replace(/\.glb$/i,'')+'_movement_proposal.json',payload);status('Movement proposal JSON exported. Original GLB unchanged.')};
 updateMoveUI();
 function hashBuffer(buffer){return crypto.subtle.digest('SHA-256',buffer).then(arr=>[...new Uint8Array(arr)].map(v=>v.toString(16).padStart(2,'0')).join(''))}
-async function loadGLBFile(f,fromRecovery=false){if(!f)return false;if(!fromRecovery)await recoveryReady;dismissImportNotice();$('importResult').style.display='none';if(editedSinceSave&&root)await saveSessionNow();status('Loading '+f.name+'…');let url;try{const bytes=await f.arrayBuffer();const hash=await hashBuffer(bytes);url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const gltf=await new GLTFLoader().loadAsync(url);const incoming=[];gltf.scene.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)incoming.push(o)});if(!incoming.length)throw Error('GLB contains no renderable triangle meshes.');clearUnifiedBeforeLoad();if(root){clearPreviews();scene.remove(root);for(const m of meshes){const old=Array.isArray(m.material)?m.material:[m.material];old.forEach(a=>a.dispose());(baseMaterials.get(m)||[]).forEach(a=>a.dispose())}}root=gltf.scene;meshes=incoming;originalName=f.name;fingerprint=hash;glbFileSize=f.size;adjCache.clear();regions.forEach(r=>{r.parts.clear();r.offset=[0,0,0]});moveHistory.length=0;showProposal=false;clearMovePreview();regionIndex=0;triSelections=regions[0].parts;$('regionName').value=regions[0].name;lastHit=null;visibilityMode='all';clearMarks();materialCopies();scene.add(root);modelBounds=new THREE.Box3().setFromObject(root);frameBounds(modelBounds);defaultCamera={position:camera.position.toArray(),target:controls.target.toArray()};const n=meshes.reduce((sum,m)=>sum+triCount(m),0),v=meshes.reduce((sum,m)=>sum+m.geometry.attributes.position.count,0),uvCount=meshes.filter(m=>!!m.geometry.attributes.uv).length,bones=[];root.traverse(o=>{if(o.isBone)bones.push(o)});const materialCount=new Set(meshes.flatMap(m=>{const a=Array.isArray(m.material)?m.material:[m.material];return a.map(z=>z.uuid)})).size;$('stats').textContent=`File: ${f.name}\nSHA-256: ${hash.slice(0,16)}…\nMeshes: ${meshes.length} · vertices: ${v.toLocaleString()} · triangles: ${n.toLocaleString()}\nUV-mapped meshes: ${uvCount}/${meshes.length}\nBones: ${bones.length} · embedded animation clips: ${gltf.animations.length}\nMaterials: ${materialCount} (current rendering copies)\nRigging: ${bones.length?'present':'none — inspector still available'}`;$('import').value='';selectMode(false);
+async function loadGLBFile(f,fromRecovery=false){if(!f)return false;
+ if(!fromRecovery&&/\.fbx$/i.test(f.name)){
+  try{
+   status('Converting FBX for editing…');
+   const bytes=await f.arrayBuffer();
+   const model=new FBXLoader().parse(bytes,'');
+   const clips=model.animations||[];
+   const binary=await new GLTFExporter().parseAsync(model,{binary:true,animations:clips,onlyVisible:false});
+   const converted=new File([binary],f.name.replace(/\.fbx$/i,'.glb'),{type:'model/gltf-binary'});
+   const loaded=await loadGLBFile(converted,false);
+   if(loaded)status('FBX imported as editable GLB. Export GLB to keep your changes; the original FBX is untouched.');
+   return loaded;
+  }catch(err){status('FBX import failed: '+err.message);return false}
+ }
+if(!fromRecovery)await recoveryReady;dismissImportNotice();$('importResult').style.display='none';if(editedSinceSave&&root)await saveSessionNow();status('Loading '+f.name+'…');let url;try{const bytes=await f.arrayBuffer();const hash=await hashBuffer(bytes);url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const gltf=await new GLTFLoader().loadAsync(url);const incoming=[];gltf.scene.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)incoming.push(o)});if(!incoming.length)throw Error('GLB contains no renderable triangle meshes.');clearUnifiedBeforeLoad();if(root){clearPreviews();scene.remove(root);for(const m of meshes){const old=Array.isArray(m.material)?m.material:[m.material];old.forEach(a=>a.dispose());(baseMaterials.get(m)||[]).forEach(a=>a.dispose())}}root=gltf.scene;meshes=incoming;originalName=f.name;fingerprint=hash;glbFileSize=f.size;adjCache.clear();regions.forEach(r=>{r.parts.clear();r.offset=[0,0,0]});moveHistory.length=0;showProposal=false;clearMovePreview();regionIndex=0;triSelections=regions[0].parts;$('regionName').value=regions[0].name;lastHit=null;visibilityMode='all';clearMarks();materialCopies();scene.add(root);modelBounds=new THREE.Box3().setFromObject(root);frameBounds(modelBounds);defaultCamera={position:camera.position.toArray(),target:controls.target.toArray()};const n=meshes.reduce((sum,m)=>sum+triCount(m),0),v=meshes.reduce((sum,m)=>sum+m.geometry.attributes.position.count,0),uvCount=meshes.filter(m=>!!m.geometry.attributes.uv).length,bones=[];root.traverse(o=>{if(o.isBone)bones.push(o)});const materialCount=new Set(meshes.flatMap(m=>{const a=Array.isArray(m.material)?m.material:[m.material];return a.map(z=>z.uuid)})).size;$('stats').textContent=`File: ${f.name}\nSHA-256: ${hash.slice(0,16)}…\nMeshes: ${meshes.length} · vertices: ${v.toLocaleString()} · triangles: ${n.toLocaleString()}\nUV-mapped meshes: ${uvCount}/${meshes.length}\nBones: ${bones.length} · embedded animation clips: ${gltf.animations.length}\nMaterials: ${materialCount} (current rendering copies)\nRigging: ${bones.length?'present':'none — inspector still available'}`;$('import').value='';selectMode(false);
  if(!fromRecovery){inspectorDisplay={style:'solid',context:0,visibility:'all',isolateAlpha:20};workspace='review';}
  renderMarks();initializeUnified(gltf);if(!fromRecovery)showWorkspace('inspect');status('Loaded. Tap Select, then tap any visible triangle.');
  currentModelBlob=new Blob([bytes],{type:'model/gltf-binary'});
@@ -2328,5 +2343,21 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
 const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal:()=>root,getHit:()=>lastHit});
+// Explicit same-origin handoff when embedded in Unified Studio.
+window.addEventListener('message',async event=>{
+ if(event.origin!==location.origin||event.source!==window.parent||event.data?.kind!=='coLab-model-transfer-v1')return;
+ if(root&&!confirm('Unified Studio is sending a model. Replace the current Director Lab model? Export your edits first.'))return;
+ try{await loadGLBFile(new File([event.data.bytes],event.data.name||'unified-transfer.glb',{type:'model/gltf-binary'}))}
+ catch(err){status('Transfer failed: '+err.message)}
+});
+$('sendToUnified').onclick=async()=>{
+ if(window.parent===window){status('Open Director Lab inside Unified Studio to send a model back.');return}
+ if(!root){status('Load a model first.');return}
+ try{
+  const bytes=await new GLTFExporter().parseAsync(root,{binary:true,onlyVisible:false});
+  window.parent.postMessage({kind:'coLab-model-transfer-v1',name:(originalName||'director').replace(/\.(fbx|glb)$/i,'')+'.glb',bytes},location.origin,[bytes]);
+  status('Model sent to Unified Studio for review.');
+ }catch(err){status('Transfer failed: '+err.message)}
+};
 function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
 </script></body></html>

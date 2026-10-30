@@ -40,3 +40,8 @@ Only share screenshots you're comfortable sharing; crop private details, and nev
 4. On an installed version, make an approved update available. Confirm **Save & update** saves before reloading and **Later** does not reload.
 5. Load a second model while a saved checkpoint exists; verify the older checkpoint is not overwritten without explicit Save now confirmation.
 6. Test disabling storage or quota failure: UI must report the failure, not claim success.
+## Director Lab bridge (integration experiment, October 30, 2026)
+
+The Unified Studio now offers a collapsible **Director Lab** panel to access the independently deployed Assembly Lab, Geometry Workshop, sculpt and rig tools. It embeds `https://foxfriend-colab-director-lab.pages.dev/director` on demand and also links to the full-screen version. This **is not a native merge** of the underlying scene graph, rigging state, or local IndexedDB data. Save/export a GLB from one editor and import it in the other; local recovery remains separate by origin. Closing the panel releases the embedded iframe to reduce GPU load. Some browsers or future content-security policies may prevent embedding; use the full-tab link in that case.
+
+**Before promoting this branch:** verify HTML/JS parsing, desktop and Xbox Edge layout, export/import roundtrip, that closing the iframe does not change the Unified session, and that both recovery systems remain functional. Do not change a deployed production site without visual acceptance.

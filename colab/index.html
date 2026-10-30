@@ -239,14 +239,14 @@ $('exportMoves').onclick=()=>{if(!root)return status('Load GLB first');const pay
 updateMoveUI();
 function hashBuffer(buffer){return crypto.subtle.digest('SHA-256',buffer).then(arr=>[...new Uint8Array(arr)].map(v=>v.toString(16).padStart(2,'0')).join(''))}
 async function loadGLBFile(f,fromRecovery=false){if(!f)return false;
- if(!fromRecovery&&/\\.fbx$/i.test(f.name)){
+ if(!fromRecovery&&/\.fbx$/i.test(f.name)){
   try{
    status('Converting FBX for editing…');
    const bytes=await f.arrayBuffer();
    const model=new FBXLoader().parse(bytes,'');
    const clips=model.animations||[];
    const binary=await new GLTFExporter().parseAsync(model,{binary:true,animations:clips,onlyVisible:false});
-   const converted=new File([binary],f.name.replace(/\\.fbx$/i,'.glb'),{type:'model/gltf-binary'});
+   const converted=new File([binary],f.name.replace(/\.fbx$/i,'.glb'),{type:'model/gltf-binary'});
    const loaded=await loadGLBFile(converted,false);
    if(loaded)status('FBX imported as editable GLB. Export GLB to keep your changes; the original FBX is untouched.');
    return loaded;

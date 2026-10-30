@@ -100,7 +100,7 @@
 <div class="row"><button id="candidateOriginal" class="active">Original</button><button id="candidateView">Candidate</button></div>
 <button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></div></section><details class="subpanel" id="directorBridgePanel" aria-label="Director Lab advanced tools"><summary>🧰 Director Lab · Assembly, Geometry & Sculpt</summary>
 <p class="hint">Open the current Director Lab inside this workspace to use its Assembly Lab, Geometry Workshop, sculpt and rigging experiments. This is a separate editor session: export your GLB here, then import it in Director Lab. Your existing Unified Studio session stays open.</p>
-<div class="row"><button type="button" id="directorEmbedOpen">Open Director Lab here</button><button type="button" id="directorEmbedClose" hidden>Close Director Lab</button></div>
+<div class="row"><button type="button" id="directorSend">Send current model to Director</button></div><div class="row"><button type="button" id="directorEmbedOpen">Open Director Lab here</button><button type="button" id="directorEmbedClose" hidden>Close Director Lab</button></div>
 <div id="directorEmbedRegion" hidden style="margin-top:10px"><p class="warn">Director Lab has its own model and browser storage. Changes do not automatically transfer between editors. Export and reimport GLB files; keep backups.</p>
 <iframe id="directorEmbedFrame" title="CoLab Director Lab advanced tools" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:75dvh;min-height:480px;border:1px solid #71899b;border-radius:9px;background:#101925" allow="fullscreen"></iframe></div>
 <p class="hint"><a href="https://foxfriend-colab-director-lab.pages.dev/director" target="_blank" rel="noopener noreferrer">Open Director Lab in a full browser tab ↗</a> (recommended on smaller screens).</p>
@@ -923,13 +923,31 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
 // Isolated Director Lab bridge: keep Unified Studio's original renderer and recovery intact.
 $('directorEmbedOpen').addEventListener('click',()=>{
  const region=$('directorEmbedRegion'),frame=$('directorEmbedFrame');
- if(!frame.src)frame.src='https://foxfriend-colab-director-lab.pages.dev/director';
+ if(!frame.getAttribute('src'))frame.src='./director.html';
  region.hidden=false;$('directorEmbedOpen').hidden=true;$('directorEmbedClose').hidden=false;
 });
 $('directorEmbedClose').addEventListener('click',()=>{
  $('directorEmbedRegion').hidden=true;$('directorEmbedOpen').hidden=false;$('directorEmbedClose').hidden=true;
  // Release the embedded renderer so two GPU-heavy scenes do not run concurrently.
  $('directorEmbedFrame').removeAttribute('src');
+});
+// Explicit, same-origin model handoff. No automatic overwrites of either editor.
+$('directorSend').onclick=async()=>{
+ if(!root){status('Load a GLB or FBX model first.');return}
+ const frame=$('directorEmbedFrame');
+ if(!$('directorEmbedRegion').hidden && frame.contentWindow && frame.contentDocument?.readyState==='complete'){
+  try{
+   const bytes=await new GLTFExporter().parseAsync(root,{binary:true,onlyVisible:false});
+   frame.contentWindow.postMessage({kind:'coLab-model-transfer-v1',name:(originalName||'character').replace(/\.(fbx|glb)$/i,'')+'.glb',bytes},location.origin,[bytes]);
+   status('Sent model to Director Lab. Check the Director viewport.');
+  }catch(err){status('Model transfer failed: '+err.message)}
+ }else{status('Open Director Lab in this panel before sending the model.')}
+};
+window.addEventListener('message',async event=>{
+ if(event.origin!==location.origin || event.source!==$('directorEmbedFrame').contentWindow || event.data?.kind!=='coLab-model-transfer-v1')return;
+ if(!confirm('Director Lab is sending a model. Replace the current Unified Studio model? Export your work first.'))return;
+ try{await loadGLBFile(new File([event.data.bytes],event.data.name||'director-transfer.glb',{type:'model/gltf-binary'}))}
+ catch(err){status('Director transfer failed: '+err.message)}
 });
 function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();renderer.render(scene,camera)}animate();
 </script></body></html>

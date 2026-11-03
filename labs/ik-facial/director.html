@@ -175,6 +175,8 @@
 </div>
 <label for="paintTarget">Selected surface · advanced mesh choice</label><select id="paintTarget"><option value="">Load a model</option></select>
 <div class="row"><button id="paintNavigate" class="active">✋ Navigate</button><button id="paintStart">🖌 Paint</button></div>
+<div class="row"><button id="paintWireToggle" type="button" aria-pressed="false">▦ Show mesh wireframe</button><button id="paintUvToggle" type="button" aria-pressed="false">▤ Show UV lines</button></div>
+<p class="hint" id="paintWireHelp">Wireframe shows mesh triangles in the 3D viewer; UV lines appear on the texture preview. Painting switches the model to solid shading so you can see your colors.</p>
 <label for="paintColor">Brush color</label><div class="row"><input type="color" id="paintColor" value="#e78b9c" aria-label="Brush color"><button id="paintEyedropper" type="button">🎯 Eyedropper · tap model</button></div>
 <p class="hint" id="paintSampleStatus" role="status">Sample a color from the model's texture without applying paint.</p>
 <label for="paintSize">Brush size: <output id="paintSizeValue">16</output> texture pixels</label><input id="paintSize" type="range" min="1" max="110" value="16">
@@ -621,6 +623,7 @@ const WORKSPACES={inspect:'Six-color Geometry Inspector · tested B3.3 foundatio
 let assemblyLab=null;
 let workspace='inspect';
 let inspectorDisplay={style:'solid',context:0,visibility:'all',isolateAlpha:20};
+let paintWireEnabled=false,paintUvEnabled=false;
 function rememberInspectDisplay(){
  inspectorDisplay={style:viewStyle,context:Number($('context').value),visibility:visibilityMode,isolateAlpha:Number($('isolateAlpha').value)};
 }
@@ -638,7 +641,7 @@ function showWorkspace(name){
    $('context').value=String(inspectorDisplay.context);
    $('isolateAlpha').value=String(inspectorDisplay.isolateAlpha);
   }else{
-   viewStyle='solid';visibilityMode='all';$('context').value='0';
+   viewStyle=name==='paint'&&paintWireEnabled?'wire':'solid';visibilityMode='all';$('context').value='0';
   }
   for(const style of ['solid','wire','xray'])$(style).classList.toggle('active',viewStyle===style);
 
@@ -679,8 +682,25 @@ const paintPrev=$('paintPreview'),paintPrevCtx=paintPrev.getContext('2d');
 function paintMessage(text){$('paintStatus').textContent=text;status(text)}
 function downloadRaw(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000)}
 function paintCanvasPreview(){
-  const p=paintSessions.get(paintTarget);if(!p){paintPrevCtx.clearRect(0,0,paintPrev.width,paintPrev.height);return}
-  paintPrev.width=p.canvas.width;paintPrev.height=p.canvas.height;paintPrevCtx.drawImage(p.canvas,0,0);
+ const p=paintSessions.get(paintTarget);
+ if(!p){paintPrevCtx.clearRect(0,0,paintPrev.width,paintPrev.height);return}
+ paintPrev.width=p.canvas.width;paintPrev.height=p.canvas.height;
+ paintPrevCtx.drawImage(p.canvas,0,0);
+ if(paintUvEnabled&&paintTarget?.geometry?.attributes?.uv){
+  const geometry=paintTarget.geometry,uv=geometry.attributes.uv,ix=geometry.index;
+  const triangles=Math.min(150000,Math.floor((ix?ix.count:uv.count)/3));
+  paintPrevCtx.save();paintPrevCtx.strokeStyle='rgba(0,0,0,.8)';paintPrevCtx.lineWidth=Math.max(1,p.canvas.width/1024);
+  paintPrevCtx.beginPath();
+  for(let t=0;t<triangles;t++){
+   for(let v=0;v<3;v++){
+    const n=ix?ix.getX(t*3+v):t*3+v;
+    const x=uv.getX(n)*paintPrev.width,y=(1-uv.getY(n))*paintPrev.height;
+    if(v===0)paintPrevCtx.moveTo(x,y);else paintPrevCtx.lineTo(x,y);
+   }
+   paintPrevCtx.closePath();
+  }
+  paintPrevCtx.stroke();paintPrevCtx.restore();
+ }
 }
 let artReferenceUrl=null,artReferenceName='',artReferencePinned=false,artReferenceSampling=false,artReferenceBitmap=null;
 function setReferenceSampling(enabled){
@@ -904,7 +924,7 @@ function setPaintMode(on){
  if(!root||!paintTarget)return paintMessage('Load a UV-mapped model and select a paint target.');
  if(on){
    if(visibilityMode!=='all')setVisibility('all');
-   if(viewStyle!=='solid'){$('solid').click()}
+   if(viewStyle!=='solid'){viewStyle='solid';paintWireEnabled=false;$('paintWireToggle').textContent='▦ Show mesh wireframe';$('paintWireToggle').setAttribute('aria-pressed','false');applyStyle()}
    const size=Number($('paintResolution').value),original=originalTextureSize(paintTarget);
    if(!paintSessions.has(paintTarget)&&(original.width>size||original.height>size)&&
       !confirm('Texture quality warning: original is '+original.width+'×'+original.height+
@@ -917,6 +937,18 @@ function setPaintMode(on){
  $('paintStart').classList.toggle('active',on);$('paintNavigate').classList.toggle('active',!on);
  paintMessage(on?'Paint active: make ONE small stroke, then inspect. Undo is ready.':'Navigate: rotate or zoom your character.');updatePaintUI();paintTargetNotice();
 }
+$('paintWireToggle').onclick=()=>{
+ paintWireEnabled=!paintWireEnabled;viewStyle=paintWireEnabled?'wire':'solid';
+ $('paintWireToggle').textContent=paintWireEnabled?'▦ Hide mesh wireframe':'▦ Show mesh wireframe';
+ $('paintWireToggle').setAttribute('aria-pressed',String(paintWireEnabled));
+ if(workspace==='paint')applyStyle();
+};
+$('paintUvToggle').onclick=()=>{
+ paintUvEnabled=!paintUvEnabled;
+ $('paintUvToggle').textContent=paintUvEnabled?'▤ Hide UV lines':'▤ Show UV lines';
+ $('paintUvToggle').setAttribute('aria-pressed',String(paintUvEnabled));
+ paintCanvasPreview();
+};
 $('paintStart').onclick=()=>setPaintMode(true);$('paintNavigate').onclick=()=>setPaintMode(false);
 function hitForPaint(e){
  if(!paintTarget||!root)return null;

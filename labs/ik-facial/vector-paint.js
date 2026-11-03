@@ -24,7 +24,7 @@ export function installVectorPaintStudio(api){
   const size=p.canvas.width,underlay=makeCanvas(size),shade=makeCanvas(size);
   underlay.getContext('2d').drawImage(p.canvas,0,0);
   p.vector={schema:'colab-vector-v1',underlay,shade,shadeCtx:shade.getContext('2d',{willReadFrequently:true}),
-   shapes:[],draft:[],selected:-1,undo:[],shadeUndo:[],pendingShadeUndo:null};
+   shapes:[],draft:[],draftAnchors:[],hover:null,hoverAnchor:null,selected:-1,undo:[],shadeUndo:[],pendingShadeUndo:null};
   return p.vector;
  }
  function validateShapes(shapes){
@@ -36,7 +36,11 @@ export function installVectorPaintStudio(api){
    if(!safeHex(shape.color)||!Number.isFinite(shape.opacity)||shape.opacity<0.05||shape.opacity>1
       ||!Number.isFinite(shape.outline)||shape.outline<0||shape.outline>20
       ||typeof shape.smooth!=='boolean')throw Error('Invalid vector fill or outline '+(i+1)+'.');
-   return {points:shape.points.map(q=>q.slice()),color:shape.color,
+   const anchors=shape.anchors===undefined?shape.points.map(()=>null):shape.anchors;
+   if(!Array.isArray(anchors)||anchors.length!==shape.points.length||
+      anchors.some(a=>a!==null&&(!Array.isArray(a)||a.length!==3||a.some(n=>!Number.isFinite(n)||Math.abs(n)>1e7))))
+    throw Error('Invalid stored 3D anchor in vector form '+(i+1)+'.');
+   return {points:shape.points.map(q=>q.slice()),anchors:anchors.map(a=>a?a.slice():null),color:shape.color,
      opacity:shape.opacity,outline:shape.outline,smooth:shape.smooth};
   });
  }
@@ -134,10 +138,19 @@ export function installVectorPaintStudio(api){
  function begin(){
   const p=targetSession(true);if(!p){setInfo('Select a UV-ready paint surface first.');return}
   finishPaint();selectMode(false);const v=ensure(p);
-  v.draft=[];v.selected=-1;v.hover=null;showOutline();setInfo('New contour: click the large UV canvas, or use Trace points on 3D model. Three or more points are required.');
+  v.draft=[];v.draftAnchors=[];v.selected=-1;v.hover=null;v.hoverAnchor=null;showOutline();setInfo('New contour: click the large UV canvas, or use Trace points on 3D model. Three or more points are required.');
   sync();
  }
- function addPoint(q){
+ function localAnchor(hit){
+  if(!hit?.point||!getTarget())return null;
+  const mesh=getTarget();
+  mesh.updateWorldMatrix?.(true,false);
+  const v=hit.point.clone();
+  mesh.worldToLocal(v);
+  const xyz=v.toArray();
+  return xyz.length===3&&xyz.every(Number.isFinite)?xyz:null;
+ }
+ function addPoint(q,anchor=null){
   const p=targetSession(true);if(!p)return;
   const v=ensure(p);
   if(v.draft.length>=MAX_POINTS){setInfo('This form reached the 512-point limit. Close it before continuing.');return}
@@ -147,7 +160,7 @@ export function installVectorPaintStudio(api){
    if(Math.hypot(last[0]-xy[0],last[1]-xy[1])>0.6)
     setInfo('Large UV jump detected: the outline may cross an island seam. Work on one UV island at a time.');
   }
-  v.selected=-1;v.draft.push(xy);v.hover=null;
+  v.selected=-1;v.draft.push(xy);(v.draftAnchors??=[]).push(anchor?anchor.slice():null);v.hover=null;v.hoverAnchor=null;
   drawEditor();showOutline();$('vectorClose').disabled=v.draft.length<3;
  }
  function shapeSettings(){
@@ -158,8 +171,8 @@ export function installVectorPaintStudio(api){
   const p=targetSession(),v=p?.vector;
   if(!v||v.draft.length<3)return setInfo('Add at least three outline points first.');
   if(v.shapes.length>=MAX_SHAPES)return setInfo('128 forms per mesh maximum; export this stage before adding more.');
-  remember(v);v.shapes.push({...shapeSettings(),points:v.draft.map(q=>q.slice())});
-  v.draft=[];v.hover=null;v.selected=v.shapes.length-1;composite(p);save();
+  remember(v);v.shapes.push({...shapeSettings(),points:v.draft.map(q=>q.slice()),anchors:(v.draftAnchors||[]).map(a=>a?a.slice():null)});
+  v.draft=[];v.draftAnchors=[];v.hover=null;v.hoverAnchor=null;v.selected=v.shapes.length-1;composite(p);save();
   setInfo('Closed, filled form '+v.shapes.length+'. Select it below to drag its control points or adjust the fill. Add another form for hard-edged shading.');
   sync();
  }
@@ -170,7 +183,7 @@ export function installVectorPaintStudio(api){
  }
  function undo(){
   const p=targetSession(),v=p?.vector;if(!v?.undo.length)return;
-  const item=v.undo.pop();v.shapes=item.shapes;v.selected=item.selected;v.draft=[];
+  const item=v.undo.pop();v.shapes=item.shapes;v.selected=item.selected;v.draft=[];v.draftAnchors=[];v.hover=null;v.hoverAnchor=null;
   composite(p);save();sync();setInfo('Previous vector shape edit restored.');
  }
  function reorder(delta){
@@ -214,13 +227,14 @@ export function installVectorPaintStudio(api){
  editor.addEventListener('pointermove',e=>{
   if(drag){
    drag.v.shapes[drag.v.selected].points[drag.idx]=editorUv(e);
+   if(drag.v.shapes[drag.v.selected].anchors)drag.v.shapes[drag.v.selected].anchors[drag.idx]=null;
    drag.moved=true;
    if(!redrawScheduled){redrawScheduled=true;requestAnimationFrame(()=>{redrawScheduled=false;if(drag)composite(drag.p)})}
    e.preventDefault();return;
   }
   const v=targetSession()?.vector;
   if(!v?.draft.length)return;
-  v.hover=editorUv(e);
+  v.hover=editorUv(e);v.hoverAnchor=null;
   if(!editorHoverFrame){editorHoverFrame=true;requestAnimationFrame(()=>{editorHoverFrame=false;drawEditor();showOutline()})}
  });
  const endDrag=e=>{
@@ -239,7 +253,7 @@ export function installVectorPaintStudio(api){
   if(hit?.uv){
    const v=targetSession(true)?.vector;
    if(v?.draft.length&&v.draft.length>=MAX_POINTS)return setInfo('512-point outline limit; close the form.');
-   addPoint([hit.uv.x,hit.uv.y]);
+   addPoint([hit.uv.x,hit.uv.y],localAnchor(hit));
    traceDrawing=true;tracePointerId=e.pointerId;
    try{overlay.setPointerCapture(e.pointerId)}catch{}
    setInfo('Tracing on model · '+(targetSession()?.vector?.draft.length||0)+' points. Yellow is your live outline; green dashes show the closing edge.');
@@ -262,15 +276,15 @@ export function installVectorPaintStudio(api){
    if(traceDrawing&&ev.pointerId===tracePointerId){
     const last=v.draft.at(-1);
     if(!last||Math.hypot(last[0]-uv[0],last[1]-uv[1])>=0.005){
-     addPoint(uv);
+     addPoint(uv,localAnchor(hit));
      setInfo('Live outline · '+v.draft.length+' points. Close outline & fill when ready.');
-    }else{v.hover=uv;showOutline()}
-   }else{v.hover=uv;showOutline();}
+    }else{v.hover=uv;v.hoverAnchor=localAnchor(hit);showOutline()}
+   }else{v.hover=uv;v.hoverAnchor=localAnchor(hit);showOutline();}
   });
  },true);
  const stopModelTrace=e=>{
   if(e?.pointerId===tracePointerId){traceDrawing=false;tracePointerId=null;}
-  const v=targetSession()?.vector;if(v){v.hover=null;showOutline()}
+  const v=targetSession()?.vector;if(v){v.hover=null;v.hoverAnchor=null;showOutline()}
  };
  overlay.addEventListener('pointerup',stopModelTrace,true);
  overlay.addEventListener('pointercancel',stopModelTrace,true);
@@ -291,7 +305,7 @@ export function installVectorPaintStudio(api){
  $('vectorClose').onclick=close;
  $('vectorUndoPoint').onclick=()=>{
   const v=targetSession()?.vector;if(!v?.draft.length)return;
-  v.draft.pop();v.hover=null;drawEditor();sync();
+  v.draft.pop();v.draftAnchors?.pop();v.hover=null;v.hoverAnchor=null;drawEditor();sync();
  };
  $('vectorUndo').onclick=undo;
  $('vectorDelete').onclick=removeSelected;

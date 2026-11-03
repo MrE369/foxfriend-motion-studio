@@ -21,6 +21,11 @@
 #artReferencePin .refResizeHandle.height{left:calc(50% - 14px);bottom:0;cursor:ns-resize}
 #artReferencePin .refResizeHandle.corner{left:0;bottom:0;cursor:nesw-resize}
 #artReferencePin[hidden]{display:none!important}#artReferencePin.sampling{pointer-events:auto;cursor:crosshair;outline:3px solid #ffe16b}#artReferencePin.sampling img{cursor:crosshair;touch-action:manipulation}#artReferencePreview.sampling{cursor:crosshair;outline:3px solid #ffe16b;touch-action:manipulation}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
+#aiPaintPanel textarea{width:100%;min-height:90px;font-size:15px}
+#aiPaintPanel button{min-height:44px}
+#aiPaintPanel #aiPaintStatus{padding:10px;border:1px solid #548a9a;background:#1c3444;border-radius:8px;line-height:1.45}
+#aiPaintPreview{display:block;width:min(100%,340px);height:auto;aspect-ratio:1;border:2px solid #7bd3ca;background:#fff}
+#aiPaintPreview[hidden]{display:none}
 </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison">
 <button class="refResizeHandle width" id="artRefResizeWidth" type="button" aria-label="Drag left or right to resize pinned image width" title="Resize width; drag left to expand">↔</button>
 <button class="refResizeHandle height" id="artRefResizeHeight" type="button" aria-label="Drag up or down to resize pinned image height" title="Resize height; drag down to expand">↕</button>
@@ -235,6 +240,20 @@
 <p class="hint">For Codex-assisted painting, the paths-only JSON keeps vector points editable and validates the model fingerprint and selected mesh before applying anything.</p>
 <p id="vectorStatus" role="status">Select a UV-ready mesh and choose New outline to begin. Work stays local and can be exported as an editable Paint Project JSON.</p>
 </details>
+<details id="aiPaintPanel" class="subpanel">
+ <summary>🤖 Codex Paint Bridge · headless recipe test</summary>
+ <p class="hint"><strong>No clicking around the model by Codex.</strong> CoLab exports a model and task to a folder you choose. Codex runs independently and writes a paint-recipe JSON there. CoLab checks it every 3 seconds, previews it, and paints only after you approve. CoLab itself uses no AI API key or cloud upload; Codex separately processes the files through its own authenticated service. There are no automatic paint commits.</p>
+ <label for="aiPaintInstruction">Tell Codex which form to paint</label>
+ <textarea id="aiPaintInstruction" rows="3">Start with ONE small flat-color panel on Sylvara's clothing, matching the supplied reference. Avoid face, skin, and hair. Do not fill any other surface. UV overlap may cause color spill, so use a small test shape.</textarea>
+ <div class="row"><button id="aiPaintConnect" type="button">📁 Connect local folder (Chrome)</button><button id="aiPaintExport" type="button">⬇ Export paint task</button></div>
+ <p class="hint">Codex reads <code>colab-paint-task.json</code>, <code>colab-model.glb</code>, <code>colab-codex-instructions.txt</code>, and the optional <code>colab-reference.png</code>. It writes <code>colab-paint-recipe.json</code> into that folder. To launch Codex headlessly, open a terminal in the chosen folder and run: <code>codex exec --sandbox workspace-write "Read colab-codex-instructions.txt and produce the recipe."</code> CoLab detects the reply without needing Codex to click anything.</p>
+ <div class="row"><button id="aiPaintCheck" type="button">↻ Check for recipe</button><label style="flex:1">Or import JSON<input id="aiPaintRecipeFile" type="file" accept=".json,application/json"></label></div>
+ <p class="hint" id="aiPaintTaskId">No task exported yet.</p>
+ <p class="hint">A recipe can only add up to 32 editable UV polygon fills on the selected mesh. An approximate UV overlap check rejects detected conflicts. It cannot prove all UV islands are unique; always inspect the full character. This experiment doesn't support unattended whole-character painting yet.</p>
+ <label>Codex recipe preview — UV texture, not committed</label><canvas id="aiPaintPreview" width="512" height="512" hidden aria-label="Codex recipe preview on UV texture"></canvas>
+ <div class="row"><button id="aiPaintApprove" type="button" disabled>✓ Approve &amp; apply paint</button><button id="aiPaintReject" type="button">Discard recipe</button></div>
+ <p id="aiPaintStatus" role="status">Load a model, select one UV-ready surface, and connect a local folder to try headless Codex painting. Your current work will not be cleared.</p>
+</details>
 </section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
 <p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
 <div id="allSkeletonPoints" class="subpanel" aria-label="Grab every skeleton joint">
@@ -380,6 +399,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
 import {installVectorPaintStudio} from './vector-paint.js';
 import {createVectorOutlinePreview} from './vector-outline-preview.js';
+import {installHeadlessPaintBridge} from './ai-paint-bridge.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {relaxSelectedSurface} from './director-tools.js';
 import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
@@ -730,7 +750,7 @@ for(const b of document.querySelectorAll('#workspaceTabs [data-tab]'))b.addEvent
 // PAINT: independent 2D canvases for each UV-mapped, single-material mesh.
 // The Paint Studio's v0.1.3 stroke and JSON conventions are retained.
 const paintSessions=new Map();
-let vectorPaint=null,vectorOutlinePreview=null;
+let vectorPaint=null,vectorOutlinePreview=null,aiPaintBridge=null;
 let paintTarget=null,paintDragging=false,paintLast=null,paintBefore=null,paintStroke=null;
 const paintPrev=$('paintPreview'),paintPrevCtx=paintPrev.getContext('2d');
 function paintMessage(text){$('paintStatus').textContent=text;status(text)}
@@ -1255,6 +1275,13 @@ vectorPaint=installVectorPaintStudio({
  startSession:startPaintSession,finishPaint,selectMode,
  setMode:v=>{mode=v},getMode:()=>mode,controls,overlay,hitForPaint,
  preview:paintCanvasPreview,save:scheduleAutosave,notice:paintMessage,outlinePreview:vectorOutlinePreview
+});
+aiPaintBridge=installHeadlessPaintBridge({
+ $,getTarget:()=>paintTarget,getMeshIndex:()=>meshes.indexOf(paintTarget),
+ getModelHash:()=>fingerprint,getModelName:()=>originalName,getModelBlob:()=>currentModelBlob,
+ getSession:m=>paintSessions.get(m),getResolution:()=>Number($('paintResolution').value),
+ getReferenceBlob:async()=>artReferenceUrl?await (await fetch(artReferenceUrl)).blob():null,
+ vectorPaint:()=>vectorPaint,save:scheduleAutosave,finishPaint
 });
 
 // MOTION: keyframes and basic skeletal posing built from the working Motion Check grammar.

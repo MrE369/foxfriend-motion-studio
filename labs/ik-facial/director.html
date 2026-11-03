@@ -14,8 +14,17 @@
 #vectorStatus{min-height:44px;padding:9px;background:#223d4c;border-radius:9px}
  .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
 #directorPanel{background:#223a4c;border-color:#72cdb7}#directorPanel summary{padding:5px 0}#directorPanel h3{color:#a7ecdf}#directorPanel p{line-height:1.45}.directorFlow{margin:11px 0;padding:10px 12px;background:#122635;border:1px solid #476d7c;border-radius:10px}#directorPanel input[type=range]{padding:5px;min-height:32px;accent-color:#77e4cc}#directorPanel input[type=color]{padding:4px}#directorPanel output{font-variant-numeric:tabular-nums;color:#9af1d7}#directorPanel button:disabled{opacity:.4}#allSkeletonPoints{border-color:#6689a3;background:#20384c}#allSkeletonPoints input[type=search]{min-height:40px}#allSkeletonPoints p{line-height:1.45}
-#artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);max-height:calc(100% - 65px);background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}#artReferencePin img{display:block;width:100%;max-height:calc(41dvh - 93px);object-fit:contain}#artReferencePin.sampling{pointer-events:auto;cursor:crosshair;outline:3px solid #ffe16b}#artReferencePin.sampling img{cursor:crosshair;touch-action:manipulation}#artReferencePreview.sampling{cursor:crosshair;outline:3px solid #ffe16b;touch-action:manipulation}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
-</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
+#artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);height:180px;max-height:calc(100% - 65px);background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}
+#artReferencePin img{display:block;width:100%;height:100%;max-height:none;object-fit:fill}
+#artReferencePin .refResizeHandle{position:absolute;z-index:2;display:grid;place-items:center;padding:0;width:29px;height:29px;min-width:29px;min-height:29px;border:2px solid #132632;border-radius:8px;background:#e2faf4;color:#112834;box-shadow:0 1px 5px #0009;font-size:17px;font-weight:900;pointer-events:auto;touch-action:none;user-select:none}
+#artReferencePin .refResizeHandle.width{left:0;top:calc(50% - 14px);cursor:ew-resize}
+#artReferencePin .refResizeHandle.height{left:calc(50% - 14px);bottom:0;cursor:ns-resize}
+#artReferencePin .refResizeHandle.corner{left:0;bottom:0;cursor:nesw-resize}
+#artReferencePin[hidden]{display:none!important}#artReferencePin.sampling{pointer-events:auto;cursor:crosshair;outline:3px solid #ffe16b}#artReferencePin.sampling img{cursor:crosshair;touch-action:manipulation}#artReferencePreview.sampling{cursor:crosshair;outline:3px solid #ffe16b;touch-action:manipulation}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison">
+<button class="refResizeHandle width" id="artRefResizeWidth" type="button" aria-label="Drag left or right to resize pinned image width" title="Resize width; drag left to expand">↔</button>
+<button class="refResizeHandle height" id="artRefResizeHeight" type="button" aria-label="Drag up or down to resize pinned image height" title="Resize height; drag down to expand">↕</button>
+<button class="refResizeHandle corner" id="artRefResizeCorner" type="button" aria-label="Drag diagonally to resize pinned reference width and height" title="Drag diagonally to resize">⤢</button></div></div><aside>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
 <button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
 <button type="button" id="tabButtonPaint" role="tab" aria-selected="false" aria-controls="tabPaint" data-tab="paint">🖌<span>Paint</span></button>
@@ -166,8 +175,12 @@
 <img id="artReferencePreview" alt="Loaded concept art" hidden>
 <p id="artReferenceSummary" role="status">No reference loaded. Your artwork stays on this device until you choose to share it.</p>
 <div class="row"><button id="artReferenceToggle" type="button" disabled>Pin image over viewer</button><button id="artReferenceRemove" type="button" disabled>Remove reference</button></div>
-<label for="artReferenceScale">Pinned reference size: <output id="artReferenceScaleValue">34%</output> of viewer width</label>
-<input id="artReferenceScale" type="range" min="15" max="90" step="1" value="34" disabled aria-label="Resize pinned reference image">
+<label for="artReferenceScale">Pinned width: <output id="artReferenceScaleValue">34%</output> of viewer</label>
+<input id="artReferenceScale" type="range" min="15" max="95" step="1" value="34" disabled aria-label="Resize pinned reference width">
+<label for="artReferenceHeight">Pinned height: <output id="artReferenceHeightValue">35%</output> of viewer</label>
+<input id="artReferenceHeight" type="range" min="12" max="95" step="1" value="35" disabled aria-label="Resize pinned reference height">
+<label style="display:flex;align-items:center;gap:8px"><input id="artReferenceLockAspect" type="checkbox" style="width:auto" disabled> Keep original image proportions (optional)</label>
+<p class="hint">Drag ↔ on the left edge, ↕ on the bottom edge, or ⤢ in the lower-left corner of the pinned picture. Unchecked lets you stretch width and height independently; check the box to preserve the original proportions. Neither changes the source image.</p>
 <button id="artReferenceEyedropper" type="button" disabled>🎯 Pick brush color from reference</button>
 <p class="hint" id="artReferenceSampleStatus" role="status">Choose Pick brush color, then tap the pinned image or the preview above. Painting on the character will stay unchanged.</p>
 
@@ -750,10 +763,13 @@ function sampleReferencePixel(event,img){
  const picture=artReferenceBitmap;
  const bounds=img.getBoundingClientRect();
  // object-fit:contain preserves the entire image and adds letterboxing where needed.
- const scale=Math.min(bounds.width/picture.width,bounds.height/picture.height);
- const drawnW=picture.width*scale,drawnH=picture.height*scale;
+ // Pinned image can be stretched freely; the standard preview still uses contain.
+ const pinned=img.id==='artReferencePinImage';
+ const scale=pinned?null:Math.min(bounds.width/picture.width,bounds.height/picture.height);
+ const drawnW=pinned?bounds.width:picture.width*scale,drawnH=pinned?bounds.height:picture.height*scale;
  const left=bounds.left+(bounds.width-drawnW)/2,top=bounds.top+(bounds.height-drawnH)/2;
- const x=Math.floor((event.clientX-left)/scale),y=Math.floor((event.clientY-top)/scale);
+ const x=Math.floor((event.clientX-left)/drawnW*picture.width),
+       y=Math.floor((event.clientY-top)/drawnH*picture.height);
  if(x<0||y<0||x>=picture.width||y>=picture.height){$('artReferenceSampleStatus').textContent='Tap directly on the image to sample a color.';return}
  try{
   const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
@@ -770,11 +786,72 @@ function sampleReferencePixel(event,img){
   event.preventDefault();event.stopPropagation();
  }catch(err){$('artReferenceSampleStatus').textContent='Could not sample the image: '+err.message;setReferenceSampling(false)}
 }
+// The pin is anchored at top-right. Left / bottom / lower-left touch handles
+// grow it in the directions artists naturally drag, without touching the model.
+let artRefWidth=0,artRefHeight=0,artRefResize=null;
+function refBounds(){
+ return {width:Math.max(100,view.clientWidth-24),height:Math.max(100,view.clientHeight-70)};
+}
+function applyArtRefSize(width,height,changed='both'){
+ const b=refBounds(),aspect=(artReferenceBitmap?.width||1)/(artReferenceBitmap?.height||1);
+ let w=Math.max(86,Math.min(b.width,width)),h=Math.max(86,Math.min(b.height,height));
+ if($('artReferenceLockAspect').checked){
+  if(changed==='height')w=h*aspect;
+  else if(changed==='corner'){
+   const ratioWidth=(w||1)/(artRefWidth||w),ratioHeight=(h||1)/(artRefHeight||h);
+   if(Math.abs(ratioHeight-1)>Math.abs(ratioWidth-1))w=h*aspect;else h=w/aspect;
+  }else h=w/aspect;
+  if(w>b.width){w=b.width;h=w/aspect}
+  if(h>b.height){h=b.height;w=h*aspect}
+  if(w<86){w=86;h=w/aspect}
+  if(h<86){h=86;w=h*aspect}
+ }
+ artRefWidth=Math.round(w);artRefHeight=Math.round(h);
+ $('artReferencePin').style.width=artRefWidth+'px';
+ $('artReferencePin').style.height=artRefHeight+'px';
+ const wPct=Math.round(artRefWidth/Math.max(1,view.clientWidth)*100),
+       hPct=Math.round(artRefHeight/Math.max(1,view.clientHeight-54)*100);
+ $('artReferenceScale').value=String(Math.min(95,Math.max(15,wPct)));
+ $('artReferenceScaleValue').textContent=wPct+'%';
+ $('artReferenceHeight').value=String(Math.min(95,Math.max(12,hPct)));
+ $('artReferenceHeightValue').textContent=hPct+'%';
+}
+function initializeArtRefSize(){
+ const b=refBounds(),a=(artReferenceBitmap?.width||1)/(artReferenceBitmap?.height||1);
+ const w=Math.min(b.width*0.34,Math.max(115,Math.min(230,b.width*0.34)));
+ applyArtRefSize(w,Math.min(b.height,w/a),'width');
+}
 $('artReferenceScale').oninput=e=>{
- const n=Math.max(15,Math.min(90,Number(e.target.value)||34));
- $('artReferenceScaleValue').textContent=n+'%';
- $('artReferencePin').style.width=n+'%';
+ const w=view.clientWidth*Number(e.target.value)/100;
+ applyArtRefSize(w,artRefHeight||130,'width');
 };
+$('artReferenceHeight').oninput=e=>{
+ const h=(view.clientHeight-54)*Number(e.target.value)/100;
+ applyArtRefSize(artRefWidth||150,h,'height');
+};
+$('artReferenceLockAspect').onchange=()=>applyArtRefSize(artRefWidth||155,artRefHeight||155,'width');
+for(const [id,axis] of [['artRefResizeWidth','width'],['artRefResizeHeight','height'],['artRefResizeCorner','corner']]){
+ const handle=$(id);
+ handle.addEventListener('pointerdown',e=>{
+  if(!artReferencePinned||!artReferenceBitmap)return;
+  artRefResize={axis,id:e.pointerId,x:e.clientX,y:e.clientY,w:artRefWidth,h:artRefHeight};
+  handle.setPointerCapture(e.pointerId);
+  e.preventDefault();e.stopPropagation();
+ });
+ handle.addEventListener('pointermove',e=>{
+  if(!artRefResize||artRefResize.id!==e.pointerId)return;
+  const r=artRefResize;
+  const w=r.w-(e.clientX-r.x),h=r.h+(e.clientY-r.y);
+  applyArtRefSize(axis==='height'?r.w:w,axis==='width'?r.h:h,axis);
+  e.preventDefault();e.stopPropagation();
+ });
+ const end=e=>{
+  if(artRefResize?.id===e.pointerId)artRefResize=null;
+  e.stopPropagation();
+ };
+ handle.addEventListener('pointerup',end);
+ handle.addEventListener('pointercancel',end);
+}
 $('artReferenceEyedropper').onclick=()=>setReferenceSampling(!artReferenceSampling);
 for(const id of ['artReferencePinImage','artReferencePreview']){
  $(id).addEventListener('pointerdown',e=>sampleReferencePixel(e,$(id)));
@@ -783,7 +860,7 @@ for(const id of ['artReferencePinImage','artReferencePreview']){
 function updateArtReferenceDisplay(){
  const has=!!artReferenceUrl,visible=has&&artReferencePinned&&workspace==='paint';
  $('artReferenceToggle').disabled=!has;$('artReferenceRemove').disabled=!has;
- $('artReferenceScale').disabled=!has;$('artReferenceEyedropper').disabled=!has;
+ $('artReferenceScale').disabled=!has;$('artReferenceHeight').disabled=!has;$('artReferenceLockAspect').disabled=!has;$('artReferenceEyedropper').disabled=!has;
  $('artReferenceToggle').textContent=artReferencePinned?'Hide image from viewer':'Pin image over viewer';
  $('artReferencePin').hidden=!visible;
  $('artReferencePreview').hidden=!has;
@@ -801,6 +878,7 @@ function chooseArtReference(e){
   if(img.width>12000||img.height>12000){URL.revokeObjectURL(nextUrl);$('artReferenceSummary').textContent='Image dimensions too large for this phone-friendly preview.';return}
   if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl);
   artReferenceUrl=nextUrl;artReferenceName=file.name;artReferencePinned=true;artReferenceBitmap=img;setReferenceSampling(false);
+  initializeArtRefSize();
   $('artReferenceSummary').textContent='Local reference: '+file.name+' · '+img.width+'×'+img.height+'. Not uploaded. Share this image separately with your AI partner.';
   updateArtReferenceDisplay();
  };

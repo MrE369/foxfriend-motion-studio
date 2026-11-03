@@ -201,7 +201,8 @@
 <p class="hint" id="paintSampleStatus" role="status">Sample a color from the model's texture without applying paint.</p>
 <label for="paintSize">Brush size: <output id="paintSizeValue">16</output> texture pixels</label><input id="paintSize" type="range" min="1" max="110" value="16">
 <label for="paintOpacity">Opacity: <output id="paintOpacityValue">35%</output></label><input id="paintOpacity" type="range" min="5" max="100" value="35">
-<label for="paintResolution">Texture resolution</label><select id="paintResolution"><option value="1024">1024 × 1024 (phone-friendly)</option><option value="2048">2048 × 2048 (more detail)</option></select>
+<label for="paintResolution">Texture resolution · can resize existing painting</label><select id="paintResolution"><option value="1024">1024 × 1024 (lower memory)</option><option value="2048">2048 × 2048 (sharper details)</option></select>
+<p class="hint">You can now change the resolution after painting. CoLab will ask before resizing existing artwork. The vector forms stay editable; raster shading is resampled and previous stroke undo history is cleared. Export a Paint Project JSON backup first.</p>
 <div class="row"><button id="paintUndo">↶ Undo stroke</button><button id="paintClear">Reset paint</button></div>
 <label>Painted UV texture</label><canvas id="paintPreview" width="1024" height="1024"></canvas>
 <div class="row"><button id="paintPNG">⬇ PNG</button><button id="paintGLB">⬇ Test GLB</button></div>
@@ -216,7 +217,12 @@
  <div class="row"><button id="vectorClose" type="button">✓ Close outline & fill</button><button id="vectorUndoPoint" type="button">↶ Remove last point</button></div>
  <label for="vectorShapeSelect">Select an editable vector form</label><select id="vectorShapeSelect"><option value="-1">New outline / unselected</option></select>
  <div class="row"><label for="vectorColor">Fill color <input id="vectorColor" type="color" value="#587f67"></label><button type="button" id="vectorUseBrushColor">Use current brush color</button></div>
- <label for="vectorOpacity">Form opacity: <output id="vectorOpacityValue">100%</output></label>
+ <div class="row"><label for="vectorBakeQuality" style="flex:1">Vector bake precision
+<select id="vectorBakeQuality"><option value="1">Fast · 1×</option><option value="2" selected>Crisp · 2×</option><option value="4">Detailed · 4×</option></select></label>
+<label for="vectorEdgeMode" style="flex:1">Edge rendering
+<select id="vectorEdgeMode"><option value="crisp">Crisp antialias</option><option value="hard">Hard pixel cutoff</option></select></label></div>
+<p class="hint">Vector edges are calculated at higher precision in cropped regions, then baked into your texture. For the cleanest result choose 2048 × 2048 above with Crisp · 2×. Hard pixel cutoff intentionally removes soft edge pixels and may look more jagged when enlarged. CoLab limits temporary memory for dense forms.</p>
+<label for="vectorOpacity">Form opacity: <output id="vectorOpacityValue">100%</output></label>
  <input id="vectorOpacity" type="range" min="5" max="100" value="100" step="5">
  <div class="row"><label for="vectorCurve" style="flex:1">Outline style<select id="vectorCurve"><option value="corners">Straight / hard edge</option><option value="smooth">Smooth Bézier curve</option></select></label>
  <label for="vectorOutline" style="flex:1">Line thickness (px)<select id="vectorOutline"><option value="0">No outline</option><option value="1">1</option><option value="3">3</option><option value="6">6</option><option value="10">10</option></select></label></div>
@@ -1016,7 +1022,7 @@ function updatePaintUI(){
  syncPaintWireOverlay();
  vectorPaint?.sync();
  const current=paintSessions.get(paintTarget);
- $('paintResolution').disabled=!!current;
+ $('paintResolution').disabled=!enabled;
  if(current)$('paintResolution').value=String(current.canvas.width);
  $('paintSizeValue').textContent=$('paintSize').value;
  $('paintOpacityValue').textContent=$('paintOpacity').value+'%';
@@ -1030,7 +1036,27 @@ function refreshPaintTargets(){
 }
 $('paintTarget').onchange=()=>{if(paintDragging)finishPaint();const m=meshes[Number($('paintTarget').value)];paintTarget=paintEligible(m)?m:null;selectMode(false);updatePaintUI();paintTargetNotice()};
 $('paintSize').oninput=updatePaintUI;$('paintOpacity').oninput=updatePaintUI;
-$('paintResolution').onchange=paintTargetNotice;
+$('paintResolution').onchange=()=>{
+ const desired=Number($('paintResolution').value),p=paintSessions.get(paintTarget);
+ if(!p){paintTargetNotice();return}
+ const previous=p.canvas.width;
+ if(desired===previous)return;
+ if(![1024,2048].includes(desired)){$('paintResolution').value=String(previous);return}
+ finishPaint();
+ const warning='Resize this texture from '+previous+'×'+previous+' to '+desired+'×'+desired+'?\n\n'+
+  'Your editable vector outlines will be rebaked, and raster brushwork will be resampled. The previous stroke and vector-undo history will be cleared.\n\n'+
+  'Please export your Paint Project JSON backup before continuing. Continue?';
+ if(!confirm(warning)){$('paintResolution').value=String(previous);return}
+ try{
+  vectorPaint.resizePaint(p,desired);
+  p.tex.needsUpdate=true;
+  paintCanvasPreview();updatePaintUI();paintTargetNotice();scheduleAutosave();
+  paintMessage('Texture resized to '+desired+'×'+desired+'. Vector paths preserved and rebaked. Raster shading resampled. Save your Paint Project JSON.');
+ }catch(err){
+  $('paintResolution').value=String(p.canvas.width);
+  paintMessage('Resize failed: '+err.message+'. Export your Paint Project JSON as a backup.');
+ }
+};
 $('paintPickTarget').onclick=()=>{
  if(!root)return paintMessage('Load Finn or Sylvara first.');
  finishPaint();selectMode(false);mode='paintPick';controls.enabled=false;

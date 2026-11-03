@@ -1,6 +1,6 @@
 // CoLab Vector Forms -- draw-only UV outline preview projected onto the original 3D mesh.
 // No changes to geometry, rigging, paint texture, exported GLB, or saved vector shapes.
-export function createVectorOutlinePreview({THREE,scene,getTarget,getSession,getWorkspace}){
+export function createVectorOutlinePreview({THREE,scene,getTarget,getSession,getWorkspace,getPanelOpen}){
  const size=768,canvas=document.createElement('canvas');canvas.width=canvas.height=size;
  const ctx=canvas.getContext('2d');
  const texture=new THREE.CanvasTexture(canvas);
@@ -57,7 +57,7 @@ export function createVectorOutlinePreview({THREE,scene,getTarget,getSession,get
   mesh=null;
  }
  function refresh(){
-  const target=getWorkspace()==='paint'?getTarget():null;
+  const target=getWorkspace()==='paint'&&getPanelOpen()?getTarget():null;
   const v=target?getSession(target)?.vector:null;
   const draft=v?.draft||[];
   const selected=(Number.isInteger(v?.selected)&&v.selected>=0)?v.shapes?.[v.selected]:null;

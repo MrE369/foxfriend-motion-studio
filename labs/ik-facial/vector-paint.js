@@ -398,7 +398,7 @@ export function installVectorPaintStudio(api){
  }
  function asJSON(p){
   if(!p?.vector)return null;
-  return {schema:'colab-vector-v1',shapes:clone(p.vector.shapes),
+  return {schema:'colab-vector-v1',shapes:clone(p.vector.shapes),bakeQuality:p.vector.bakeQuality,edgeMode:p.vector.edgeMode,
    underlayPng:p.vector.underlay.toDataURL('image/png'),
    shadePng:p.vector.shade.toDataURL('image/png')};
  }
@@ -427,15 +427,58 @@ export function installVectorPaintStudio(api){
    if(a.width!==size||a.height!==size||b.width!==size||b.height!==size)throw Error('Vector layer dimensions do not match selected paint resolution.');
    p.vector=null;const v=ensure(p);v.underlay.getContext('2d').clearRect(0,0,size,size);
    v.underlay.getContext('2d').drawImage(a,0,0);v.shadeCtx.clearRect(0,0,size,size);
-   v.shadeCtx.drawImage(b,0,0);v.shapes=shapes;v.selected=-1;v.undo=[];v.shadeUndo=[];
+   v.shadeCtx.drawImage(b,0,0);v.shapes=shapes;v.bakeQuality=[1,2,4].includes(obj.bakeQuality)?obj.bakeQuality:2;v.edgeMode=['crisp','hard'].includes(obj.edgeMode)?obj.edgeMode:'crisp';v.selected=-1;v.undo=[];v.shadeUndo=[];
    composite(p);sync();
   }finally{if(typeof a.close==='function')a.close();if(typeof b.close==='function')b.close();}
  }
  async function forRecovery(p){
   if(!p?.vector)return null;
-  return {schema:'colab-vector-v1',shapes:clone(p.vector.shapes),
+  return {schema:'colab-vector-v1',shapes:clone(p.vector.shapes),bakeQuality:p.vector.bakeQuality,edgeMode:p.vector.edgeMode,
    underlay:await canvasBlob(p.vector.underlay),shade:await canvasBlob(p.vector.shade)};
  }
+
+ // Resample existing pixel work by explicit user confirmation; re-bake
+ // normalized vector paths at the new resolution. Old raster undo snapshots
+ // cannot safely cross resolutions, so their history is cleared.
+ function resizePaint(p,newSize){
+  if(!p||![1024,2048].includes(newSize))throw Error('Unsupported resolution.');
+  const oldSize=p.canvas.width;if(oldSize===newSize)return null;
+  const newPaint=makeCanvas(newSize),newBase=makeCanvas(newSize);
+  newPaint.getContext('2d').drawImage(p.canvas,0,0,newSize,newSize);
+  newBase.getContext('2d').drawImage(p.baseCanvas,0,0,newSize,newSize);
+  const v=p.vector;
+  let underlay=null,shade=null;
+  if(v){
+   underlay=makeCanvas(newSize);shade=makeCanvas(newSize);
+   underlay.getContext('2d').drawImage(v.underlay,0,0,newSize,newSize);
+   shade.getContext('2d').drawImage(v.shade,0,0,newSize,newSize);
+  }
+  // Stage all resampled canvas images before committing any destructive change.
+  p.canvas.width=p.canvas.height=newSize;
+  p.ctx.setTransform(1,0,0,1,0,0);p.ctx.globalCompositeOperation='source-over';
+  p.ctx.globalAlpha=1;p.ctx.drawImage(newPaint,0,0);
+  p.baseCanvas.width=p.baseCanvas.height=newSize;
+  p.baseCanvas.getContext('2d').drawImage(newBase,0,0);
+  p.undo=[];
+  if(v){
+   v.underlay=underlay;v.shade=shade;v.shadeCtx=shade.getContext('2d',{willReadFrequently:true});
+   v.shadeUndo=[];v.pendingShadeUndo=null;v.undo=[];
+   composite(p);sync();
+  }else{
+   p.tex.needsUpdate=true;preview();
+  }
+  return {from:oldSize,to:newSize,forms:v?.shapes.length||0};
+ }
+ function changeBake(){
+  const p=targetSession(true),v=p?ensure(p):null;if(!v)return;
+  const quality=selectedBake(),edge=selectedEdge();
+  if(v.bakeQuality===quality&&v.edgeMode===edge)return;
+  remember(v);v.bakeQuality=quality;v.edgeMode=edge;
+  composite(p);save();sync();
+  setInfo('Rebaked editable vector forms with '+quality+'× sampling, '+(edge==='hard'?'hard pixel cutoff':'crisp antialiasing')+'. The final GLB texture is '+p.canvas.width+' pixels wide.');
+ }
+ $('vectorBakeQuality').onchange=changeBake;
+ $('vectorEdgeMode').onchange=changeBake;
 
  function exportPaths(){
   const p=targetSession(),v=p?.vector;
@@ -474,5 +517,5 @@ export function installVectorPaintStudio(api){
 
  // Initial UI is safe before a model is loaded.
  sync();
- return {sync,reset,asJSON,restore,forRecovery,brushDot,strokeStart,strokeEnd,brushUndo,exportPaths,importPaths,clearDisplay:()=>outlinePreview?.clear()};
+ return {sync,reset,asJSON,restore,forRecovery,brushDot,strokeStart,strokeEnd,brushUndo,exportPaths,importPaths,resizePaint,clearDisplay:()=>outlinePreview?.clear()};
 }

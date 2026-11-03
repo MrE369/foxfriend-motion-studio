@@ -212,7 +212,9 @@
  <label for="vectorZoom">UV editor zoom: <output id="vectorZoomValue">100%</output></label><input id="vectorZoom" type="range" min="100" max="300" step="25" value="100">
  <p class="hint">Tap the UV editor to place exact corners. Select a saved form and drag its cyan handles to correct the outline. Zoom for precision. Lines here are guides, not paint.</p>
  <div id="vectorEditorScroll"><canvas id="vectorEditor" width="1024" height="1024" aria-label="Editable vector outlines on UV texture"></canvas></div>
- <p id="vectorStatus" role="status">Select a UV-ready mesh and choose New outline to begin. Work stays local and can be exported as an editable Paint Project JSON.</p>
+ <div class="row"><button id="vectorExport" type="button">⬇ Export vector paths JSON</button><label style="flex:1">⬆ Import vector paths JSON<input id="vectorImport" type="file" accept=".json,application/json"></label></div>
+<p class="hint">For Codex-assisted painting, the paths-only JSON keeps vector points editable and validates the model fingerprint and selected mesh before applying anything.</p>
+<p id="vectorStatus" role="status">Select a UV-ready mesh and choose New outline to begin. Work stays local and can be exported as an editable Paint Project JSON.</p>
 </details>
 </section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
 <p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
@@ -1090,7 +1092,7 @@ function finishPaint(){
  paintBefore=null;paintStroke=null;paintCanvasPreview();paintMessage('Stroke completed; local recovery will save it automatically. You can also export JSON.');scheduleAutosave();
 }
 overlay.addEventListener('pointerup',finishPaint);overlay.addEventListener('pointercancel',finishPaint);
-$('paintUndo').onclick=()=>{finishPaint();const p=paintSessions.get(paintTarget);if(vectorPaint?.brushUndo(p)){paintCanvasPreview();paintMessage('Last raster shading stroke undone.');return}if(!p?.undo.length)return paintMessage('No recent stroke to undo.');p.ctx.putImageData(p.undo.pop(),0,0);p.tex.needsUpdate=true;p.strokes.pop();paintCanvasPreview();paintMessage('Paint stroke undone.')};
+$('paintUndo').onclick=()=>{finishPaint();const p=paintSessions.get(paintTarget);const vUndo=vectorPaint?.brushUndo(p);if(vUndo==='undone'){paintCanvasPreview();paintMessage('Last raster shading stroke undone.');return}if(vUndo==='blocked')return;if(!p?.undo.length)return paintMessage('No recent stroke to undo.');p.ctx.putImageData(p.undo.pop(),0,0);p.tex.needsUpdate=true;p.strokes.pop();paintCanvasPreview();paintMessage('Paint stroke undone.')};
 $('paintClear').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return;if(!confirm('Clear paint on the selected mesh? Original GLB is unchanged.'))return;p.ctx.globalAlpha=1;p.ctx.globalCompositeOperation='source-over';p.ctx.clearRect(0,0,p.canvas.width,p.canvas.height);p.ctx.drawImage(p.baseCanvas,0,0);p.tex.needsUpdate=true;p.strokes=[];p.undo=[];vectorPaint?.reset(p);paintCanvasPreview();paintMessage('Paint on active mesh cleared.')};
 $('paintPNG').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return paintMessage('Paint on the mesh first.');p.canvas.toBlob(b=>b?downloadRaw(b,originalName.replace(/\.glb$/i,'')+'_paint.png'):paintMessage('PNG could not be exported.'),'image/png')};
 $('paintJSON').onclick=()=>{
@@ -1140,7 +1142,7 @@ $('paintGLB').onclick=async()=>{
  }catch(err){paintMessage('GLB export failed: '+err.message)}finally{for(const item of previous){item.m.material=item.material;item.m.visible=item.visible}}
 };
 vectorPaint=installVectorPaintStudio({
- $,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),
+ $,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getModelName:()=>originalName,getModelHash:()=>fingerprint,getMeshIndex:()=>meshes.indexOf(paintTarget),
  startSession:startPaintSession,finishPaint,selectMode,
  setMode:v=>{mode=v},getMode:()=>mode,controls,overlay,hitForPaint,
  preview:paintCanvasPreview,save:scheduleAutosave,notice:paintMessage

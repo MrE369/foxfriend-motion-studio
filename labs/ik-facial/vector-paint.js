@@ -515,7 +515,28 @@ export function installVectorPaintStudio(api){
   e.target.value='';
  };
 
+ // Direct, headless Codex recipe executor. Uses the SAME vector rasterizer,
+ // normal undo, local autosave and GLB export as artist-drawn forms.
+ // Never mutates original geometry, UV coordinates or source GLB.
+ function applyHeadlessForms(forms){
+  const checked=validateShapes(forms);
+  if(!checked.length)throw Error('No paint forms supplied.');
+  finishPaint();selectMode(false);
+  const p=targetSession(true);
+  if(!p)throw Error('No active UV-ready painting session.');
+  const v=ensure(p);
+  if(v.shapes.length+checked.length>MAX_SHAPES)
+   throw Error('Too many shapes on this mesh. Limit: '+MAX_SHAPES+'.');
+  remember(v);
+  v.shapes.push(...checked);
+  v.selected=v.shapes.length-1;
+  v.draft=[];v.draftAnchors=[];v.hover=null;v.hoverAnchor=null;
+  composite(p);save();sync();
+  setInfo('Headless Codex painting pass: '+checked.length+' editable forms. Undo vector edit reverses the group.');
+  return checked.length;
+ }
+
  // Initial UI is safe before a model is loaded.
  sync();
- return {sync,reset,asJSON,restore,forRecovery,brushDot,strokeStart,strokeEnd,brushUndo,exportPaths,importPaths,resizePaint,clearDisplay:()=>outlinePreview?.clear()};
+ return {sync,reset,asJSON,restore,forRecovery,brushDot,strokeStart,strokeEnd,brushUndo,exportPaths,importPaths,resizePaint,applyHeadlessForms,clearDisplay:()=>outlinePreview?.clear()};
 }

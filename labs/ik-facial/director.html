@@ -823,9 +823,25 @@ function startPaintSession(m,sz){
   baseCanvas.getContext('2d').drawImage(canvas,0,0);
   const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
   tex.flipY=true;tex.wrapS=THREE.ClampToEdgeWrapping;tex.wrapT=THREE.ClampToEdgeWrapping;
-  const material=base.clone();material.map=tex;material.side=THREE.DoubleSide;
+  // An untextured FBX often carries a dark material tint, vertex colors,
+  // or nonstandard shading. All three can conceal a correctly painted UV canvas.
+  // Use a neutral white, texture-capable paint material for that case only.
+  // Textured assets retain their original material and texture treatment.
+  const material=base.map?base.clone():new THREE.MeshStandardMaterial({
+    color:0xffffff,roughness:1,metalness:0,side:THREE.DoubleSide
+  });
+  material.map=tex;material.side=THREE.DoubleSide;
+  if(!base.map){
+    material.color.set(0xffffff);
+    material.vertexColors=false;
+    material.opacity=1;
+    material.transparent=false;
+    material.depthWrite=true;
+  }
+  material.needsUpdate=true;
   // B3.3's solid / X-ray / wire view rebuilds materials from this baseline.
   baseMaterials.set(m,[material]);applyStyle();
+  if(!base.map)paintMessage('Blank UV texture initialized on a neutral white model material. Brush colors should now appear on the character.');
   p={canvas,ctx,tex,material,baseCanvas,undo:[],strokes:[],painted:false};paintSessions.set(m,p);
   return p;
 }

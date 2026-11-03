@@ -199,7 +199,7 @@
  <summary>✒ Vector Forms · precise outline and fill (experiment)</summary>
  <p class="hint">Draw precise, editable outlines on the 3D character or enlarged UV canvas. Close a form to fill it with flat color. Add more forms for hard-edged shadows. The regular brush paints on top as raster shading.</p>
  <div class="row"><button id="vectorNew" type="button">＋ New outline</button><button id="vectorTrace" type="button" aria-pressed="false">Trace points on 3D model</button></div>
- <p class="hint">Tap individual points to follow the form. To rotate the model, tap Navigate, then resume tracing. If a shape crosses a UV seam, break it into separate forms.</p>
+ <p class="hint">Tap corners or hold and drag directly on the 3D character to trace continuously. Your yellow outline and control points appear on the model as you draw; green dashes preview the closing edge. Navigate rotates the model without changing the outline. UV seams may require separate forms.</p>
  <div class="row"><button id="vectorClose" type="button">✓ Close outline & fill</button><button id="vectorUndoPoint" type="button">↶ Remove last point</button></div>
  <label for="vectorShapeSelect">Select an editable vector form</label><select id="vectorShapeSelect"><option value="-1">New outline / unselected</option></select>
  <div class="row"><label for="vectorColor">Fill color <input id="vectorColor" type="color" value="#587f67"></label><button type="button" id="vectorUseBrushColor">Use current brush color</button></div>
@@ -360,6 +360,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
 import {installVectorPaintStudio} from './vector-paint.js';
+import {createVectorOutlinePreview} from './vector-outline-preview.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {relaxSelectedSurface} from './director-tools.js';
 import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
@@ -678,6 +679,7 @@ function showWorkspace(name){
 
   if(name!=='review'&&candidateVisible)showCandidate(false);
   workspace=name;
+  vectorOutlinePreview?.refresh();
   for(const key of Object.keys(WORKSPACES)){
     $('tab'+key[0].toUpperCase()+key.slice(1)).hidden=key!==name;
     const b=$('tabButton'+key[0].toUpperCase()+key.slice(1));
@@ -709,7 +711,7 @@ for(const b of document.querySelectorAll('#workspaceTabs [data-tab]'))b.addEvent
 // PAINT: independent 2D canvases for each UV-mapped, single-material mesh.
 // The Paint Studio's v0.1.3 stroke and JSON conventions are retained.
 const paintSessions=new Map();
-let vectorPaint=null;
+let vectorPaint=null,vectorOutlinePreview=null;
 let paintTarget=null,paintDragging=false,paintLast=null,paintBefore=null,paintStroke=null;
 const paintPrev=$('paintPreview'),paintPrevCtx=paintPrev.getContext('2d');
 function paintMessage(text){$('paintStatus').textContent=text;status(text)}
@@ -1141,11 +1143,14 @@ $('paintGLB').onclick=async()=>{
   downloadRaw(new Blob([bytes],{type:'model/gltf-binary'}),originalName.replace(/\.glb$/i,'')+'_painted.glb');paintMessage('Textured GLB exported separately. Reopen it in a viewer to verify textures and UV seams.');
  }catch(err){paintMessage('GLB export failed: '+err.message)}finally{for(const item of previous){item.m.material=item.material;item.m.visible=item.visible}}
 };
+vectorOutlinePreview=createVectorOutlinePreview({
+ THREE,scene,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getWorkspace:()=>workspace
+});
 vectorPaint=installVectorPaintStudio({
  $,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getModelName:()=>originalName,getModelHash:()=>fingerprint,getMeshIndex:()=>meshes.indexOf(paintTarget),
  startSession:startPaintSession,finishPaint,selectMode,
  setMode:v=>{mode=v},getMode:()=>mode,controls,overlay,hitForPaint,
- preview:paintCanvasPreview,save:scheduleAutosave,notice:paintMessage
+ preview:paintCanvasPreview,save:scheduleAutosave,notice:paintMessage,outlinePreview:vectorOutlinePreview
 });
 
 // MOTION: keyframes and basic skeletal posing built from the working Motion Check grammar.
@@ -1589,6 +1594,7 @@ function clearUnifiedBeforeLoad(){
  directorRepairReady=false;directorRepairClips=[];$('directorExportRepair').disabled=true;
  directorValidRecipe=null;$('agentPreview').disabled=true;$('agentRecipeStatus').textContent='Load the matching asset and validate the AI recipe again.';
  paintDragging=false;paintTarget=null;paintStroke=null;paintLast=null;paintBefore=null;
+ vectorPaint?.clearDisplay();
  clearPaintWireOverlays();
  for(const p of paintSessions.values())p.tex.dispose();paintSessions.clear();vectorPaint?.sync();
  animPlaying=false;if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=[];
@@ -2550,5 +2556,5 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
 const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal:()=>root,getHit:()=>lastHit});
-function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();updatePaintWireMatrices();renderer.render(scene,camera)}animate();
+function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();updatePaintWireMatrices();vectorOutlinePreview?.updateMatrices();renderer.render(scene,camera)}animate();
 </script></body></html>

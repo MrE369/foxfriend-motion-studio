@@ -8,7 +8,7 @@
 
 [hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
 #directorPanel{background:#223a4c;border-color:#72cdb7}#directorPanel summary{padding:5px 0}#directorPanel h3{color:#a7ecdf}#directorPanel p{line-height:1.45}.directorFlow{margin:11px 0;padding:10px 12px;background:#122635;border:1px solid #476d7c;border-radius:10px}#directorPanel input[type=range]{padding:5px;min-height:32px;accent-color:#77e4cc}#directorPanel input[type=color]{padding:4px}#directorPanel output{font-variant-numeric:tabular-nums;color:#9af1d7}#directorPanel button:disabled{opacity:.4}#allSkeletonPoints{border-color:#6689a3;background:#20384c}#allSkeletonPoints input[type=search]{min-height:40px}#allSkeletonPoints p{line-height:1.45}
-#artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);max-height:62%;background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}#artReferencePin img{display:block;width:100%;max-height:calc(41dvh - 93px);object-fit:contain}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
+#artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);max-height:calc(100% - 65px);background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}#artReferencePin img{display:block;width:100%;max-height:calc(41dvh - 93px);object-fit:contain}#artReferencePin.sampling{pointer-events:auto;cursor:crosshair;outline:3px solid #ffe16b}#artReferencePin.sampling img{cursor:crosshair;touch-action:manipulation}#artReferencePreview.sampling{cursor:crosshair;outline:3px solid #ffe16b;touch-action:manipulation}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
 </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
 <button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
@@ -160,6 +160,11 @@
 <img id="artReferencePreview" alt="Loaded concept art" hidden>
 <p id="artReferenceSummary" role="status">No reference loaded. Your artwork stays on this device until you choose to share it.</p>
 <div class="row"><button id="artReferenceToggle" type="button" disabled>Pin image over viewer</button><button id="artReferenceRemove" type="button" disabled>Remove reference</button></div>
+<label for="artReferenceScale">Pinned reference size: <output id="artReferenceScaleValue">34%</output> of viewer width</label>
+<input id="artReferenceScale" type="range" min="15" max="90" step="1" value="34" disabled aria-label="Resize pinned reference image">
+<button id="artReferenceEyedropper" type="button" disabled>🎯 Pick brush color from reference</button>
+<p class="hint" id="artReferenceSampleStatus" role="status">Choose Pick brush color, then tap the pinned image or the preview above. Painting on the character will stay unchanged.</p>
+
 <p class="hint">Reference art is visual guidance; it does not automatically repaint the model or send the image to Aster. Screenshots from your phone can show us both the drawing and 3D result.</p>
 </div>
 <div id="firstPaintGuide">
@@ -677,10 +682,53 @@ function paintCanvasPreview(){
   const p=paintSessions.get(paintTarget);if(!p){paintPrevCtx.clearRect(0,0,paintPrev.width,paintPrev.height);return}
   paintPrev.width=p.canvas.width;paintPrev.height=p.canvas.height;paintPrevCtx.drawImage(p.canvas,0,0);
 }
-let artReferenceUrl=null,artReferenceName='',artReferencePinned=false;
+let artReferenceUrl=null,artReferenceName='',artReferencePinned=false,artReferenceSampling=false,artReferenceBitmap=null;
+function setReferenceSampling(enabled){
+ artReferenceSampling=!!enabled&&!!artReferenceBitmap;
+ $('artReferencePin').classList.toggle('sampling',artReferenceSampling);
+ $('artReferencePreview').classList.toggle('sampling',artReferenceSampling);
+ $('artReferenceEyedropper').textContent=artReferenceSampling?'Cancel reference eyedropper':'🎯 Pick brush color from reference';
+ if(artReferenceSampling)$('artReferenceSampleStatus').textContent='Tap the image in the viewer, or the full preview above, to choose a brush color.';
+}
+function sampleReferencePixel(event,img){
+ if(!artReferenceSampling||!artReferenceBitmap)return;
+ const picture=artReferenceBitmap;
+ const bounds=img.getBoundingClientRect();
+ // object-fit:contain preserves the entire image and adds letterboxing where needed.
+ const scale=Math.min(bounds.width/picture.width,bounds.height/picture.height);
+ const drawnW=picture.width*scale,drawnH=picture.height*scale;
+ const left=bounds.left+(bounds.width-drawnW)/2,top=bounds.top+(bounds.height-drawnH)/2;
+ const x=Math.floor((event.clientX-left)/scale),y=Math.floor((event.clientY-top)/scale);
+ if(x<0||y<0||x>=picture.width||y>=picture.height){$('artReferenceSampleStatus').textContent='Tap directly on the image to sample a color.';return}
+ try{
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  // The loaded image is a locally selected object URL, not a remote image.
+  ctx.drawImage(picture,x,y,1,1,0,0,1,1);
+  const pixel=ctx.getImageData(0,0,1,1).data;
+  if(pixel[3]===0){$('artReferenceSampleStatus').textContent='That pixel is transparent. Try another color.';return}
+  const hex='#'+[pixel[0],pixel[1],pixel[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+  $('paintColor').value=hex;
+  $('paintSampleStatus').textContent='Brush color '+hex+' picked from reference image. No paint applied.';
+  $('artReferenceSampleStatus').textContent='Selected '+hex+' from reference image. You can now paint with this color.';
+  setReferenceSampling(false);
+  event.preventDefault();event.stopPropagation();
+ }catch(err){$('artReferenceSampleStatus').textContent='Could not sample the image: '+err.message;setReferenceSampling(false)}
+}
+$('artReferenceScale').oninput=e=>{
+ const n=Math.max(15,Math.min(90,Number(e.target.value)||34));
+ $('artReferenceScaleValue').textContent=n+'%';
+ $('artReferencePin').style.width=n+'%';
+};
+$('artReferenceEyedropper').onclick=()=>setReferenceSampling(!artReferenceSampling);
+for(const id of ['artReferencePinImage','artReferencePreview']){
+ $(id).addEventListener('pointerdown',e=>sampleReferencePixel(e,$(id)));
+}
+
 function updateArtReferenceDisplay(){
  const has=!!artReferenceUrl,visible=has&&artReferencePinned&&workspace==='paint';
  $('artReferenceToggle').disabled=!has;$('artReferenceRemove').disabled=!has;
+ $('artReferenceScale').disabled=!has;$('artReferenceEyedropper').disabled=!has;
  $('artReferenceToggle').textContent=artReferencePinned?'Hide image from viewer':'Pin image over viewer';
  $('artReferencePin').hidden=!visible;
  $('artReferencePreview').hidden=!has;
@@ -697,7 +745,7 @@ function chooseArtReference(e){
  img.onload=()=>{
   if(img.width>12000||img.height>12000){URL.revokeObjectURL(nextUrl);$('artReferenceSummary').textContent='Image dimensions too large for this phone-friendly preview.';return}
   if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl);
-  artReferenceUrl=nextUrl;artReferenceName=file.name;artReferencePinned=true;
+  artReferenceUrl=nextUrl;artReferenceName=file.name;artReferencePinned=true;artReferenceBitmap=img;setReferenceSampling(false);
   $('artReferenceSummary').textContent='Local reference: '+file.name+' · '+img.width+'×'+img.height+'. Not uploaded. Share this image separately with your AI partner.';
   updateArtReferenceDisplay();
  };
@@ -706,10 +754,10 @@ function chooseArtReference(e){
 }
 $('artReferenceFile').onchange=chooseArtReference;
 $('artReferenceBrowse').onchange=chooseArtReference;
-$('artReferenceToggle').onclick=()=>{artReferencePinned=!artReferencePinned;updateArtReferenceDisplay()};
+$('artReferenceToggle').onclick=()=>{artReferencePinned=!artReferencePinned;if(!artReferencePinned)setReferenceSampling(false);updateArtReferenceDisplay()};
 $('artReferenceRemove').onclick=()=>{
  if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl);
- artReferenceUrl=null;artReferenceName='';artReferencePinned=false;
+ artReferenceUrl=null;artReferenceName='';artReferencePinned=false;artReferenceBitmap=null;setReferenceSampling(false);
  $('artReferenceFile').value='';$('artReferenceBrowse').value='';$('artReferencePreview').removeAttribute('src');
  $('artReferencePinImage').removeAttribute('src');
  $('artReferenceSummary').textContent='Reference removed from this page. Your original image file was not deleted.';

@@ -8,6 +8,8 @@ export function installHeadlessPaintBridge(api){
  const taskFile='colab-paint-task.json',recipeFile='colab-paint-recipe.json';
  const modelFile='colab-model.glb',referenceFile='colab-reference.png';
  let folder=null,task=null,pending=null,validation=null,lastFileStamp=null,watcher=null,reading=false;
+ const instructionFile='colab-codex-instructions.txt';
+ const codexInstruction='You are the Finn & Sylvara Codex Paint Assistant. Read colab-paint-task.json and inspect colab-model.glb and colab-reference.png if it exists. You may use code to inspect the GLB mesh and UV mapping. Your ONLY deliverable is colab-paint-recipe.json with the exact schema and task/model/mesh identity shown in the task. Paint ONE small flat-color outfit panel initially (maximum 32 forms). Output normalized UV coordinates in 0..1 and valid #RRGGBB colors. Do not invent UV coordinates if you cannot identify the surface safely; instead write colab-paint-review.txt explaining what is missing. Do not modify model files or source textures. UV maps can overlap. You must NOT assume that triangle masks make shared UV pixels independent. Do not issue code to CoLab, API calls, or remote uploads. The artist will inspect and approve the recipe manually.\\n';
  const maxBytes=1024*1024;
  const status=message=>$('aiPaintStatus').textContent=message;
  const canvasBlob=c=>new Promise((res,rej)=>c.toBlob(blob=>blob?res(blob):rej(Error('PNG encoding failed')),'image/png'));
@@ -64,6 +66,7 @@ export function installHeadlessPaintBridge(api){
     const p=getSession(getTarget());
     if(p)await write('colab-current-texture.png',await canvasBlob(p.canvas));
     await write(taskFile,json);
+    await write(instructionFile,codexInstruction);
     status('Paint task saved to your local folder with the model. Codex can now write '+recipeFile+'. CoLab watches for changes; nothing will paint without your approval.');
    }else{
     download(json,taskFile);

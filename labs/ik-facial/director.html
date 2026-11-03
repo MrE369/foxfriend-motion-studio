@@ -175,8 +175,9 @@
 </div>
 <label for="paintTarget">Selected surface · advanced mesh choice</label><select id="paintTarget"><option value="">Load a model</option></select>
 <div class="row"><button id="paintNavigate" class="active">✋ Navigate</button><button id="paintStart">🖌 Paint</button></div>
-<div class="row"><button id="paintWireToggle" type="button" aria-pressed="false">▦ Show mesh wireframe</button><button id="paintUvToggle" type="button" aria-pressed="false">▤ Show UV lines</button></div>
-<p class="hint" id="paintWireHelp">Wireframe shows mesh triangles in the 3D viewer; UV lines appear on the texture preview. Painting switches the model to solid shading so you can see your colors.</p>
+<div class="row"><button id="paintWireToggle" type="button" aria-pressed="false">▦ Shaded + wire guide</button><button id="paintUvToggle" type="button" aria-pressed="false">▤ Show UV lines</button></div>
+<p class="hint" id="paintWireHelp">Show dark or light mesh edges directly over the textured model while painting. The guide is visual only and never becomes part of your exported texture. Leave the separate UV-lines preview off for better performance.</p>
+<div class="row"><label for="paintWireOpacity" style="flex:2">Guide visibility <output id="paintWireOpacityValue">45%</output><input id="paintWireOpacity" type="range" min="10" max="90" value="45" step="5"></label><label for="paintWireTone" style="flex:1">Line color<select id="paintWireTone"><option value="dark">Dark</option><option value="light">Light</option></select></label></div>
 <label for="paintColor">Brush color</label><div class="row"><input type="color" id="paintColor" value="#e78b9c" aria-label="Brush color"><button id="paintEyedropper" type="button">🎯 Eyedropper · tap model</button></div>
 <p class="hint" id="paintSampleStatus" role="status">Sample a color from the model's texture without applying paint.</p>
 <label for="paintSize">Brush size: <output id="paintSizeValue">16</output> texture pixels</label><input id="paintSize" type="range" min="1" max="110" value="16">
@@ -624,6 +625,8 @@ let assemblyLab=null;
 let workspace='inspect';
 let inspectorDisplay={style:'solid',context:0,visibility:'all',isolateAlpha:20};
 let paintWireEnabled=false,paintUvEnabled=false;
+const paintWireCache=new Map(); // Extra draw-pass geometry is shared, never modified or exported.
+
 function rememberInspectDisplay(){
  inspectorDisplay={style:viewStyle,context:Number($('context').value),visibility:visibilityMode,isolateAlpha:Number($('isolateAlpha').value)};
 }
@@ -641,7 +644,7 @@ function showWorkspace(name){
    $('context').value=String(inspectorDisplay.context);
    $('isolateAlpha').value=String(inspectorDisplay.isolateAlpha);
   }else{
-   viewStyle=name==='paint'&&paintWireEnabled?'wire':'solid';visibilityMode='all';$('context').value='0';
+   viewStyle='solid';visibilityMode='all';$('context').value='0';
   }
   for(const style of ['solid','wire','xray'])$(style).classList.toggle('active',viewStyle===style);
 
@@ -654,6 +657,7 @@ function showWorkspace(name){
   }
   $('workspaceHint').textContent=WORKSPACES[name];
   if(root){renderMarks();} // restores model visibility and tab-specific preview without touching the saved selections.
+  syncPaintWireOverlay();
   if(name==='assemble'){
     assemblyLab?.setActive(true);
     markGroup.visible=false;moveGroup.visible=false;previewGroup.visible=false;
@@ -800,6 +804,55 @@ function paintTargetNotice(){
   ?'Texture resolution warning: source '+original.width+'×'+original.height+'; paint canvas '+resolution+'×'+resolution+'. Painting and exporting may reduce detail. CoLab will ask first. Keep your original GLB.'
   :'Texture check: paint canvas '+resolution+'×'+resolution+'. Export a separate test GLB and compare against the original.';
 }
+// A shaded Tripo-like mesh guide: a single read-only wire rendering pass for
+// the selected paint surface. No UV-outline redraw; no extra exported geometry.
+function clearPaintWireOverlays(){
+ for(const layer of paintWireCache.values()){
+  scene.remove(layer);layer.material?.dispose();
+ }
+ paintWireCache.clear();
+}
+function syncPaintWireOverlay(){
+ const target=workspace==='paint'&&paintWireEnabled&&root?paintTarget:null;
+ for(const [mesh,layer] of paintWireCache)layer.visible=mesh===target;
+ if(!target||paintWireCache.has(target)||!target.geometry)return;
+ const mat=new THREE.MeshBasicMaterial({
+  color:$('paintWireTone').value==='light'?0xf1f7ff:0x162331,
+  wireframe:true,transparent:true,opacity:Number($('paintWireOpacity').value)/100,
+  depthTest:true,depthWrite:false,side:THREE.DoubleSide
+ });
+ let guide;
+ if(target.isSkinnedMesh){
+  guide=new THREE.SkinnedMesh(target.geometry,mat);
+  guide.bindMode=target.bindMode;
+  guide.bind(target.skeleton,target.bindMatrix.clone());
+  guide.bindMatrixInverse.copy(target.bindMatrixInverse);
+ }else guide=new THREE.Mesh(target.geometry,mat);
+ if(target.morphTargetInfluences){
+  guide.morphTargetInfluences=target.morphTargetInfluences;
+  guide.morphTargetDictionary=target.morphTargetDictionary;
+ }
+ guide.matrixAutoUpdate=false;
+ guide.frustumCulled=false;
+ guide.renderOrder=target.renderOrder+1;
+ guide.raycast=()=>{}; // Do not intercept artist's clicks on the paint surface.
+ guide.name='Paint wire guide (not part of model)';
+ guide.userData.coLabDisplayOnly=true;
+ scene.add(guide); // Keep OUTSIDE root so GLB exports don't contain the overlay.
+ paintWireCache.set(target,guide);
+ const n=target.geometry.index?.count??target.geometry.attributes.position?.count??0;
+ if(n/3>250000)$('paintWireHelp').textContent='High polygon count: wire guide may reduce FPS on this laptop. Toggle it off while painting if needed.';
+}
+function updatePaintWireMatrices(){
+ if(workspace!=='paint'||!paintWireEnabled)return;
+ for(const [mesh,guide] of paintWireCache){
+  if(!guide.visible)continue;
+  mesh.updateWorldMatrix(true,false);
+  guide.matrix.copy(mesh.matrixWorld);
+  guide.matrixWorldNeedsUpdate=true;
+ }
+}
+
 function startPaintSession(m,sz){
   if(!paintEligible(m))throw Error('This mesh needs UV coordinates and one material for paint v0.1.');
   let p=paintSessions.get(m);if(p)return p;
@@ -851,6 +904,7 @@ function updatePaintUI(){
  $('paintPickTarget').disabled=!root;
  $('paintEyedropper').disabled=!root;
  paintCanvasPreview();
+ syncPaintWireOverlay();
  const current=paintSessions.get(paintTarget);
  $('paintResolution').disabled=!!current;
  if(current)$('paintResolution').value=String(current.canvas.width);
@@ -940,7 +994,7 @@ function setPaintMode(on){
  if(!root||!paintTarget)return paintMessage('Load a UV-mapped model and select a paint target.');
  if(on){
    if(visibilityMode!=='all')setVisibility('all');
-   if(viewStyle!=='solid'){viewStyle='solid';paintWireEnabled=false;$('paintWireToggle').textContent='▦ Show mesh wireframe';$('paintWireToggle').setAttribute('aria-pressed','false');applyStyle()}
+   if(viewStyle!=='solid'){viewStyle='solid';applyStyle()}
    const size=Number($('paintResolution').value),original=originalTextureSize(paintTarget);
    if(!paintSessions.has(paintTarget)&&(original.width>size||original.height>size)&&
       !confirm('Texture quality warning: original is '+original.width+'×'+original.height+
@@ -954,10 +1008,18 @@ function setPaintMode(on){
  paintMessage(on?'Paint active: make ONE small stroke, then inspect. Undo is ready.':'Navigate: rotate or zoom your character.');updatePaintUI();paintTargetNotice();
 }
 $('paintWireToggle').onclick=()=>{
- paintWireEnabled=!paintWireEnabled;viewStyle=paintWireEnabled?'wire':'solid';
- $('paintWireToggle').textContent=paintWireEnabled?'▦ Hide mesh wireframe':'▦ Show mesh wireframe';
+ paintWireEnabled=!paintWireEnabled;
+ $('paintWireToggle').textContent=paintWireEnabled?'▦ Hide wire guide':'▦ Shaded + wire guide';
  $('paintWireToggle').setAttribute('aria-pressed',String(paintWireEnabled));
- if(workspace==='paint')applyStyle();
+ syncPaintWireOverlay();
+};
+$('paintWireOpacity').oninput=()=>{
+ $('paintWireOpacityValue').textContent=$('paintWireOpacity').value+'%';
+ for(const layer of paintWireCache.values())layer.material.opacity=Number($('paintWireOpacity').value)/100;
+};
+$('paintWireTone').onchange=()=>{
+ const color=$('paintWireTone').value==='light'?0xf1f7ff:0x162331;
+ for(const layer of paintWireCache.values())layer.material.color.setHex(color);
 };
 $('paintUvToggle').onclick=()=>{
  paintUvEnabled=!paintUvEnabled;
@@ -1487,6 +1549,7 @@ function clearUnifiedBeforeLoad(){
  directorRepairReady=false;directorRepairClips=[];$('directorExportRepair').disabled=true;
  directorValidRecipe=null;$('agentPreview').disabled=true;$('agentRecipeStatus').textContent='Load the matching asset and validate the AI recipe again.';
  paintDragging=false;paintTarget=null;paintStroke=null;paintLast=null;paintBefore=null;
+ clearPaintWireOverlays();
  for(const p of paintSessions.values())p.tex.dispose();paintSessions.clear();
  animPlaying=false;if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=[];
  if(candidateRoot)scene.remove(candidateRoot);candidateRoot=null;candidateVisible=false;candidateName='';
@@ -2446,5 +2509,5 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
 const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal:()=>root,getHit:()=>lastHit});
-function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
+function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();updatePaintWireMatrices();renderer.render(scene,camera)}animate();
 </script></body></html>

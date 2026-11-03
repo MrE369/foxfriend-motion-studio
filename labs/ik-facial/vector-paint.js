@@ -1,4 +1,4 @@
-// CoLab Vector Forms v0.1 -- local UV-space shapes over a separate raster shading layer.
+// CoLab Vector Forms v0.2 -- editable UV shapes with adaptive antialias baking.
 // All changes are opt-in and never modify the source model or its UV coordinates.
 export function installVectorPaintStudio(api){
  const {$,getTarget,getSession,startSession,finishPaint,selectMode,setMode,getMode,controls,overlay,hitForPaint,preview,save,notice,outlinePreview}=api;
@@ -10,6 +10,10 @@ export function installVectorPaintStudio(api){
  const safeHex=s=>typeof s==='string'&&/^#[0-9a-f]{6}$/i.test(s);
  const clone=obj=>JSON.parse(JSON.stringify(obj));
  let drag=null,redrawScheduled=false,traceDrawing=false,tracePointerId=null;
+ const stageCanvas=makeCanvas(1),stageCtx=stageCanvas.getContext('2d',{willReadFrequently:true});
+ const MAX_STAGE_PIXELS=16*1024*1024; // 64 MB RGBA temp maximum
+ const selectedBake=()=>Number($('vectorBakeQuality').value)||2;
+ const selectedEdge=()=>$('vectorEdgeMode').value||'crisp';
  let traceFramePending=false,traceEvent=null,editorHoverFrame=false;
  const showOutline=()=>outlinePreview?.refresh();
  function targetSession(create=false){
@@ -24,7 +28,7 @@ export function installVectorPaintStudio(api){
   const size=p.canvas.width,underlay=makeCanvas(size),shade=makeCanvas(size);
   underlay.getContext('2d').drawImage(p.canvas,0,0);
   p.vector={schema:'colab-vector-v1',underlay,shade,shadeCtx:shade.getContext('2d',{willReadFrequently:true}),
-   shapes:[],draft:[],draftAnchors:[],hover:null,hoverAnchor:null,selected:-1,undo:[],shadeUndo:[],pendingShadeUndo:null};
+   shapes:[],draft:[],draftAnchors:[],hover:null,hoverAnchor:null,selected:-1,bakeQuality:selectedBake(),edgeMode:selectedEdge(),undo:[],shadeUndo:[],pendingShadeUndo:null};
   return p.vector;
  }
  function validateShapes(shapes){
@@ -59,10 +63,41 @@ export function installVectorPaintStudio(api){
   }
   if(closed)drawCtx.closePath();
  }
- function paintShape(drawCtx,shape,size){
-  drawCtx.save();tracePath(drawCtx,shape.points,size,shape.smooth);
-  drawCtx.globalAlpha=shape.opacity;drawCtx.fillStyle=shape.color;drawCtx.fill();
-  if(shape.outline>0){drawCtx.lineWidth=shape.outline;drawCtx.strokeStyle=shape.color;drawCtx.lineJoin='round';drawCtx.stroke()}
+ // Rasterize only each form's local rectangle at 1x, 2x, or 4x.
+ // No giant permanent texture, and unchanged vector control points.
+ function paintShape(drawCtx,shape,size,quality=2,edgeStyle='crisp'){
+  const xy=shape.points.map(q=>[q[0]*size,(1-q[1])*size]);
+  const xs=xy.map(p=>p[0]),ys=xy.map(p=>p[1]);
+  const spanX=Math.max(...xs)-Math.min(...xs),spanY=Math.max(...ys)-Math.min(...ys);
+  const pad=Math.max(6,shape.outline+3,shape.smooth?Math.max(spanX,spanY)*.2:0);
+  const left=Math.max(0,Math.floor(Math.min(...xs)-pad)),top=Math.max(0,Math.floor(Math.min(...ys)-pad));
+  const right=Math.min(size,Math.ceil(Math.max(...xs)+pad)),bottom=Math.min(size,Math.ceil(Math.max(...ys)+pad));
+  const w=right-left,h=bottom-top;if(w<1||h<1)return;
+  let q=[1,2,4].includes(quality)?quality:2;
+  while(q>1&&w*h*q*q>MAX_STAGE_PIXELS)q/=2;
+  stageCanvas.width=w*q;stageCanvas.height=h*q;
+  stageCtx.setTransform(q,0,0,q,-left*q,-top*q);
+  stageCtx.globalAlpha=1;
+  tracePath(stageCtx,shape.points,size,shape.smooth);
+  stageCtx.fillStyle=shape.color;stageCtx.fill();
+  if(shape.outline>0){
+   stageCtx.lineWidth=shape.outline;stageCtx.strokeStyle=shape.color;
+   stageCtx.lineJoin='round';stageCtx.stroke();
+  }
+  stageCtx.setTransform(1,0,0,1,0,0);
+  drawCtx.save();drawCtx.globalAlpha=shape.opacity;drawCtx.imageSmoothingEnabled=true;
+  drawCtx.imageSmoothingQuality='high';
+  if(edgeStyle==='hard'){
+   // Optional binary coverage cut; deliberately more pixel-stepped than crisp AA.
+   // Opacity is applied later to preserve translucent shadows.
+   const binary=makeCanvas(w);binary.height=h;
+   const bctx=binary.getContext('2d',{willReadFrequently:true});
+   bctx.imageSmoothingEnabled=true;bctx.imageSmoothingQuality='high';
+   bctx.drawImage(stageCanvas,0,0,w,h);
+   const bits=bctx.getImageData(0,0,w,h);
+   for(let i=3;i<bits.data.length;i+=4)bits.data[i]=bits.data[i]>=128?255:0;
+   bctx.putImageData(bits,0,0);drawCtx.drawImage(binary,left,top);
+  }else drawCtx.drawImage(stageCanvas,0,0,stageCanvas.width,stageCanvas.height,left,top,w,h);
   drawCtx.restore();
  }
  function composite(p){
@@ -70,13 +105,13 @@ export function installVectorPaintStudio(api){
   const size=p.canvas.width;
   p.ctx.save();p.ctx.setTransform(1,0,0,1,0,0);p.ctx.globalAlpha=1;p.ctx.globalCompositeOperation='source-over';
   p.ctx.clearRect(0,0,size,size);p.ctx.drawImage(v.underlay,0,0);
-  for(const sh of v.shapes)paintShape(p.ctx,sh,size);
+  for(const sh of v.shapes)paintShape(p.ctx,sh,size,v.bakeQuality,v.edgeMode);
   p.ctx.drawImage(v.shade,0,0);
   p.ctx.restore();p.tex.needsUpdate=true;p.painted=true;
   preview();drawEditor();showOutline();
  }
  function remember(v){
-  v.undo.push({shapes:clone(v.shapes),selected:v.selected});
+  v.undo.push({shapes:clone(v.shapes),selected:v.selected,bakeQuality:v.bakeQuality,edgeMode:v.edgeMode});
   if(v.undo.length>24)v.undo.shift();
  }
  function drawEditor(){
@@ -133,6 +168,10 @@ export function installVectorPaintStudio(api){
   $('vectorDelete').disabled=!p?.vector||p.vector.selected<0;
   $('vectorTrace').setAttribute('aria-pressed',String(getMode()==='vectorTrace'));
   $('vectorTrace').textContent=getMode()==='vectorTrace'?'Stop model tracing':'Trace points on 3D model';
+  if(p?.vector){
+   $('vectorBakeQuality').value=String(p.vector.bakeQuality||2);
+   $('vectorEdgeMode').value=p.vector.edgeMode||'crisp';
+  }
   listShapes();drawEditor();showOutline();
  }
  function begin(){
@@ -183,7 +222,7 @@ export function installVectorPaintStudio(api){
  }
  function undo(){
   const p=targetSession(),v=p?.vector;if(!v?.undo.length)return;
-  const item=v.undo.pop();v.shapes=item.shapes;v.selected=item.selected;v.draft=[];v.draftAnchors=[];v.hover=null;v.hoverAnchor=null;
+  const item=v.undo.pop();v.shapes=item.shapes;v.selected=item.selected;v.bakeQuality=item.bakeQuality||2;v.edgeMode=item.edgeMode||'crisp';v.draft=[];v.draftAnchors=[];v.hover=null;v.hoverAnchor=null;
   composite(p);save();sync();setInfo('Previous vector shape edit restored.');
  }
  function reorder(delta){

@@ -20,13 +20,13 @@
 
 <p class="hint" style="margin:3px 0 12px"><a href="https://mre369.github.io/foxfriend-motion-studio/colab/agent-guide.html" style="color:#91f0d8" target="_blank" rel="noopener">📷 New to collaborating with an AI agent? See our screenshot-first guide ↗</a></p>
 <label>1 · Load any GLB</label><input id="file" type="file" accept=".glb,.fbx,model/gltf-binary,application/octet-stream">
-<button id="fileBrowseAll" type="button">📁 Android: Browse all files for original GLB</button>
-<input id="fileUnfiltered" type="file" hidden aria-label="Browse Android files to choose original GLB without type filtering">
-<p class="hint">If an extracted GLB is greyed out in Android's picker, use Browse all files above. Only genuine GLB models are loaded; ZIPs must be extracted first.</p><button type="button" id="sendToUnified">Send current model to Unified Studio</button><p class="hint">When opened inside Unified Studio, this sends an editable GLB copy back after confirmation. Originals stay untouched. Animation clips may need separate reimport.</p><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
+<button id="fileBrowseAll" type="button">📁 Android: Browse all model files</button>
+<input id="fileUnfiltered" type="file" hidden aria-label="Browse Android files to choose GLB or FBX without type filtering">
+<p class="hint">If an extracted GLB is greyed out in Android's picker, use Browse all files above. Load extracted GLB or FBX models; ZIPs must be extracted first.</p><button type="button" id="sendToUnified">Send current model to Unified Studio</button><p class="hint">When opened inside Unified Studio, this sends an editable GLB copy back after confirmation. Originals stay untouched. Animation clips may need separate reimport.</p><div id="status" role="status">Choose a GLB or FBX to inspect.</div><div id="stats">No model loaded.</div>
 
 <details id="directorPanel" class="subpanel" open aria-label="Director's Desk">
  <summary>🎬 Director's Desk · describe, preview, collaborate</summary>
- <p class="hint">You direct. Your AI collaborator can propose small changes. CoLab runs supported recipes locally and keeps the original GLB untouched. Nothing is automatically sent to an AI service.</p>
+ <p class="hint">You direct. Your AI collaborator can propose small changes. CoLab runs supported recipes locally and keeps the original model untouched. Nothing is automatically sent to an AI service.</p>
  <label for="directorTask">Choose an experience</label>
  <select id="directorTask"><option value="repair">◈ Repair a surface</option><option value="paint">🖌 Repaint a selected area</option><option value="animate">▶ Block an animation</option></select>
  <label for="directorIntent">Tell your AI partner what you want</label>
@@ -562,6 +562,7 @@ if(!fromRecovery)await recoveryReady;dismissImportNotice();$('importResult').sty
  // unrestricted picker uses the SAME model loader with a file signature check.
 async function verifyGLBFile(f){
  if(!f)throw Error('No file selected.');
+ if(/\.fbx$/i.test(f.name)){if(f.size<32)throw Error('FBX file is unusually small or empty.');return true;}
  const header=await f.slice(0,12).arrayBuffer();
  if(header.byteLength<12)throw Error('The selected file is too short to be a GLB.');
  const h=new DataView(header);

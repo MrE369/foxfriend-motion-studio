@@ -1222,7 +1222,7 @@ $('paintGLB').onclick=async()=>{
  }catch(err){paintMessage('GLB export failed: '+err.message)}finally{for(const item of previous){item.m.material=item.material;item.m.visible=item.visible}}
 };
 vectorOutlinePreview=createVectorOutlinePreview({
- THREE,scene,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getWorkspace:()=>workspace
+ THREE,scene,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getWorkspace:()=>workspace,getPanelOpen:()=>$('vectorPaintPanel').open
 });
 vectorPaint=installVectorPaintStudio({
  $,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getModelName:()=>originalName,getModelHash:()=>fingerprint,getMeshIndex:()=>meshes.indexOf(paintTarget),

@@ -9,7 +9,7 @@ export function installVectorPaintStudio(api){
  const canvasBlob=canvas=>new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Vector layer could not be saved.')),'image/png'));
  const safeHex=s=>typeof s==='string'&&/^#[0-9a-f]{6}$/i.test(s);
  const clone=obj=>JSON.parse(JSON.stringify(obj));
- let drag=null,editorDown=false;
+ let drag=null,redrawScheduled=false;
  function targetSession(create=false){
   const m=getTarget();if(!m)return null;
   let p=getSession(m);
@@ -74,6 +74,7 @@ export function installVectorPaintStudio(api){
   if(v.undo.length>24)v.undo.shift();
  }
  function drawEditor(){
+  if(!$('vectorPaintPanel').open)return; // Preserve the fast existing painter when tools are collapsed.
   const p=targetSession(),v=p?.vector;
   if(!p){ctx.clearRect(0,0,editor.width,editor.height);return}
   if(editor.width!==p.canvas.width||editor.height!==p.canvas.height){editor.width=editor.height=p.canvas.width}
@@ -200,17 +201,18 @@ export function installVectorPaintStudio(api){
   }else{
    addPoint(uv);
   }
-  editorDown=true;e.preventDefault();
+  e.preventDefault();
  });
  editor.addEventListener('pointermove',e=>{
   if(!drag)return;
   drag.v.shapes[drag.v.selected].points[drag.idx]=editorUv(e);
   drag.moved=true;
-  composite(drag.p);e.preventDefault();
+  if(!redrawScheduled){redrawScheduled=true;requestAnimationFrame(()=>{redrawScheduled=false;if(drag)composite(drag.p)})}
+  e.preventDefault();
  });
  const endDrag=e=>{
   if(!drag)return;
-  if(drag.moved){save();setInfo('Control point repositioned. Texture updated on the model.');}
+  if(drag.moved){composite(drag.p);save();setInfo('Control point repositioned. Texture updated on the model.');}
   else drag.v.undo.pop(); // No actual movement: avoid an empty undo step.
   drag=null;sync();
  };
@@ -360,6 +362,7 @@ export function installVectorPaintStudio(api){
    composite(p);save();sync();setInfo('Imported '+shapes.length+' vector forms. Drag points to refine.');
   }catch(err){setInfo('Vector paths import failed: '+err.message)}
  }
+ $('vectorPaintPanel').addEventListener('toggle',sync);
  $('vectorExport').onclick=exportPaths;
  $('vectorImport').onchange=async e=>{
   const f=e.target.files?.[0];if(f)await importPaths(f);

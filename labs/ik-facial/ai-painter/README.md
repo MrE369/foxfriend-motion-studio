@@ -28,7 +28,11 @@ This is a **Windows desktop launcher for headless Codex**. The first model is Sy
 - `Documents\Finn-Sylvara-AI-Painter\Start-AI-Painter.ps1`
 - `Desktop\Start AI Painter.lnk`
 
-The launcher expects exactly **one** model and **at least one** reference image. It pauses with a readable message and opens the correct folder if inputs are missing. It passes up to six reference images directly to Codex's image input while making all reference files available in the workspace. Local Codex authentication is required.
+The launcher expects exactly **one** model and **at least one** reference image. Missing inputs stop before Codex is started (exit 10 for the model, 11 for references). Messages are also written to `logs/last-launch.txt`. It never waits for keyboard input or opens a browser/editor. It passes up to six reference images to Codex while making all files available in the workspace. Existing ChatGPT CLI authentication is required; no API key purchase is configured.
+
+`-CheckOnly` checks inputs, executable discovery and authentication without starting an AI task. `-VerifyLauncher` restricts a test launch to writing and reading one marker file. The installer preserves replaced launcher files and any existing shortcut under `installer-backups/`. It copies reusable Python tools into `scripts/` and does not modify global Codex/MCP or Blender configuration.
+
+For a real shortcut launch test, an engineer can create the disposable `logs/verify-next-launch.flag`; the runner consumes it and performs only the bounded verification on that one launch. Ordinary launches execute the full mission. The installed CLI's `--ignore-user-config` option reset the reported sandbox to read-only during testing; the launcher therefore keeps the existing runtime configuration and explicitly passes `exec --sandbox workspace-write`.
 
 ## Why this is not the existing CoLab headless bridge
 
@@ -56,4 +60,20 @@ It may call CoLab offline tooling where safe, but does not depend on CoLab being
 - The untouched blank FBX and reference images still match original hashes.
 - Full-surface leak detection and GLB roundtrip checks pass before user acceptance.
 
-No part of the package has been executed on the artist's laptop from this GitHub conversation. Codex must verify installation and generated results there.
+## Verified laptop run — November 3, 2026
+
+The shortcut was installed and its actual `.lnk` launched. Authenticated `codex exec` wrote and reread a disposable marker and exited successfully. Missing-model and missing-reference gates returned 10 and 11. Blender 5.2.2 LTS executed the painting and export scripts without a GUI. Results are candidates for artistic review, with rigging explicitly deferred by the artist.
+
+Private models, reference art, generated maps and renders are kept on the laptop, outside this public repository. See `VERIFICATION_2026-11-03.md` for the measured checks and limitations.
+
+## Deterministic tools
+
+- `painter_audit.py`: imports the supplied FBX, records geometry/UV/rig baselines, and renders clay/component views.
+- `painter_pipeline.py`: generates independent UV charts, semantic albedo and roughness/metallic textures, an editable Blender file, GLB and five-angle renders. Its component IDs and eye masks are calibrated to the audited Sylvara source hash; a different FBX requires an audit and remapping.
+- `painter_refine_eyes.py`: creates a new version from a candidate and repaints the full exposed sclera, larger blue irises, and dark lash rims without changing geometry or UVs.
+- `painter_validate.py`: independently reimports FBX and GLB, compares the surface within floating-point tolerance, inspects embedded textures, renders the actual exported GLB, and performs a disposable red-chest/blue-skirt leakage test.
+- `godot_inspect.gd`: checks imported surfaces and texture resources in a disposable Godot project. It does not demonstrate animation or runtime frame rate.
+
+Use Blender with `--background --factory-startup --python-exit-code 1 --python <script> -- <arguments>`. The audit takes `--source <fbx> --output <new-folder>`; painting takes `--source <fbx> --references <folder> --output <new-folder>`; validation takes `--source <fbx> --output <candidate-folder>`. Eye refinement takes `--previous <candidate-folder> --references <folder> --output <new-folder>`; `--face-only` is available for a quick close-up check. Never point output at the input directory or overwrite an artist-approved version.
+
+The safe automated UV fallback uses one chart per original polygon. It eliminates measured overlaps but increases exported seam vertices and is less convenient for 2D hand painting than an artist-authored island layout. The current candidate has 53,051 triangles and 12 material surfaces. Atlas consolidation, deformation, LODs and runtime performance remain separate acceptance work. The source contains no rig or facial morphs; successful GLB import does not make it animation-ready.

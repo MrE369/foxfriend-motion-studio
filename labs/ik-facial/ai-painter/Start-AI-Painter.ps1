@@ -1,94 +1,69 @@
-# Start AI Painter — Windows Codex headless runner
-# Runs in an ordinary user's Documents workspace, no browser control or admin.
+# Versioned, non-interactive local Codex runner. No GUI or global configuration changes.
 param(
- [string]$Workspace = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Finn-Sylvara-AI-Painter')
+ [string]$Workspace=(Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Finn-Sylvara-AI-Painter'),
+ [string]$CodexPath,
+ [switch]$CheckOnly,
+ [switch]$VerifyLauncher
 )
-$ErrorActionPreference = 'Stop'
-$Host.UI.RawUI.WindowTitle = 'Finn & Sylvara - Start AI Painter'
-function Stop-ForArtist([string]$Message,[string]$Folder){
- Write-Host ''
- Write-Host $Message -ForegroundColor Yellow
- if($Folder -and (Test-Path -LiteralPath $Folder)){Start-Process explorer.exe -ArgumentList ('"{0}"' -f $Folder) | Out-Null}
- [void](Read-Host 'Press Enter to close')
- exit 1
+$ErrorActionPreference='Stop'
+function Get-PainterHash([string]$Path){
+ $stream=[IO.File]::OpenRead($Path);$sha=[Security.Cryptography.SHA256]::Create()
+ try{return [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-','')}finally{$sha.Dispose();$stream.Dispose()}
+}
+function Write-PainterStatus([string]$Message){
+ Write-Host $Message
+ $Message|Set-Content -LiteralPath (Join-Path $Workspace 'logs\last-launch.txt') -Encoding UTF8
 }
 try {
- $Workspace = [IO.Path]::GetFullPath($Workspace)
- $modelDir = Join-Path $Workspace 'input\models'
- $refDir = Join-Path $Workspace 'input\references'
- $runsDir = Join-Path $Workspace 'output\runs'
- foreach($dir in @($Workspace,$modelDir,$refDir,$runsDir,(Join-Path $Workspace 'logs'))){
-  [void](New-Item -ItemType Directory -Force -Path $dir)
+ $Workspace=[IO.Path]::GetFullPath($Workspace)
+ foreach($rel in @('input\models','input\references','output\runs','logs')){[void](New-Item -ItemType Directory -Path (Join-Path $Workspace $rel) -Force)}
+ $verifyFlag=Join-Path $Workspace 'logs\verify-next-launch.flag'
+ if(Test-Path -LiteralPath $verifyFlag){$VerifyLauncher=$true;Remove-Item -LiteralPath $verifyFlag}
+ $modelDir=Join-Path $Workspace 'input\models';$refDir=Join-Path $Workspace 'input\references'
+ $models=@(Get-ChildItem -LiteralPath $modelDir -File|Where-Object Extension -in '.fbx','.glb')
+ $refs=@(Get-ChildItem -LiteralPath $refDir -File|Where-Object Extension -in '.png','.jpg','.jpeg','.webp')
+ if($models.Count -ne 1){Write-PainterStatus "Add exactly ONE blank FBX or GLB to $modelDir. No painting was started.";exit 10}
+ if($refs.Count -eq 0){Write-PainterStatus "Add approved reference images to $refDir. No painting was started.";exit 11}
+ $missionPath=Join-Path $Workspace 'MASTER_PAINTER_MISSION.md'
+ if(-not(Test-Path -LiteralPath $missionPath)){throw 'Mission is missing; rerun the installer.'}
+ if(-not $CodexPath){
+  $cmd=Get-Command codex.exe -ErrorAction SilentlyContinue|Select-Object -First 1
+  if($cmd){$CodexPath=$cmd.Source}
+  $config=Join-Path $Workspace 'launcher-config.json'
+  if(-not $CodexPath -and (Test-Path -LiteralPath $config)){$CodexPath=(Get-Content -LiteralPath $config -Raw|ConvertFrom-Json).codexPath}
+  if(-not $CodexPath -or -not(Test-Path -LiteralPath $CodexPath)){
+   $pkg=Get-AppxPackage -Name OpenAI.Codex -ErrorAction SilentlyContinue|Select-Object -First 1
+   if($pkg){$CodexPath=Join-Path $pkg.InstallLocation 'app\resources\codex.exe'}
+  }
  }
- $missionPath = Join-Path $Workspace 'MASTER_PAINTER_MISSION.md'
- if(-not (Test-Path -LiteralPath $missionPath)){
-  Stop-ForArtist 'Mission file missing. Have Codex run Install-Start-AI-Painter.ps1 again.' $Workspace
- }
- $models = @(Get-ChildItem -LiteralPath $modelDir -File | Where-Object {$_.Extension.ToLowerInvariant() -in @('.fbx','.glb')})
- $refs = @(Get-ChildItem -LiteralPath $refDir -File | Where-Object {$_.Extension.ToLowerInvariant() -in @('.png','.jpg','.jpeg','.webp')})
- if($models.Count -ne 1){
-  Stop-ForArtist 'Place EXACTLY ONE blank Sylvara FBX or GLB inside input\models. Nothing will be overwritten.' $modelDir
- }
- if($refs.Count -eq 0){
-  Stop-ForArtist 'Add Sylvara reference pictures to input\references. Reference images are essential for matching her appearance.' $refDir
- }
- $codex = Get-Command codex -ErrorAction SilentlyContinue | Select-Object -First 1
- if(-not $codex){
-  Stop-ForArtist 'Codex CLI was not found. Have Codex install/sign in to Codex CLI first (codex --version).' $Workspace
- }
- $timestamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
- $runDir = Join-Path $runsDir $timestamp
- if(Test-Path -LiteralPath $runDir){$runDir += '-'+[Guid]::NewGuid().ToString('N').Substring(0,6)}
+ if(-not $CodexPath -or -not(Test-Path -LiteralPath $CodexPath)){throw 'Existing Codex CLI not found; no painting was started.'}
+ & $CodexPath login status
+ if($LASTEXITCODE -ne 0){throw 'Sign in to Codex CLI before starting the painter.'}
+ if($CheckOnly){Write-PainterStatus ('READY: '+$models[0].Name+'; '+$refs.Count+' references; '+$CodexPath);exit 0}
+ $runDir=Join-Path $Workspace ('output\runs\'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,6))
  [void](New-Item -ItemType Directory -Path $runDir)
- $lastFile = Join-Path $runDir 'codex-final-message.md'
- $logFile = Join-Path $runDir 'codex-terminal.log'
- $mission = Get-Content -LiteralPath $missionPath -Raw -Encoding UTF8
- $prompt = @"
-$mission
-
-## This run
-Source model: $($models[0].FullName)
-Reference directory: $refDir
-Run output directory: $runDir
-Windows Documents workspace: $Workspace
-
-You are operating headlessly; never click around CoLab or Blender.
-Execute the stages and produce assets in the run directory.
-Inspect the blank FBX and every supplied approved reference image.
-Prefer headless Blender/bpy when available; compare all realistic tool choices.
-Preserve all original inputs and previously generated runs.
-Create a complete painted Sylvara candidate if feasible.
-If blocked, produce BLOCKED.md with a reproducible diagnosis and the next safe engineering step.
-Do not ask the user to buy anything, change production, or install paid software.
-Do not claim final artistic approval: Bill and Callie will review renders.
-"@
- $argsList = @('exec','--skip-git-repo-check','-C',$Workspace,'--sandbox','workspace-write',
-              '--output-last-message',$lastFile)
- # Explicit image attachments let Codex see the actual Style 3 references.
- foreach($img in ($refs | Sort-Object Name | Select-Object -First 6)){
-  $argsList += @('--image',$img.FullName)
- }
- $argsList += '-'
- Write-Host ''
- Write-Host 'Finn & Sylvara — MASTER AI PAINTER' -ForegroundColor Cyan
- Write-Host ('Model: '+$models[0].Name)
- Write-Host ('References: '+$refs.Count+' images')
- Write-Host ('Run artifacts: '+$runDir)
- Write-Host 'Codex is running headlessly. It may use installed Blender, Python, and CoLab batch tooling.'
- Write-Host 'Original inputs are protected. Final model is a candidate until approved.' -ForegroundColor Yellow
- Write-Host ''
+ $manifest=@($models+$refs|ForEach-Object{[pscustomobject]@{path=$_.FullName;sha256=(Get-PainterHash $_.FullName)}})
+ $manifest|ConvertTo-Json -Depth 3|Set-Content -LiteralPath (Join-Path $runDir 'input-hashes-before.json') -Encoding UTF8
+ $prompt=Get-Content -LiteralPath $missionPath -Raw -Encoding UTF8
+ $prompt+="`nSource model: $($models[0].FullName)`nReferences: $refDir`nOutput: $runDir`nReusable deterministic scripts: $(Join-Path $Workspace 'scripts')`nUse and improve the supplied scripts. No UI, purchases or paid services. Original inputs and prior runs are read-only."
+ if($VerifyLauncher){$prompt="Creator-authorized launcher verification: use only a local shell/file tool to write VERIFIED to '$runDir\headless-write-proof.txt'. No asset reads, browser, installs, or painting. Check the marker and report the result."}
+ $prompt|Set-Content -LiteralPath (Join-Path $runDir 'mission-this-run.md') -Encoding UTF8
+ # Keep the existing authenticated runtime configuration. In the installed alpha,
+ # --ignore-user-config incorrectly resets the reported sandbox to read-only.
+ $cliArgs=@('exec','--sandbox','workspace-write','--ephemeral','--skip-git-repo-check','-C',$Workspace,'--output-last-message',(Join-Path $runDir 'codex-final-message.md'))
+ if(-not $VerifyLauncher){foreach($ref in ($refs|Sort-Object Name|Select-Object -First 6)){$cliArgs+=@('--image',$ref.FullName)}}
+ $cliArgs+='-'
+ Write-PainterStatus ('RUNNING: '+$runDir)
  $ErrorActionPreference='Continue'
- $prompt | & $codex.Source @argsList 2>&1 | Tee-Object -FilePath $logFile
- $exitCode=$LASTEXITCODE
- $ErrorActionPreference='Stop'
- Write-Host ''
- if($exitCode -eq 0){Write-Host 'Codex session completed. Inspect renders, reports and candidate GLB.' -ForegroundColor Green}
- else{Write-Host ('Codex exited with code '+$exitCode+'. Inspect the log and any partial outputs.') -ForegroundColor Yellow}
- Start-Process explorer.exe -ArgumentList ('"{0}"' -f $runDir) | Out-Null
- [void](Read-Host 'Press Enter when finished reviewing the run folder')
- exit $exitCode
+ $prompt|& $CodexPath @cliArgs 2>&1|Tee-Object -FilePath (Join-Path $runDir 'codex-terminal.log')
+ $code=$LASTEXITCODE;$ErrorActionPreference='Stop'
+ $after=@($manifest|ForEach-Object{$hash=Get-PainterHash $_.path;[pscustomobject]@{path=$_.path;sha256=$hash;unchanged=($_.sha256 -eq $hash)}})
+ $after|ConvertTo-Json -Depth 3|Set-Content -LiteralPath (Join-Path $runDir 'input-hashes-after.json') -Encoding UTF8
+ if(@($after|Where-Object {-not $_.unchanged}).Count){throw 'An input hash changed; review this run before using any output.'}
+ Write-PainterStatus ('FINISHED (exit '+$code+'): '+$runDir+' - inspect reports/previews; artistic approval remains required.')
+ exit $code
 }catch{
- Write-Host ('AI Painter launcher error: '+$_.Exception.Message) -ForegroundColor Red
- [void](Read-Host 'Press Enter to close')
+ Write-Host ('AI Painter: '+$_.Exception.Message) -ForegroundColor Red
+ if(Test-Path -LiteralPath (Join-Path $Workspace 'logs')){Write-PainterStatus ('ERROR: '+$_.Exception.Message)}
  exit 1
 }

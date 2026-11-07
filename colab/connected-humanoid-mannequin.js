@@ -9,8 +9,8 @@ export function createConnectedHumanoidMannequin(THREE, scene) {
   layer.name = 'CoLab_EDITOR_ONLY_ReferenceMannequin';
   layer.visible = false;
   scene.add(layer); // Deliberately NOT inside the loaded GLB's export root.
-  const skeletonLayer = new THREE.Group(), figureLayer = new THREE.Group();
-  layer.add(skeletonLayer, figureLayer);
+  const skeletonLayer = new THREE.Group(), figureLayer = new THREE.Group(), jointLayer = new THREE.Group();
+  layer.add(figureLayer, skeletonLayer, jointLayer);
   const cylinder = new THREE.CylinderGeometry(1, 1, 1, 12, 1);
   const ball = new THREE.SphereGeometry(1, 14, 10);
   const yAxis = new THREE.Vector3(0, 1, 0);
@@ -34,7 +34,7 @@ export function createConnectedHumanoidMannequin(THREE, scene) {
     transparent: true, opacity: .92
   });
   let rig = null, bones = [], boneByName = new Map(), sourceMeshes = [];
-  let savedVisibility = null, viewMode = 'skeleton', translucent = false;
+  let savedVisibility = null, viewMode = 'original', translucent = false;
   let scale = 1, segments = [], orbs = [], jointMarkers = [], skeletonGeometry = null;
   let skeletonLinks = [], diagnostic = {supported: false, missing: [], boneCount: 0, disconnected: []};
 
@@ -83,7 +83,7 @@ export function createConnectedHumanoidMannequin(THREE, scene) {
     restoreMeshVisibility();
     rig = null; bones = []; boneByName.clear(); sourceMeshes = [];
     segments = []; orbs = []; jointMarkers = []; skeletonLinks = [];
-    skeletonLayer.clear(); figureLayer.clear(); skeletonGeometry?.dispose();
+    skeletonLayer.clear(); figureLayer.clear(); jointLayer.clear(); skeletonGeometry?.dispose();
     skeletonGeometry = null; layer.visible = false;
     diagnostic = {supported: false, missing: [], boneCount: 0, disconnected: []};
   }
@@ -149,7 +149,7 @@ export function createConnectedHumanoidMannequin(THREE, scene) {
       const marker = new THREE.Mesh(ball, markerMat);
       marker.renderOrder = 1002; marker.name = 'ReferenceJoint_' + (b.name || 'joint');
       marker.scale.setScalar(.020 * scale);
-      skeletonLayer.add(marker);
+      jointLayer.add(marker);
       jointMarkers.push({bone: b, mesh: marker});
     }
     if (diagnostic.supported) {
@@ -210,6 +210,7 @@ export function createConnectedHumanoidMannequin(THREE, scene) {
     layer.visible = true;
     skeletonLayer.visible = viewMode === 'skeleton' || viewMode === 'combined';
     figureLayer.visible = viewMode === 'mannequin' || viewMode === 'combined';
+    jointLayer.visible = true; // Joint positions remain visible over the mannequin.
     rig.updateWorldMatrix(true, true);
     const positions = bones.map(b => b.getWorldPosition(V()));
     if (skeletonGeometry) {
@@ -231,7 +232,7 @@ export function createConnectedHumanoidMannequin(THREE, scene) {
       mesh.position.copy(p).add(q).multiplyScalar(.5);
       mesh.quaternion.setFromUnitVectors(yAxis, diff.divideScalar(len));
       const r = radius * scale;
-      mesh.scale.set(r,r === 0 ? 0 : len + r * .8,r);
+      mesh.scale.set(r, len + r * .8, r);
     }
     for (const o of orbs) {
       const mesh = o.mesh, r = o.radius * scale;

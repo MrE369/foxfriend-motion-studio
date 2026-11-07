@@ -27,4 +27,10 @@
 - Not yet visually tested in live phone/WebGL. No production update; artist approval still required before merging.
 - Proposed test: import `Finn_Sylvara_Humanoid_Rig_v01.glb`; show **Connected mannequin**; Pose Local hand, foot, and elbow; compare Full reach on same pose after resetting. Check other limbs remain steady, all joints still targetable, and original clips still play. Export and reimport animated GLB separately before release.
 
+## Phone release checklist (future, separate approval)
+- Before promoting to the installed PWA, bump `colab/sw.js` cache key and update the Unified/Workshop version display so **Check for updates → Save & update** becomes available. Do not modify PWA origin, manifest identity, icons or IndexedDB names.
+- Protect active projects: ask the artist to export GLB/pose JSON and save the workshop session first. Never clear site data or force service-worker activation.
+- Verify both display modes, touch dragging, arrow nudge, original animation playback, local recovery and export→reimport on the actual installed phone.
+- CI passing is not proof of comfortable motion or correct mobile rendering.
+
 **Rollback:** revert the experiment branch. Production v0.13.2 stays available.

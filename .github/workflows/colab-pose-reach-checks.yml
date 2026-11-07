@@ -1,0 +1,22 @@
+name: CoLab Local Pose Reach Checks
+on:
+  pull_request:
+    paths:
+      - 'colab/director.html'
+      - 'colab/skeleton-points.js'
+      - 'colab/pose-reach.test.mjs'
+      - '.github/workflows/colab-pose-reach-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pose-reach:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node.js version
+        run: node --version
+      - name: Test local/full joint reach and Workshop integration
+        run: node --test colab/pose-reach.test.mjs

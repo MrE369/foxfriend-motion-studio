@@ -6,10 +6,25 @@
 #viewNotice.error{background:#4b3029ef;border-color:#ff9d59}
 #autoConnected{width:24px;min-height:24px;height:24px;vertical-align:middle;accent-color:#49d9ff;margin-right:8px}
 
-[hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
+[hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px}
+#vectorEditorScroll{overflow:auto;max-height:480px;border:1px solid #57798e;border-radius:9px;background:#182737}
+#vectorEditor{display:block;width:100%;height:auto;max-width:none;aspect-ratio:1;touch-action:none;cursor:crosshair}
+#vectorPaintPanel button{min-height:42px}
+#vectorPaintPanel label{margin-top:8px}
+#vectorStatus{min-height:44px;padding:9px;background:#223d4c;border-radius:9px}
+ .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
 #directorPanel{background:#223a4c;border-color:#72cdb7}#directorPanel summary{padding:5px 0}#directorPanel h3{color:#a7ecdf}#directorPanel p{line-height:1.45}.directorFlow{margin:11px 0;padding:10px 12px;background:#122635;border:1px solid #476d7c;border-radius:10px}#directorPanel input[type=range]{padding:5px;min-height:32px;accent-color:#77e4cc}#directorPanel input[type=color]{padding:4px}#directorPanel output{font-variant-numeric:tabular-nums;color:#9af1d7}#directorPanel button:disabled{opacity:.4}#allSkeletonPoints{border-color:#6689a3;background:#20384c}#allSkeletonPoints input[type=search]{min-height:40px}#allSkeletonPoints p{line-height:1.45}
-#artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);max-height:calc(100% - 65px);background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}#artReferencePin img{display:block;width:100%;max-height:calc(41dvh - 93px);object-fit:contain}#artReferencePin.sampling{pointer-events:auto;cursor:crosshair;outline:3px solid #ffe16b}#artReferencePin.sampling img{cursor:crosshair;touch-action:manipulation}#artReferencePreview.sampling{cursor:crosshair;outline:3px solid #ffe16b;touch-action:manipulation}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
-</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
+#artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);height:180px;max-height:calc(100% - 65px);background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}
+#artReferencePin img{display:block;width:100%;height:100%;max-height:none;object-fit:fill}
+#artReferencePin .refResizeHandle{position:absolute;z-index:2;display:grid;place-items:center;padding:0;width:29px;height:29px;min-width:29px;min-height:29px;border:2px solid #132632;border-radius:8px;background:#e2faf4;color:#112834;box-shadow:0 1px 5px #0009;font-size:17px;font-weight:900;pointer-events:auto;touch-action:none;user-select:none}
+#artReferencePin .refResizeHandle.width{left:0;top:calc(50% - 14px);cursor:ew-resize}
+#artReferencePin .refResizeHandle.height{left:calc(50% - 14px);bottom:0;cursor:ns-resize}
+#artReferencePin .refResizeHandle.corner{left:0;bottom:0;cursor:nesw-resize}
+#artReferencePin[hidden]{display:none!important}#artReferencePin.sampling{pointer-events:auto;cursor:crosshair;outline:3px solid #ffe16b}#artReferencePin.sampling img{cursor:crosshair;touch-action:manipulation}#artReferencePreview.sampling{cursor:crosshair;outline:3px solid #ffe16b;touch-action:manipulation}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison">
+<button class="refResizeHandle width" id="artRefResizeWidth" type="button" aria-label="Drag left or right to resize pinned image width" title="Resize width; drag left to expand">↔</button>
+<button class="refResizeHandle height" id="artRefResizeHeight" type="button" aria-label="Drag up or down to resize pinned image height" title="Resize height; drag down to expand">↕</button>
+<button class="refResizeHandle corner" id="artRefResizeCorner" type="button" aria-label="Drag diagonally to resize pinned reference width and height" title="Drag diagonally to resize">⤢</button></div></div><aside>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
 <button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
 <button type="button" id="tabButtonPaint" role="tab" aria-selected="false" aria-controls="tabPaint" data-tab="paint">🖌<span>Paint</span></button>
@@ -160,8 +175,12 @@
 <img id="artReferencePreview" alt="Loaded concept art" hidden>
 <p id="artReferenceSummary" role="status">No reference loaded. Your artwork stays on this device until you choose to share it.</p>
 <div class="row"><button id="artReferenceToggle" type="button" disabled>Pin image over viewer</button><button id="artReferenceRemove" type="button" disabled>Remove reference</button></div>
-<label for="artReferenceScale">Pinned reference size: <output id="artReferenceScaleValue">34%</output> of viewer width</label>
-<input id="artReferenceScale" type="range" min="15" max="90" step="1" value="34" disabled aria-label="Resize pinned reference image">
+<label for="artReferenceScale">Pinned width: <output id="artReferenceScaleValue">34%</output> of viewer</label>
+<input id="artReferenceScale" type="range" min="15" max="95" step="1" value="34" disabled aria-label="Resize pinned reference width">
+<label for="artReferenceHeight">Pinned height: <output id="artReferenceHeightValue">35%</output> of viewer</label>
+<input id="artReferenceHeight" type="range" min="12" max="95" step="1" value="35" disabled aria-label="Resize pinned reference height">
+<label style="display:flex;align-items:center;gap:8px"><input id="artReferenceLockAspect" type="checkbox" style="width:auto" disabled> Keep original image proportions (optional)</label>
+<p class="hint">Drag ↔ on the left edge, ↕ on the bottom edge, or ⤢ in the lower-left corner of the pinned picture. Unchecked lets you stretch width and height independently; check the box to preserve the original proportions. Neither changes the source image.</p>
 <button id="artReferenceEyedropper" type="button" disabled>🎯 Pick brush color from reference</button>
 <p class="hint" id="artReferenceSampleStatus" role="status">Choose Pick brush color, then tap the pinned image or the preview above. Painting on the character will stay unchanged.</p>
 
@@ -189,6 +208,27 @@
 <p class="hint" id="paintQualityNote" role="status">The paint canvas is phone-friendly. Larger original textures may lose detail in a test export; CoLab will warn you before that happens.</p>
 <button id="paintJSON">⬇ Paint Project JSON</button><label for="paintImport">Restore Paint Project JSON</label><input id="paintImport" type="file" accept=".json,application/json">
 <p class="hint" id="paintStatus">Painting requires UV coordinates. Paint JSON includes sampled 3D hit positions; textured GLB is a new export, never an overwrite. A brush stroke can affect overlapping UV islands.</p>
+<details id="vectorPaintPanel" class="subpanel" aria-label="Vector painting experimental tools">
+ <summary>✒ Vector Forms · precise outline and fill (experiment)</summary>
+ <p class="hint">Draw precise, editable outlines on the 3D character or enlarged UV canvas. Close a form to fill it with flat color. Add more forms for hard-edged shadows. The regular brush paints on top as raster shading.</p>
+ <div class="row"><button id="vectorNew" type="button">＋ New outline</button><button id="vectorTrace" type="button" aria-pressed="false">Trace points on 3D model</button></div>
+ <p class="hint">Tap corners or hold and drag directly on the 3D character to trace continuously. Your yellow outline and control points appear on the model as you draw; green dashes preview the closing edge. Navigate rotates the model without changing the outline. UV seams may require separate forms.</p>
+ <div class="row"><button id="vectorClose" type="button">✓ Close outline & fill</button><button id="vectorUndoPoint" type="button">↶ Remove last point</button></div>
+ <label for="vectorShapeSelect">Select an editable vector form</label><select id="vectorShapeSelect"><option value="-1">New outline / unselected</option></select>
+ <div class="row"><label for="vectorColor">Fill color <input id="vectorColor" type="color" value="#587f67"></label><button type="button" id="vectorUseBrushColor">Use current brush color</button></div>
+ <label for="vectorOpacity">Form opacity: <output id="vectorOpacityValue">100%</output></label>
+ <input id="vectorOpacity" type="range" min="5" max="100" value="100" step="5">
+ <div class="row"><label for="vectorCurve" style="flex:1">Outline style<select id="vectorCurve"><option value="corners">Straight / hard edge</option><option value="smooth">Smooth Bézier curve</option></select></label>
+ <label for="vectorOutline" style="flex:1">Line thickness (px)<select id="vectorOutline"><option value="0">No outline</option><option value="1">1</option><option value="3">3</option><option value="6">6</option><option value="10">10</option></select></label></div>
+ <div class="row"><button id="vectorUndo" type="button">↶ Undo vector edit</button><button id="vectorDelete" type="button">Delete selected form</button></div>
+ <div class="row"><button id="vectorLower" type="button">↓ Move form backward</button><button id="vectorRaise" type="button">↑ Move form forward</button></div>
+ <label for="vectorZoom">UV editor zoom: <output id="vectorZoomValue">100%</output></label><input id="vectorZoom" type="range" min="100" max="300" step="25" value="100">
+ <p class="hint">Tap the UV editor to place exact corners. Select a saved form and drag its cyan handles to correct the outline. Zoom for precision. Lines here are guides, not paint.</p>
+ <div id="vectorEditorScroll"><canvas id="vectorEditor" width="1024" height="1024" aria-label="Editable vector outlines on UV texture"></canvas></div>
+ <div class="row"><button id="vectorExport" type="button">⬇ Export vector paths JSON</button><label style="flex:1">⬆ Import vector paths JSON<input id="vectorImport" type="file" accept=".json,application/json"></label></div>
+<p class="hint">For Codex-assisted painting, the paths-only JSON keeps vector points editable and validates the model fingerprint and selected mesh before applying anything.</p>
+<p id="vectorStatus" role="status">Select a UV-ready mesh and choose New outline to begin. Work stays local and can be exported as an editable Paint Project JSON.</p>
+</details>
 </section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
 <p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
 <div id="allSkeletonPoints" class="subpanel" aria-label="Grab every skeleton joint">
@@ -332,6 +372,8 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import {installVectorPaintStudio} from './vector-paint.js';
+import {createVectorOutlinePreview} from './vector-outline-preview.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {relaxSelectedSurface} from './director-tools.js';
 import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
@@ -650,6 +692,7 @@ function showWorkspace(name){
 
   if(name!=='review'&&candidateVisible)showCandidate(false);
   workspace=name;
+  vectorOutlinePreview?.refresh();
   for(const key of Object.keys(WORKSPACES)){
     $('tab'+key[0].toUpperCase()+key.slice(1)).hidden=key!==name;
     const b=$('tabButton'+key[0].toUpperCase()+key.slice(1));
@@ -681,6 +724,7 @@ for(const b of document.querySelectorAll('#workspaceTabs [data-tab]'))b.addEvent
 // PAINT: independent 2D canvases for each UV-mapped, single-material mesh.
 // The Paint Studio's v0.1.3 stroke and JSON conventions are retained.
 const paintSessions=new Map();
+let vectorPaint=null,vectorOutlinePreview=null;
 let paintTarget=null,paintDragging=false,paintLast=null,paintBefore=null,paintStroke=null;
 const paintPrev=$('paintPreview'),paintPrevCtx=paintPrev.getContext('2d');
 function paintMessage(text){$('paintStatus').textContent=text;status(text)}
@@ -719,10 +763,13 @@ function sampleReferencePixel(event,img){
  const picture=artReferenceBitmap;
  const bounds=img.getBoundingClientRect();
  // object-fit:contain preserves the entire image and adds letterboxing where needed.
- const scale=Math.min(bounds.width/picture.width,bounds.height/picture.height);
- const drawnW=picture.width*scale,drawnH=picture.height*scale;
+ // Pinned image can be stretched freely; the standard preview still uses contain.
+ const pinned=img.id==='artReferencePinImage';
+ const scale=pinned?null:Math.min(bounds.width/picture.width,bounds.height/picture.height);
+ const drawnW=pinned?bounds.width:picture.width*scale,drawnH=pinned?bounds.height:picture.height*scale;
  const left=bounds.left+(bounds.width-drawnW)/2,top=bounds.top+(bounds.height-drawnH)/2;
- const x=Math.floor((event.clientX-left)/scale),y=Math.floor((event.clientY-top)/scale);
+ const x=Math.floor((event.clientX-left)/drawnW*picture.width),
+       y=Math.floor((event.clientY-top)/drawnH*picture.height);
  if(x<0||y<0||x>=picture.width||y>=picture.height){$('artReferenceSampleStatus').textContent='Tap directly on the image to sample a color.';return}
  try{
   const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
@@ -739,11 +786,72 @@ function sampleReferencePixel(event,img){
   event.preventDefault();event.stopPropagation();
  }catch(err){$('artReferenceSampleStatus').textContent='Could not sample the image: '+err.message;setReferenceSampling(false)}
 }
+// The pin is anchored at top-right. Left / bottom / lower-left touch handles
+// grow it in the directions artists naturally drag, without touching the model.
+let artRefWidth=0,artRefHeight=0,artRefResize=null;
+function refBounds(){
+ return {width:Math.max(100,view.clientWidth-24),height:Math.max(100,view.clientHeight-70)};
+}
+function applyArtRefSize(width,height,changed='both'){
+ const b=refBounds(),aspect=(artReferenceBitmap?.width||1)/(artReferenceBitmap?.height||1);
+ let w=Math.max(86,Math.min(b.width,width)),h=Math.max(86,Math.min(b.height,height));
+ if($('artReferenceLockAspect').checked){
+  if(changed==='height')w=h*aspect;
+  else if(changed==='corner'){
+   const ratioWidth=(w||1)/(artRefWidth||w),ratioHeight=(h||1)/(artRefHeight||h);
+   if(Math.abs(ratioHeight-1)>Math.abs(ratioWidth-1))w=h*aspect;else h=w/aspect;
+  }else h=w/aspect;
+  if(w>b.width){w=b.width;h=w/aspect}
+  if(h>b.height){h=b.height;w=h*aspect}
+  if(w<86){w=86;h=w/aspect}
+  if(h<86){h=86;w=h*aspect}
+ }
+ artRefWidth=Math.round(w);artRefHeight=Math.round(h);
+ $('artReferencePin').style.width=artRefWidth+'px';
+ $('artReferencePin').style.height=artRefHeight+'px';
+ const wPct=Math.round(artRefWidth/Math.max(1,view.clientWidth)*100),
+       hPct=Math.round(artRefHeight/Math.max(1,view.clientHeight-54)*100);
+ $('artReferenceScale').value=String(Math.min(95,Math.max(15,wPct)));
+ $('artReferenceScaleValue').textContent=wPct+'%';
+ $('artReferenceHeight').value=String(Math.min(95,Math.max(12,hPct)));
+ $('artReferenceHeightValue').textContent=hPct+'%';
+}
+function initializeArtRefSize(){
+ const b=refBounds(),a=(artReferenceBitmap?.width||1)/(artReferenceBitmap?.height||1);
+ const w=Math.min(b.width*0.34,Math.max(115,Math.min(230,b.width*0.34)));
+ applyArtRefSize(w,Math.min(b.height,w/a),'width');
+}
 $('artReferenceScale').oninput=e=>{
- const n=Math.max(15,Math.min(90,Number(e.target.value)||34));
- $('artReferenceScaleValue').textContent=n+'%';
- $('artReferencePin').style.width=n+'%';
+ const w=view.clientWidth*Number(e.target.value)/100;
+ applyArtRefSize(w,artRefHeight||130,'width');
 };
+$('artReferenceHeight').oninput=e=>{
+ const h=(view.clientHeight-54)*Number(e.target.value)/100;
+ applyArtRefSize(artRefWidth||150,h,'height');
+};
+$('artReferenceLockAspect').onchange=()=>applyArtRefSize(artRefWidth||155,artRefHeight||155,'width');
+for(const [id,axis] of [['artRefResizeWidth','width'],['artRefResizeHeight','height'],['artRefResizeCorner','corner']]){
+ const handle=$(id);
+ handle.addEventListener('pointerdown',e=>{
+  if(!artReferencePinned||!artReferenceBitmap)return;
+  artRefResize={axis,id:e.pointerId,x:e.clientX,y:e.clientY,w:artRefWidth,h:artRefHeight};
+  handle.setPointerCapture(e.pointerId);
+  e.preventDefault();e.stopPropagation();
+ });
+ handle.addEventListener('pointermove',e=>{
+  if(!artRefResize||artRefResize.id!==e.pointerId)return;
+  const r=artRefResize;
+  const w=r.w-(e.clientX-r.x),h=r.h+(e.clientY-r.y);
+  applyArtRefSize(axis==='height'?r.w:w,axis==='width'?r.h:h,axis);
+  e.preventDefault();e.stopPropagation();
+ });
+ const end=e=>{
+  if(artRefResize?.id===e.pointerId)artRefResize=null;
+  e.stopPropagation();
+ };
+ handle.addEventListener('pointerup',end);
+ handle.addEventListener('pointercancel',end);
+}
 $('artReferenceEyedropper').onclick=()=>setReferenceSampling(!artReferenceSampling);
 for(const id of ['artReferencePinImage','artReferencePreview']){
  $(id).addEventListener('pointerdown',e=>sampleReferencePixel(e,$(id)));
@@ -752,7 +860,7 @@ for(const id of ['artReferencePinImage','artReferencePreview']){
 function updateArtReferenceDisplay(){
  const has=!!artReferenceUrl,visible=has&&artReferencePinned&&workspace==='paint';
  $('artReferenceToggle').disabled=!has;$('artReferenceRemove').disabled=!has;
- $('artReferenceScale').disabled=!has;$('artReferenceEyedropper').disabled=!has;
+ $('artReferenceScale').disabled=!has;$('artReferenceHeight').disabled=!has;$('artReferenceLockAspect').disabled=!has;$('artReferenceEyedropper').disabled=!has;
  $('artReferenceToggle').textContent=artReferencePinned?'Hide image from viewer':'Pin image over viewer';
  $('artReferencePin').hidden=!visible;
  $('artReferencePreview').hidden=!has;
@@ -770,6 +878,7 @@ function chooseArtReference(e){
   if(img.width>12000||img.height>12000){URL.revokeObjectURL(nextUrl);$('artReferenceSummary').textContent='Image dimensions too large for this phone-friendly preview.';return}
   if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl);
   artReferenceUrl=nextUrl;artReferenceName=file.name;artReferencePinned=true;artReferenceBitmap=img;setReferenceSampling(false);
+  initializeArtRefSize();
   $('artReferenceSummary').textContent='Local reference: '+file.name+' · '+img.width+'×'+img.height+'. Not uploaded. Share this image separately with your AI partner.';
   updateArtReferenceDisplay();
  };
@@ -905,6 +1014,7 @@ function updatePaintUI(){
  $('paintEyedropper').disabled=!root;
  paintCanvasPreview();
  syncPaintWireOverlay();
+ vectorPaint?.sync();
  const current=paintSessions.get(paintTarget);
  $('paintResolution').disabled=!!current;
  if(current)$('paintResolution').value=String(current.canvas.width);
@@ -1033,7 +1143,7 @@ function hitForPaint(e){
  const r=overlay.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));ray.setFromCamera(pointer,camera);root.updateMatrixWorld(true);
  return ray.intersectObject(paintTarget,false).find(h=>h.uv && Number.isFinite(h.faceIndex))||null;
 }
-function paintDot(p,x,y){const ctx=p.ctx;ctx.fillStyle=$('paintColor').value;ctx.globalAlpha=Number($('paintOpacity').value)/100;ctx.beginPath();ctx.arc(x,y,Number($('paintSize').value)/2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1}
+function paintDot(p,x,y){const color=$('paintColor').value,size=Number($('paintSize').value),alpha=Number($('paintOpacity').value)/100;const ctx=p.ctx;ctx.fillStyle=color;ctx.globalAlpha=alpha;ctx.beginPath();ctx.arc(x,y,size/2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;vectorPaint?.brushDot(p,x,y,size,color,alpha)}
 function paintSample(h){
  const p=paintSessions.get(paintTarget);if(!p||!h?.uv)return;
  const x=h.uv.x*p.canvas.width,y=(1-h.uv.y)*p.canvas.height;
@@ -1049,6 +1159,7 @@ overlay.addEventListener('pointerdown',e=>{
  const p=paintSessions.get(paintTarget);if(!p)return;
  overlay.setPointerCapture(e.pointerId);paintDragging=true;
  paintBefore=p.ctx.getImageData(0,0,p.canvas.width,p.canvas.height);
+ vectorPaint?.strokeStart(p);
  paintStroke={startedAt:new Date().toISOString(),meshName:paintTarget.name||'',meshIndex:meshes.indexOf(paintTarget),brush:{color:$('paintColor').value,sizePx:Number($('paintSize').value),opacity:Number($('paintOpacity').value)/100},samples:[]};
  paintLast=null;paintSample(hit);e.preventDefault();
 });
@@ -1057,15 +1168,16 @@ function finishPaint(){
  if(!paintDragging)return;paintDragging=false;paintLast=null;
  const p=paintSessions.get(paintTarget);
  if(p&&paintBefore){p.undo.push(paintBefore);if(p.undo.length>8)p.undo.shift();if(paintStroke?.samples.length)p.strokes.push(paintStroke)}
+ vectorPaint?.strokeEnd(p,!!paintStroke?.samples?.length);
  paintBefore=null;paintStroke=null;paintCanvasPreview();paintMessage('Stroke completed; local recovery will save it automatically. You can also export JSON.');scheduleAutosave();
 }
 overlay.addEventListener('pointerup',finishPaint);overlay.addEventListener('pointercancel',finishPaint);
-$('paintUndo').onclick=()=>{finishPaint();const p=paintSessions.get(paintTarget);if(!p?.undo.length)return paintMessage('No recent stroke to undo.');p.ctx.putImageData(p.undo.pop(),0,0);p.tex.needsUpdate=true;p.strokes.pop();paintCanvasPreview();paintMessage('Paint stroke undone.')};
-$('paintClear').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return;if(!confirm('Clear paint on the selected mesh? Original GLB is unchanged.'))return;p.ctx.globalAlpha=1;p.ctx.globalCompositeOperation='source-over';p.ctx.clearRect(0,0,p.canvas.width,p.canvas.height);p.ctx.drawImage(p.baseCanvas,0,0);p.tex.needsUpdate=true;p.strokes=[];p.undo=[];paintCanvasPreview();paintMessage('Paint on active mesh cleared.')};
+$('paintUndo').onclick=()=>{finishPaint();const p=paintSessions.get(paintTarget);const vUndo=vectorPaint?.brushUndo(p);if(vUndo==='undone'){paintCanvasPreview();paintMessage('Last raster shading stroke undone.');return}if(vUndo==='blocked')return;if(!p?.undo.length)return paintMessage('No recent stroke to undo.');p.ctx.putImageData(p.undo.pop(),0,0);p.tex.needsUpdate=true;p.strokes.pop();paintCanvasPreview();paintMessage('Paint stroke undone.')};
+$('paintClear').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return;if(!confirm('Clear paint on the selected mesh? Original GLB is unchanged.'))return;p.ctx.globalAlpha=1;p.ctx.globalCompositeOperation='source-over';p.ctx.clearRect(0,0,p.canvas.width,p.canvas.height);p.ctx.drawImage(p.baseCanvas,0,0);p.tex.needsUpdate=true;p.strokes=[];p.undo=[];vectorPaint?.reset(p);paintCanvasPreview();paintMessage('Paint on active mesh cleared.')};
 $('paintPNG').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return paintMessage('Paint on the mesh first.');p.canvas.toBlob(b=>b?downloadRaw(b,originalName.replace(/\.glb$/i,'')+'_paint.png'):paintMessage('PNG could not be exported.'),'image/png')};
 $('paintJSON').onclick=()=>{
  finishPaint();const p=paintSessions.get(paintTarget);if(!p)return paintMessage('Start painting first.');
- const project={format:'better-together-3d-colab-paint-v0.1.3',app:'Better Together 3D CoLab',createdAt:new Date().toISOString(),modelFile:originalName,source:{sha256:fingerprint,sizeBytes:glbFileSize},meshIndex:meshes.indexOf(paintTarget),meshName:paintTarget.name||'',texture:{width:p.canvas.width,height:p.canvas.height,mimeType:'image/png',dataUrl:p.canvas.toDataURL('image/png')},brush:{color:$('paintColor').value,sizePx:Number($('paintSize').value),opacity:Number($('paintOpacity').value)/100},paintTracking:{strokeCount:p.strokes.length,strokes:p.strokes},notes:'Source geometry is not included. Original model is never overwritten.'};
+ const project={format:'better-together-3d-colab-paint-v0.1.3',app:'Better Together 3D CoLab',createdAt:new Date().toISOString(),modelFile:originalName,source:{sha256:fingerprint,sizeBytes:glbFileSize},meshIndex:meshes.indexOf(paintTarget),meshName:paintTarget.name||'',texture:{width:p.canvas.width,height:p.canvas.height,mimeType:'image/png',dataUrl:p.canvas.toDataURL('image/png')},brush:{color:$('paintColor').value,sizePx:Number($('paintSize').value),opacity:Number($('paintOpacity').value)/100},paintTracking:{strokeCount:p.strokes.length,strokes:p.strokes},vectorLayers:vectorPaint?.asJSON(p)||undefined,notes:'Source geometry is not included. Original model is never overwritten.'};
  download(originalName.replace(/\.glb$/i,'')+'_colab_paint.json',project);paintMessage('Paint JSON saved with the texture and 3D stroke tracking.');
 };
 function decodePaintPng(dataUrl){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('Saved PNG could not be read.'));img.src=dataUrl})}
@@ -1088,6 +1200,7 @@ $('paintImport').onchange=async e=>{
   if(!p)p=startPaintSession(paintTarget,tex.width);
   if(p.canvas.width!==tex.width){p.canvas.width=p.canvas.height=tex.width;$('paintResolution').value=String(tex.width)}
   p.ctx.clearRect(0,0,tex.width,tex.height);p.ctx.drawImage(img,0,0);p.tex.needsUpdate=true;p.strokes=d.paintTracking.strokes;p.undo=[];p.painted=true;
+  if(d.vectorLayers)await vectorPaint?.restore(p,d.vectorLayers,'url');else vectorPaint?.reset(p);
   if(/^#[0-9a-f]{6}$/i.test(d.brush?.color||''))$('paintColor').value=d.brush.color;
   if(Number.isFinite(d.brush?.sizePx)&&d.brush.sizePx>=1&&d.brush.sizePx<=110)$('paintSize').value=String(d.brush.sizePx);
   if(Number.isFinite(d.brush?.opacity)&&d.brush.opacity>=.05&&d.brush.opacity<=1)$('paintOpacity').value=String(Math.round(d.brush.opacity*100));
@@ -1108,6 +1221,16 @@ $('paintGLB').onclick=async()=>{
   downloadRaw(new Blob([bytes],{type:'model/gltf-binary'}),originalName.replace(/\.glb$/i,'')+'_painted.glb');paintMessage('Textured GLB exported separately. Reopen it in a viewer to verify textures and UV seams.');
  }catch(err){paintMessage('GLB export failed: '+err.message)}finally{for(const item of previous){item.m.material=item.material;item.m.visible=item.visible}}
 };
+vectorOutlinePreview=createVectorOutlinePreview({
+ THREE,camera,view,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getWorkspace:()=>workspace,getPanelOpen:()=>$('vectorPaintPanel').open
+});
+vectorPaint=installVectorPaintStudio({
+ $,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getModelName:()=>originalName,getModelHash:()=>fingerprint,getMeshIndex:()=>meshes.indexOf(paintTarget),
+ startSession:startPaintSession,finishPaint,selectMode,
+ setMode:v=>{mode=v},getMode:()=>mode,controls,overlay,hitForPaint,
+ preview:paintCanvasPreview,save:scheduleAutosave,notice:paintMessage,outlinePreview:vectorOutlinePreview
+});
+
 // MOTION: keyframes and basic skeletal posing built from the working Motion Check grammar.
 let animBones=[],animInitial=[],animInitialPositions=[],animFrames=[],animPositionFrames=[],animChosen=0,animFrame=-1,animPlaying=false,animTime=0,animStarted=0,animMixer=null,animAction=null,animClips=[];
 const POSE_SEGMENT=1.5;
@@ -1549,8 +1672,9 @@ function clearUnifiedBeforeLoad(){
  directorRepairReady=false;directorRepairClips=[];$('directorExportRepair').disabled=true;
  directorValidRecipe=null;$('agentPreview').disabled=true;$('agentRecipeStatus').textContent='Load the matching asset and validate the AI recipe again.';
  paintDragging=false;paintTarget=null;paintStroke=null;paintLast=null;paintBefore=null;
+ vectorPaint?.clearDisplay();
  clearPaintWireOverlays();
- for(const p of paintSessions.values())p.tex.dispose();paintSessions.clear();
+ for(const p of paintSessions.values())p.tex.dispose();paintSessions.clear();vectorPaint?.sync();
  animPlaying=false;if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=[];
  if(candidateRoot)scene.remove(candidateRoot);candidateRoot=null;candidateVisible=false;candidateName='';
  releaseReviewChangeGeometry();reviewChangeEnabled=false;
@@ -1619,7 +1743,7 @@ async function captureSession(){
   brush:{color:$('paintColor').value,size:Number($('paintSize').value),opacity:Number($('paintOpacity').value),resolution:Number($('paintResolution').value),targetIndex:paintTarget?meshes.indexOf(paintTarget):null},
   painting:[],
   motion:{boneNames:animBones.map(b=>b.name),frames:animFrames.map(frame=>frame.map(q=>q.slice())),positionFrames:animPositionFrames.map(frame=>frame.map(p=>p.slice())),positions:animBones.length?posePositions().map(p=>p.slice()):[],pose:animBones.length?poseData().map(q=>q.slice()):[],chosen:animChosen,frame:animFrame,time:animTime,clip:$('animClip').value||''}};
- for(const [m,p] of paintSessions){const index=meshes.indexOf(m);if(index<0)continue;data.painting.push({meshIndex:index,meshName:m.name||'',width:p.canvas.width,texture:await canvasBlob(p.canvas),strokes:p.strokes});}
+ for(const [m,p] of paintSessions){const index=meshes.indexOf(m);if(index<0)continue;data.painting.push({meshIndex:index,meshName:m.name||'',width:p.canvas.width,texture:await canvasBlob(p.canvas),strokes:p.strokes,vector:await vectorPaint?.forRecovery(p)||null});}
  return data;
 }
 function scheduleAutosave(){
@@ -1687,6 +1811,7 @@ async function applyRecoveredSession(s){
   if(bitmap.width!==item.width||bitmap.height!==item.width){bitmap.close();throw Error('Saved texture resolution is invalid.')}
   p.ctx.clearRect(0,0,item.width,item.width);p.ctx.drawImage(bitmap,0,0);bitmap.close();p.tex.needsUpdate=true;
   p.strokes=item.strokes;p.undo=[];p.painted=true;
+  if(item.vector)await vectorPaint?.restore(p,item.vector,'blob');
  }
  const brush=s.brush||{};
  if(/^#[a-f0-9]{6}$/i.test(brush.color||''))$('paintColor').value=brush.color;
@@ -2509,5 +2634,5 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
 const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal:()=>root,getHit:()=>lastHit});
-function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();updatePaintWireMatrices();renderer.render(scene,camera)}animate();
+function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();updatePaintWireMatrices();vectorOutlinePreview?.updateMatrices();renderer.render(scene,camera)}animate();
 </script></body></html>

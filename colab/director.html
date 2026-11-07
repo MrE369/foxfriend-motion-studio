@@ -43,7 +43,7 @@
 <button id="fileBrowseAll" type="button">📁 Android: Browse all model files</button>
 <input id="fileUnfiltered" type="file" hidden aria-label="Browse Android files to choose GLB or FBX without type filtering">
 <p class="hint">If an extracted GLB is greyed out in Android's picker, use Browse all files above. Load extracted GLB or FBX models; ZIPs must be extracted first.</p><div class="subpanel" id="unifiedStudioReturn" style="padding:9px;border-color:#548b96">
- <div class="row"><a href="./" style="color:#a7f2e7;font-weight:bold;min-height:40px;display:flex;align-items:center">← Unified Studio home</a><button id="sendToUnified" type="button">Send model to Studio</button></div>
+ <div class="row"><a href="./" id="unifiedStudioHome" style="color:#a7f2e7;font-weight:bold;min-height:40px;display:flex;align-items:center">← Unified Studio home</a><button id="sendToUnified" type="button">Send model to Studio</button></div>
  <p class="hint">This workshop is part of your installed CoLab app. Send a GLB copy to Studio for review. Editor-only selections and undo stay separate; export backups before switching.</p>
 </div><div id="status" role="status">Choose a GLB or FBX to inspect.</div><div id="stats">No model loaded.</div>
 
@@ -2690,6 +2690,7 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
 const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal:()=>root,getHit:()=>lastHit});
+$('unifiedStudioHome').addEventListener('click',event=>{if(window.parent===window)return;event.preventDefault();if(!confirm('Close Advanced Workshop? Export or send your current edits to Unified Studio first.'))return;window.parent.postMessage({kind:'coLab-close-workshop-v1'},location.origin);});
 // Unified Studio same-origin GLB bridge. Both editors still have separate scene state.
 window.addEventListener('message',async event=>{
  if(event.origin!==location.origin||event.source!==window.parent||

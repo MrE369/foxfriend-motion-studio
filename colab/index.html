@@ -953,7 +953,9 @@ $('directorSend').onclick=async()=>{
  }else{status('Open Director Lab in this panel before sending the model.')}
 };
 window.addEventListener('message',async event=>{
- if(event.origin!==location.origin || event.source!==$('directorEmbedFrame').contentWindow || event.data?.kind!=='coLab-model-transfer-v1')return;
+ if(event.origin!==location.origin || event.source!==$('directorEmbedFrame').contentWindow)return;
+ if(event.data?.kind==='coLab-close-workshop-v1'){$('directorEmbedClose').click();return;}
+ if(event.data?.kind!=='coLab-model-transfer-v1')return;
  if(!confirm('Director Lab is sending a model. Replace the current Unified Studio model? Export your work first.'))return;
  try{await loadGLBFile(new File([event.data.bytes],event.data.name||'director-transfer.glb',{type:'model/gltf-binary'}))}
  catch(err){status('Director transfer failed: '+err.message)}

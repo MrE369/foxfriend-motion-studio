@@ -23,6 +23,7 @@ test('Local upper arm rotates its nearby shoulder, not torso',()=>{
 });
 test('Local head and neck stay short',()=>{
  assert.deepEqual(reach(bone('Head',bone('Neck',bone('UpperChest'))),'local'),['Neck']);
+ assert.deepEqual(reach(bone('Head',bone('Neck',bone('UpperChest'))),'full'),['Neck']);
 });
 test('Local fingertip movement stays within hand and forearm',()=>{
  const tip=bone('RightFinger',bone('RightHand',bone('RightLowerArm',bone('RightUpperArm'))));
@@ -35,6 +36,16 @@ test('Unnamed or non-humanoid joints use conservative generic two-parent chain',
 });
 test('Skeleton root remains directly translatable and has no parents',()=>{
  assert.deepEqual(reach(bone('Root'),'local'),[]);
+});
+test('Release cache and version are aligned',()=>{
+ const sw=readFileSync(new URL('./sw.js',import.meta.url),'utf8');
+ const index=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+ assert.match(sw,/const CACHE='bt3d-colab-v0133-local-pose-reach-1'/);
+ assert.match(sw,/'.\/director.html'/);
+ assert.match(sw,/'.\/skeleton-points.js'/);
+ assert.match(index,/Unified Studio v0\.13\.3/);
+ assert.match(sw,/SKIP_WAITING/);
+ assert.match(sw,/Save & update/);
 });
 test('Motion Studio keeps both drag and nudge policies, mode buttons, and saved preference',()=>{
  const html=readFileSync(new URL('./director.html',import.meta.url),'utf8');

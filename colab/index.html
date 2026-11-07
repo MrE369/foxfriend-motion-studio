@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finn & Sylvara CoLab · Unified Studio v0.13</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finn & Sylvara CoLab · Unified Studio v0.13.1</title><style>
 *{box-sizing:border-box}body{margin:0;background:#101925;color:#eff7fc;font:15px system-ui}header{padding:11px 15px;background:#1b2a3b}h1{font-size:20px;margin:0 0 4px}small,.hint{color:#bacddd}.hint{font-size:13px;line-height:1.45;margin:6px 0 10px}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#view{height:calc(100dvh - 76px);min-height:350px;position:relative;background:#263648;overflow:hidden}#touch{position:absolute;inset:0;touch-action:none;pointer-events:none;z-index:2}#hud{position:absolute;top:8px;left:8px;pointer-events:none;background:#101925d9;border-radius:8px;padding:8px;font-size:12px;z-index:3}#hud{animation:colabHudFade 1.2s ease-in 10s forwards}@keyframes colabHudFade{to{opacity:0;visibility:hidden}}aside{background:#182536;padding:14px;max-height:calc(100dvh - 76px);overflow:auto}label{display:block;margin:12px 0 5px;font-weight:650}button,input,select,textarea{font:inherit;background:#2b4256;border:1px solid #71899b;color:#fff;border-radius:9px;min-height:43px;padding:10px;width:100%}button{cursor:pointer;margin:3px 0}.row{display:flex;gap:7px}.row>*{flex:1;min-width:0}.active{background:#186e67;border-color:#83f1d1}#status{background:#254052;color:#b8f0d1;border-radius:8px;padding:9px;margin:8px 0}#stats{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:#c8daea;background:#101a26;padding:9px;border-radius:8px}textarea{min-height:70px}.axiscontrol{display:grid;grid-template-columns:32px 1fr 90px 1fr;align-items:center;gap:7px;margin:6px 0}.axiscontrol output{text-align:center;font-variant-numeric:tabular-nums}.warn{color:#ffda91}#picked{font-size:13px;overflow-wrap:anywhere;background:#22394c;padding:9px;border-radius:8px}a{color:#a9ddfb}details{margin:8px 0}summary{cursor:pointer;font-weight:bold}@media(max-width:760px){main{display:flex;flex-direction:column}#view{position:sticky;top:0;z-index:9;height:41dvh;min-height:235px;box-shadow:0 8px 18px #0009}aside{overflow:visible;max-height:none}}
 #hitMarker{position:absolute;z-index:4;display:none;pointer-events:none;left:0;top:0;transform:translate(-50%,-50%);border:3px solid #121b25;background:#ffe16b;color:#101925;min-width:28px;height:28px;border-radius:50%;box-shadow:0 0 0 3px white,0 0 12px #000c;font-size:13px;line-height:22px;text-align:center;font-weight:900}#slots button[aria-pressed="true"]{outline:3px solid #ffffff;outline-offset:-6px}#importResult{display:none;margin-top:9px;padding:12px;border:2px solid #72f9a3;border-radius:9px;background:#123f39;color:#d6ffeb;line-height:1.5;font-size:15px;overflow-wrap:anywhere}
 #importResult.error{border-color:#ff9d59;background:#4b3029;color:#ffe4d8}
@@ -12,7 +12,7 @@
 #directorEmbedRegion #directorEmbedFrame{display:block;flex:1;width:100%!important;height:calc(100dvh - 125px)!important;min-height:230px!important;border:1px solid #71899b;border-radius:9px}
 #directorOverlayClose{min-height:48px;font-weight:bold;background:#265866}
 @media(max-width:760px){#workspaceTabs button{padding:8px 0;font-size:16px}#workspaceTabs button span{font-size:11px}#directorEmbedRegion:not([hidden]){padding:5px}#directorEmbedRegion #directorEmbedFrame{height:calc(100dvh - 110px)!important;min-height:0!important}#directorEmbedRegion .warn{font-size:12px;line-height:1.25}}
-</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#101925"><link rel="icon" type="image/png" href="./icon-192.png"></head><body><header><h1>Better Together 3D CoLab <small>· Unified Studio v0.13</small></h1><small>One installed app · Advanced workshop · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div></div><aside>
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#101925"><link rel="icon" type="image/png" href="./icon-192.png"></head><body><header><h1>Better Together 3D CoLab <small>· Unified Studio v0.13.1</small></h1><small>One installed app · Advanced workshop · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div></div><aside>
 <p class="hint" style="margin:3px 0 12px"><a href="./agent-guide.html" style="color:#91f0d8" target="_blank" rel="noopener">📷 New to collaborating with an AI agent? See our screenshot-first guide ↗</a></p>
 <label>1 · Load GLB or FBX</label><input id="file" type="file" accept=".glb,.fbx,model/gltf-binary,application/octet-stream"><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
@@ -20,7 +20,7 @@
 <button type="button" id="tabButtonPaint" role="tab" aria-selected="false" aria-controls="tabPaint" data-tab="paint">🖌<span>Paint</span></button>
 <button type="button" id="tabButtonAnimate" role="tab" aria-selected="false" aria-controls="tabAnimate" data-tab="animate">▶<span>Animate</span></button>
 <button type="button" id="tabButtonReview" role="tab" aria-selected="false" aria-controls="tabReview" data-tab="review">◫<span>Review</span></button>
-<button type="button" id="advancedToolsButton" title="Advanced Workshop: Assembly, Geometry, Sculpt, Vector Paint, AI recipes">🧰<span>Workshop</span></button>
+<button type="button" id="tabButtonWorkshop" role="tab" aria-selected="false" aria-controls="tabWorkshop" data-tab="workshop" title="Advanced Workshop: Assembly, Geometry, Sculpt, Vector Paint, AI recipes">🧰<span>Workshop</span></button>
 </nav>
 <details class="subpanel" id="recoveryPanel" aria-label="Local session recovery"><summary id="recoverySummary">Local recovery</summary>
  <p id="saveStatus" class="hint" aria-live="polite">Checking this device for a saved session…</p>
@@ -28,7 +28,7 @@
  <button id="forgetSession" disabled>Delete saved local copy</button>
  <p class="hint">Private to this browser on this device. CoLab stores the original GLB, selections, paint, and poses locally when space allows. Nothing is uploaded. JSON exports remain your portable backup; previous paint undo history and comparison GLBs are not restored.</p>
 </details>
-<details class="subpanel" id="appUpdates" aria-label="App updates"><summary>App updates · v0.13</summary>
+<details class="subpanel" id="appUpdates" aria-label="App updates"><summary>App updates · v0.13.1</summary>
  <button id="checkUpdates">Check for updates</button>
  <div id="updateReady" hidden><p class="hint">A new version is ready. Save your current model, export any Advanced Workshop project, then close that workshop before updating.</p><div class="row"><button id="applyUpdate">Save &amp; update</button><button id="laterUpdate">Later</button></div></div>
  <p id="updateStatus" class="hint" aria-live="polite">Updates never interrupt active work automatically.</p>
@@ -104,7 +104,15 @@
 <p class="hint">Open a separate proposed GLB and switch Original / Candidate, at the same camera position. This never changes the original model.</p>
 <label for="candidateFile">Proposed GLB</label><input id="candidateFile" type="file" accept=".glb,model/gltf-binary">
 <div class="row"><button id="candidateOriginal" class="active">Original</button><button id="candidateView">Candidate</button></div>
-<button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></div></section><details class="subpanel" id="directorBridgePanel" aria-label="Director Lab advanced tools"><summary>🧰 Advanced Workshop · Assembly, Geometry, Sculpt, Vector Paint & AI</summary>
+<button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></div></section>
+<section id="tabWorkshop" class="workspace" role="tabpanel" aria-labelledby="tabButtonWorkshop" hidden>
+ <h2>🧰 Advanced Workshop</h2>
+ <p class="hint">Assembly, Geometry, Sculpt, IK, Vector Paint and AI-assisted recipes are available within this same Unified Studio app.</p>
+ <div class="row"><button type="button" id="workshopOpenWorkspace">Open Advanced Workshop</button></div>
+ <p id="workshopStatus" class="hint" role="status">Workshop opens full-screen on this device. Export important work before switching editors: the original Studio and Advanced Workshop still have separate sessions.</p>
+ <p class="hint">On a low-memory device, you can <a href="./director.html">open Workshop as a full page in this same app</a>.</p>
+</section>
+<details class="subpanel" id="directorBridgePanel" aria-label="Director Lab advanced tools"><summary>🧰 Advanced Workshop · Assembly, Geometry, Sculpt, Vector Paint & AI</summary>
 <p class="hint">Advanced tools are included in Unified Studio: Assembly Lab, Geometry Workshop, Sculpt, IK, Vector Paint v0.2 and Codex paint recipes. Open Workshop from the top tabs. The advanced and original editors still maintain separate project sessions; GLB transfers are explicit, and portable backups are recommended.</p>
 <div class="row"><button type="button" id="directorSend">Send current model to Director</button></div><div class="row"><button type="button" id="directorEmbedOpen">Open Advanced Workshop</button><button type="button" id="directorEmbedClose" hidden>Close Advanced Workshop</button></div>
 <div id="directorEmbedRegion" hidden style="margin-top:10px"><button id="directorOverlayClose" type="button">← Back to Unified Studio</button><p class="warn">This workshop has a separate live editing session. GLB transfers do not synchronize selection, undo or animation tracks. Save or export before switching or installing an app update.</p>
@@ -295,7 +303,7 @@ importFeedback((merging?'Merged':'Restored')+' JSON successfully: '+filled+' col
 // Unified CoLab v0.10 workspaces. The inspector remains the baseline scene owner.
 // Separate Paint, Motion, and Review controls share that same loaded GLB and camera.
 // -----------------------------------------------------------------------------
-const WORKSPACES={inspect:'Six-color Geometry Inspector · tested B3.3 foundation',paint:'Direct UV painting · experimental integration',animate:'Rig posing and Motion Check · experimental integration',review:'Non-destructive geometry and GLB comparison'};
+const WORKSPACES={inspect:'Six-color Geometry Inspector · tested B3.3 foundation',paint:'Direct UV painting · experimental integration',animate:'Rig posing and Motion Check · experimental integration',review:'Non-destructive geometry and GLB comparison',workshop:'Assembly, Geometry, Sculpt, IK, Vector Paint and AI recipes · same installed app'};
 let workspace='inspect';
 let inspectorDisplay={style:'solid',context:0,visibility:'all',isolateAlpha:20};
 function rememberInspectDisplay(){
@@ -338,7 +346,7 @@ function showWorkspace(name){
   hitMarker.style.display=name==='inspect'?hitMarker.style.display:'none';
   $('paintStart').classList.remove('active');$('paintNavigate').classList.add('active');
 }
-for(const b of document.querySelectorAll('#workspaceTabs [data-tab]'))b.addEventListener('click',()=>showWorkspace(b.dataset.tab));
+for(const b of document.querySelectorAll('#workspaceTabs [data-tab]'))b.addEventListener('click',()=>{showWorkspace(b.dataset.tab);if(b.dataset.tab==='workshop')openAdvancedWorkshop();});
 // PAINT: independent 2D canvases for each UV-mapped, single-material mesh.
 // The Paint Studio's v0.1.3 stroke and JSON conventions are retained.
 const paintSessions=new Map();
@@ -927,19 +935,31 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
  });
 }else $('updateStatus').textContent='App updates work from the installed HTTPS version, not a downloaded HTML file.';
 
-// Isolated Director Lab bridge: keep Unified Studio's original renderer and recovery intact.
-$('directorEmbedOpen').addEventListener('click',()=>{
+// The Advanced Workshop iframe MUST live outside a closed <details> element.
+// A fixed child of closed details stays undisplayed even with hidden=false.
+// Make it a top-level overlay while retaining the existing same-origin editor.
+document.body.append($('directorEmbedRegion'));
+function openAdvancedWorkshop(){
+ if(workspace!=='workshop')showWorkspace('workshop');
  const region=$('directorEmbedRegion'),frame=$('directorEmbedFrame');
+ region.hidden=false;
+ $('directorEmbedOpen').hidden=true;$('directorEmbedClose').hidden=false;
+ $('workshopStatus').textContent='Workshop open. Use “Back to Unified Studio” to return.';
  if(!frame.getAttribute('src'))frame.src='./director.html';
- region.hidden=false;$('directorEmbedOpen').hidden=true;$('directorEmbedClose').hidden=false;
-});
-$('directorEmbedClose').addEventListener('click',()=>{
- $('directorEmbedRegion').hidden=true;$('directorEmbedOpen').hidden=false;$('directorEmbedClose').hidden=true;
- // Release the embedded renderer so two GPU-heavy scenes do not run concurrently.
- $('directorEmbedFrame').removeAttribute('src');
-});
-$('advancedToolsButton').addEventListener('click',()=>$('directorEmbedOpen').click());
-$('directorOverlayClose').addEventListener('click',()=>$('directorEmbedClose').click());
+}
+function closeAdvancedWorkshop(skipConfirm=false){
+ const region=$('directorEmbedRegion'),frame=$('directorEmbedFrame');
+ if(region.hidden)return;
+ if(!skipConfirm&&!confirm('Close Advanced Workshop? Save or export your Workshop edits first. Any unsaved changes in its independent session will be lost.'))return;
+ region.hidden=true;
+ $('directorEmbedOpen').hidden=false;$('directorEmbedClose').hidden=true;
+ frame.removeAttribute('src'); // Release the second WebGL renderer on phones.
+ $('workshopStatus').textContent='Workshop closed. Your original Studio session is still open; tap Open Advanced Workshop to return.';
+}
+$('directorEmbedOpen').addEventListener('click',openAdvancedWorkshop);
+$('workshopOpenWorkspace').addEventListener('click',openAdvancedWorkshop);
+$('directorEmbedClose').addEventListener('click',()=>closeAdvancedWorkshop(false));
+$('directorOverlayClose').addEventListener('click',()=>closeAdvancedWorkshop(false));
 // Explicit, same-origin model handoff. No automatic overwrites of either editor.
 $('directorSend').onclick=async()=>{
  if(!root){status('Load a GLB or FBX model first.');return}
@@ -954,7 +974,7 @@ $('directorSend').onclick=async()=>{
 };
 window.addEventListener('message',async event=>{
  if(event.origin!==location.origin || event.source!==$('directorEmbedFrame').contentWindow)return;
- if(event.data?.kind==='coLab-close-workshop-v1'){$('directorEmbedClose').click();return;}
+ if(event.data?.kind==='coLab-close-workshop-v1'){closeAdvancedWorkshop(true);return;}
  if(event.data?.kind!=='coLab-model-transfer-v1')return;
  if(!confirm('Director Lab is sending a model. Replace the current Unified Studio model? Export your work first.'))return;
  try{await loadGLBFile(new File([event.data.bytes],event.data.name||'director-transfer.glb',{type:'model/gltf-binary'}))}

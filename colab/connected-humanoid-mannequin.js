@@ -257,9 +257,13 @@ export function createConnectedHumanoidMannequin(THREE, scene) {
     if (!points.length) return null;
     return new THREE.Box3().setFromPoints(points).expandByScalar(.05 * scale);
   }
+  function pickableMeshes() {
+    if (!layer.visible || !figureLayer.visible || !rig) return [];
+    return figureLayer.children.filter(mesh => mesh.isMesh && mesh.visible);
+  }
   function status() { return {...diagnostic, mode: viewMode, translucent, segmentCount: segments.length}; }
   return {
-    setRig, setMode, setTranslucent, update, clear: reset, bounds, status,
+    setRig, setMode, setTranslucent, update, clear: reset, bounds, status, pickableMeshes,
     get mode(){return viewMode;}, get supported(){return diagnostic.supported;}
   };
 }

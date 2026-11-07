@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finn & Sylvara CoLab · Unified Advanced Workshop v0.13</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finn & Sylvara CoLab · Unified Advanced Workshop v0.13.2 preview</title><style>
 *{box-sizing:border-box}body{margin:0;background:#101925;color:#eff7fc;font:15px system-ui}header{padding:11px 15px;background:#1b2a3b}h1{font-size:20px;margin:0 0 4px}small,.hint{color:#bacddd}.hint{font-size:13px;line-height:1.45;margin:6px 0 10px}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#view{height:calc(100dvh - 76px);min-height:350px;position:relative;background:#263648;overflow:hidden}#touch{position:absolute;inset:0;touch-action:none;pointer-events:none;z-index:2}#hud{position:absolute;top:8px;left:8px;pointer-events:none;background:#101925d9;border-radius:8px;padding:8px;font-size:12px;z-index:3}#hud{animation:colabHudFade 1.2s ease-in 10s forwards}@keyframes colabHudFade{to{opacity:0;visibility:hidden}}aside{background:#182536;padding:14px;max-height:calc(100dvh - 76px);overflow:auto}label{display:block;margin:12px 0 5px;font-weight:650}button,input,select,textarea{font:inherit;background:#2b4256;border:1px solid #71899b;color:#fff;border-radius:9px;min-height:43px;padding:10px;width:100%}button{cursor:pointer;margin:3px 0}.row{display:flex;gap:7px}.row>*{flex:1;min-width:0}.active{background:#186e67;border-color:#83f1d1}#status{background:#254052;color:#b8f0d1;border-radius:8px;padding:9px;margin:8px 0}#stats{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:#c8daea;background:#101a26;padding:9px;border-radius:8px}textarea{min-height:70px}.axiscontrol{display:grid;grid-template-columns:32px 1fr 90px 1fr;align-items:center;gap:7px;margin:6px 0}.axiscontrol output{text-align:center;font-variant-numeric:tabular-nums}.warn{color:#ffda91}#picked{font-size:13px;overflow-wrap:anywhere;background:#22394c;padding:9px;border-radius:8px}a{color:#a9ddfb}details{margin:8px 0}summary{cursor:pointer;font-weight:bold}@media(max-width:760px){main{display:flex;flex-direction:column}#view{position:sticky;top:0;z-index:9;height:41dvh;min-height:235px;box-shadow:0 8px 18px #0009}aside{overflow:visible;max-height:none}#workspaceTabs{top:max(41dvh,235px);z-index:8;margin-top:-14px;padding-top:9px;padding-bottom:9px}}
 #hitMarker{position:absolute;z-index:4;display:none;pointer-events:none;left:0;top:0;transform:translate(-50%,-50%);border:3px solid #121b25;background:#ffe16b;color:#101925;min-width:28px;height:28px;border-radius:50%;box-shadow:0 0 0 3px white,0 0 12px #000c;font-size:13px;line-height:22px;text-align:center;font-weight:900}#slots button[aria-pressed="true"]{outline:3px solid #ffffff;outline-offset:-6px}#importResult{display:none;margin-top:9px;padding:12px;border:2px solid #72f9a3;border-radius:9px;background:#123f39;color:#d6ffeb;line-height:1.5;font-size:15px;overflow-wrap:anywhere}
 #importResult.error{border-color:#ff9d59;background:#4b3029;color:#ffe4d8}
@@ -258,7 +258,22 @@
  <p id="aiPaintStatus" role="status">Load a model, select one UV-ready surface, and connect a local folder to try headless Codex painting. Your current work will not be cleared.</p>
 </details>
 </section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
-<p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
+<p class="hint">Pose and animate your imported rig. The optional connected mannequin follows its actual bones; it never changes the original skeleton or exported GLB.</p>
+<details class="subpanel" id="refFigurePanel" open>
+ <summary>🧍 Connected humanoid mannequin · reference view</summary>
+ <p class="hint">Load your existing 26-joint rig above. Switch views without changing its bones, bind pose, or animation clips.</p>
+ <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+  <button type="button" data-ref-view="original" aria-pressed="true">Original guides</button>
+  <button type="button" data-ref-view="skeleton" aria-pressed="false">Skeleton lines</button>
+  <button type="button" data-ref-view="mannequin" aria-pressed="false">Connected mannequin</button>
+  <button type="button" data-ref-view="combined" aria-pressed="false">Both together</button>
+ </div>
+ <label style="display:flex;align-items:center;gap:8px;min-height:48px"><input id="refFigureTranslucent" type="checkbox"> Translucent mannequin</label>
+ <div class="row"><button type="button" id="refFigureFrame">Frame whole figure</button><button type="button" id="refFigureRest">Reset to rest pose</button></div>
+ <div class="row"><button type="button" id="refFigureIdle">▶ Quiet idle</button><button type="button" id="refFigureWave">▶ Gentle wave</button></div>
+ <p class="hint" id="refFigureStatus" role="status" aria-live="polite">Load an existing humanoid GLB to enable the connected mannequin.</p>
+ <p class="hint">The figure is only a temporary display. Large blue/yellow joint dots and the existing IK controls remain your posing handles. Root is a movement anchor, not a limb.</p>
+</details>
 <div id="allSkeletonPoints" class="subpanel" aria-label="Grab every skeleton joint">
  <h3>🔵 Pose every joint</h3>
  <p class="hint">Choose Pose to drag any blue dot or touch a body part. The camera stays locked while posing. Choose Orbit when you want to rotate the model. Every detected joint can also be chosen by name.</p>
@@ -398,6 +413,7 @@
 </section></aside></main><script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {createConnectedHumanoidMannequin} from './connected-humanoid-mannequin.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
 import {installVectorPaintStudio} from './vector-paint.js';
@@ -409,6 +425,7 @@ import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
 import {installAssemblyLab} from './assembly-tools.js';
 import {installGeometryWorkshop} from './geometry-workshop.js';
 const $=id=>document.getElementById(id),view=$('view'),scene=new THREE.Scene();scene.background=new THREE.Color('#263648');
+const humanoidReferenceView=createConnectedHumanoidMannequin(THREE,scene);
 const camera=new THREE.PerspectiveCamera(35,1,.001,1e5),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.domElement.style.touchAction='none';view.append(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;scene.add(new THREE.HemisphereLight(0xffffff,0x74869c,2.5));for(const [x,y,z,k] of [[3,5,6,2.1],[-4,2,-3,1.1]]){let l=new THREE.DirectionalLight(0xffffff,k);l.position.set(x,y,z);scene.add(l)}
 const overlay=$('touch'),ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),markGroup=new THREE.Group();scene.add(markGroup);
@@ -1529,6 +1546,55 @@ renderer.domElement.addEventListener('pointermove',e=>{
 for(const event of ['pointerup','pointercancel','lostpointercapture']){
  renderer.domElement.addEventListener(event,e=>{if(e.pointerId===ikDragPointer){ikDragPointer=null;ikDragPlane=null;ikDragOffset=null}},true);
 }
+function syncHumanoidFigureUI(){
+ const info=humanoidReferenceView.status();
+ for(const button of document.querySelectorAll('[data-ref-view]')){
+  const mode=button.dataset.refView;
+  button.disabled=!info.boneCount||((mode==='mannequin'||mode==='combined')&&!info.supported);
+  const active=mode===info.mode;button.classList.toggle('active',active);
+  button.setAttribute('aria-pressed',String(active));
+ }
+ $('refFigureTranslucent').disabled=!info.supported;
+ $('refFigureTranslucent').checked=info.translucent;
+ $('refFigureFrame').disabled=!info.boneCount;
+ $('refFigureRest').disabled=!info.boneCount;
+ $('refFigureIdle').disabled=!animClips.some(c=>/quiet[_ -]?idle/i.test(c.name||''));
+ $('refFigureWave').disabled=!animClips.some(c=>/gentle[_ -]?wave/i.test(c.name||''));
+ $('refFigureStatus').textContent=!info.boneCount
+  ?'No skeleton loaded. Choose the reference GLB above.'
+  :info.boneCount+' real bones · '+info.disconnected.length+' missing parent links · '+
+   (info.supported?'connected mannequin ready':'missing humanoid joints: '+info.missing.slice(0,5).join(', '))+
+   '. View: '+info.mode+'. Display-only; exports keep original rig.';
+}
+for(const button of document.querySelectorAll('[data-ref-view]')){
+ button.onclick=()=>{
+  humanoidReferenceView.setMode(button.dataset.refView);
+  humanoidReferenceView.update(workspace==='animate'&&!candidateVisible);
+  syncHumanoidFigureUI();scheduleAutosave();
+ };
+}
+$('refFigureTranslucent').onchange=e=>{
+ humanoidReferenceView.setTranslucent(e.target.checked);syncHumanoidFigureUI();scheduleAutosave();
+};
+$('refFigureFrame').onclick=()=>{
+ const box=humanoidReferenceView.bounds();
+ if(box)frameBounds(box);else status('Load a reference rig with bones to frame it.');
+};
+$('refFigureRest').onclick=()=>{
+ if(!animBones.length)return;
+ animationPause();
+ $('animClip').value='';$('animClip').dispatchEvent(new Event('change'));
+ $('animResetAll').click();
+ humanoidReferenceView.update(workspace==='animate'&&!candidateVisible);
+};
+function previewImportedHumanMotion(pattern){
+ const index=animClips.findIndex(clip=>pattern.test(clip.name||''));
+ if(index<0)return status('This animation is not included in the imported GLB.');
+ $('animClip').value=String(index);$('animClip').dispatchEvent(new Event('change'));
+ $('animPlay').click();
+}
+$('refFigureIdle').onclick=()=>previewImportedHumanMotion(/quiet[_ -]?idle/i);
+$('refFigureWave').onclick=()=>previewImportedHumanMotion(/gentle[_ -]?wave/i);
 function setupMotion(gltf){
  ikDragStop();animPlaying=false;animBones=[];animInitial=[];animInitialPositions=[];animFrames=[];animPositionFrames=[];animFrame=-1;animTime=0;
  if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=gltf.animations||[];
@@ -1543,6 +1609,11 @@ function setupMotion(gltf){
  animClips.forEach((clip,i)=>$('animClip').add(new Option(clip.name||'Animation '+(i+1),String(i))));
  if(animClips.length)animMixer=new THREE.AnimationMixer(root);
  drawPoseFrames();syncJoint();updateAnimationUI();setupJointPoints();
+ const diagnosis=humanoidReferenceView.setRig(root,animBones);
+ const humanoidSample=diagnosis.supported&&/(?:finn[_ -]?sylvara[_ -]?humanoid[_ -]?rig|humanoid[_ -]?rig)/i.test(originalName);
+ humanoidReferenceView.setMode(humanoidSample?'mannequin':'original');
+ humanoidReferenceView.update(workspace==='animate'&&!candidateVisible);
+ syncHumanoidFigureUI();
 }
 function updateAnimation(){
  if(animPlaying){const duration=animateDuration();if(!duration){animPlaying=false;return}const time=((performance.now()-animStarted)/1000)%duration;animationAt(time)}
@@ -1725,6 +1796,7 @@ function clearUnifiedBeforeLoad(){
  facePatchState.mesh=null;facePatchState.triangles=[];facePatchState.center=null;
  $('facePatchStatus').textContent='Start by selecting a facial surface in Inspect.';
  clearJointPoints();
+ humanoidReferenceView.clear();
  directorRepairReady=false;directorRepairClips=[];$('directorExportRepair').disabled=true;
  directorValidRecipe=null;$('agentPreview').disabled=true;$('agentRecipeStatus').textContent='Load the matching asset and validate the AI recipe again.';
  paintDragging=false;paintTarget=null;paintStroke=null;paintLast=null;paintBefore=null;
@@ -1798,7 +1870,7 @@ async function captureSession(){
   review:{showProposal,moveStep:$('moveStep').value,moveHistory:moveHistory.map(h=>({regionIndex:h.regionIndex,offset:h.offset.slice()}))},
   brush:{color:$('paintColor').value,size:Number($('paintSize').value),opacity:Number($('paintOpacity').value),resolution:Number($('paintResolution').value),targetIndex:paintTarget?meshes.indexOf(paintTarget):null},
   painting:[],
-  motion:{boneNames:animBones.map(b=>b.name),frames:animFrames.map(frame=>frame.map(q=>q.slice())),positionFrames:animPositionFrames.map(frame=>frame.map(p=>p.slice())),positions:animBones.length?posePositions().map(p=>p.slice()):[],pose:animBones.length?poseData().map(q=>q.slice()):[],chosen:animChosen,frame:animFrame,time:animTime,clip:$('animClip').value||''}};
+  motion:{displayMode:humanoidReferenceView.mode,translucent:humanoidReferenceView.status().translucent,boneNames:animBones.map(b=>b.name),frames:animFrames.map(frame=>frame.map(q=>q.slice())),positionFrames:animPositionFrames.map(frame=>frame.map(p=>p.slice())),positions:animBones.length?posePositions().map(p=>p.slice()):[],pose:animBones.length?poseData().map(q=>q.slice()):[],chosen:animChosen,frame:animFrame,time:animTime,clip:$('animClip').value||''}};
  for(const [m,p] of paintSessions){const index=meshes.indexOf(m);if(index<0)continue;data.painting.push({meshIndex:index,meshName:m.name||'',width:p.canvas.width,texture:await canvasBlob(p.canvas),strokes:p.strokes,vector:await vectorPaint?.forRecovery(p)||null});}
  return data;
 }
@@ -1877,7 +1949,10 @@ async function applyRecoveredSession(s){
  if(Number.isInteger(brush.targetIndex)&&paintEligible(meshes[brush.targetIndex])){paintTarget=meshes[brush.targetIndex];$('paintTarget').value=String(brush.targetIndex)}
  animFrames=pose?.frames||[];animPositionFrames=pose?.positionFrames||[];animFrame=Number.isInteger(pose?.frame)&&pose.frame>=0&&pose.frame<animFrames.length?pose.frame:-1;animChosen=Number.isInteger(pose?.chosen)&&pose.chosen>=0&&pose.chosen<animBones.length?pose.chosen:0;
  if(animBones.length){$('animBone').value=String(animChosen);if(Array.isArray(pose?.pose)&&pose.pose.length===animBones.length&&pose.pose.every(safeQuaternion))restorePose(pose.pose);restorePosePositions(pose.positions||animInitialPositions)}
- animPlaying=false;animTime=Number.isFinite(pose?.time)?Math.max(0,pose.time):0;drawPoseFrames();syncJoint();updateAnimationUI();
+ animPlaying=false;animTime=Number.isFinite(pose?.time)?Math.max(0,pose.time):0;
+ if(['original','skeleton','mannequin','combined'].includes(pose?.displayMode))humanoidReferenceView.setMode(pose.displayMode);
+ humanoidReferenceView.setTranslucent(!!pose?.translucent);
+ syncHumanoidFigureUI();drawPoseFrames();syncJoint();updateAnimationUI();
  const chosenPaint=Number.isInteger(brush.targetIndex)?brush.targetIndex:null;
  refreshPaintTargets();if(chosenPaint!==null&&paintEligible(meshes[chosenPaint])){paintTarget=meshes[chosenPaint];$('paintTarget').value=String(chosenPaint)}updatePaintUI();
  const target=WORKSPACES[s.workspace]?s.workspace:'inspect';
@@ -2543,7 +2618,11 @@ function jointGestureDown(event){
  let entry=jointDotsOn?jointPointHit(event):null,hitMethod=entry?'joint dot':'';
  if(!entry){
   const ray=jointPointerRay(event);
-  const hit=ray.intersectObjects(meshes,true).find(item=>item.object.visible&&item.object.isMesh);
+  // Clean mannequin is a display-only scene overlay, not in the imported
+  // mesh array. Include it as a touch target so artists can tap a limb,
+  // not just tiny joint dots, while keeping source geometry untouched.
+  const poseTargets=[...meshes,...humanoidReferenceView.pickableMeshes()];
+  const hit=ray.intersectObjects(poseTargets,true).find(item=>item.object.visible&&item.object.isMesh);
   if(hit){
    if(jointSurfacePin&&jointSelected>=0){entry=jointMarkers[jointSelected];hitMethod='pinned joint';}
    else{
@@ -2715,5 +2794,5 @@ $('sendToUnified').onclick=async()=>{
  }catch(err){status('Transfer failed: '+err.message)}
 };
 
-function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();updatePaintWireMatrices();vectorOutlinePreview?.updateMatrices();renderer.render(scene,camera)}animate();
+function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();humanoidReferenceView.update(workspace==='animate'&&!candidateVisible);updatePaintWireMatrices();vectorOutlinePreview?.updateMatrices();renderer.render(scene,camera)}animate();
 </script></body></html>

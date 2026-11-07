@@ -1,7 +1,7 @@
-// Finn & Sylvara CoLab Unified Studio v0.13 PWA.
+// Finn & Sylvara CoLab Unified Studio v0.13.2 PWA (staged, not published).
 // NEVER discard local IndexedDB project/recovery data. NEVER reload an editing session
 // until the artist taps Save & update in Unified Studio.
-const CACHE='bt3d-colab-v0131-workshop-navigation-1';
+const CACHE='bt3d-colab-v0132-connected-mannequin-1';
 const PREFIX='bt3d-colab-';
 const SHELL=[
  './','./index.html','./director.html','./manifest.webmanifest',
@@ -9,7 +9,8 @@ const SHELL=[
  './director-tools.js','./assembly-tools.js','./geometry-workshop.js',
  './sculpt-tools.js','./skeleton-points.js',
  './vector-paint.js','./vector-outline-preview.js',
- './ai-paint-bridge.js','./ai-paint-uv-guard.js'
+ './ai-paint-bridge.js','./ai-paint-uv-guard.js',
+ './connected-humanoid-mannequin.js'
 ];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));

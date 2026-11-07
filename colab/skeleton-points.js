@@ -17,9 +17,10 @@ export function skeletonAncestors(bone, maxParents=3){
  * use two local parents. Does not modify the skeleton or animation clips.
  */
 export function poseReachLimit(bone,mode='local'){
- if(mode==='full')return 3;
  const name=String(bone?.name||'');
+ // Preserve the v0.13.2 short head/neck chain in both reach modes.
  if(/(?:head|neck)$/i.test(name))return 1;
+ if(mode==='full')return 3;
  if(/(?:hand|foot|finger|toes?)$/i.test(name))return 2;
  if(/(?:shoulder|upperarm|lowerarm|upperleg|lowerleg)$/i.test(name))return 1;
  return 2;

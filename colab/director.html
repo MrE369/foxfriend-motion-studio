@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Better Together 3D CoLab · Director Lab · experimental v0.12</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finn & Sylvara CoLab · Unified Advanced Workshop v0.13</title><style>
 *{box-sizing:border-box}body{margin:0;background:#101925;color:#eff7fc;font:15px system-ui}header{padding:11px 15px;background:#1b2a3b}h1{font-size:20px;margin:0 0 4px}small,.hint{color:#bacddd}.hint{font-size:13px;line-height:1.45;margin:6px 0 10px}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#view{height:calc(100dvh - 76px);min-height:350px;position:relative;background:#263648;overflow:hidden}#touch{position:absolute;inset:0;touch-action:none;pointer-events:none;z-index:2}#hud{position:absolute;top:8px;left:8px;pointer-events:none;background:#101925d9;border-radius:8px;padding:8px;font-size:12px;z-index:3}#hud{animation:colabHudFade 1.2s ease-in 10s forwards}@keyframes colabHudFade{to{opacity:0;visibility:hidden}}aside{background:#182536;padding:14px;max-height:calc(100dvh - 76px);overflow:auto}label{display:block;margin:12px 0 5px;font-weight:650}button,input,select,textarea{font:inherit;background:#2b4256;border:1px solid #71899b;color:#fff;border-radius:9px;min-height:43px;padding:10px;width:100%}button{cursor:pointer;margin:3px 0}.row{display:flex;gap:7px}.row>*{flex:1;min-width:0}.active{background:#186e67;border-color:#83f1d1}#status{background:#254052;color:#b8f0d1;border-radius:8px;padding:9px;margin:8px 0}#stats{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:#c8daea;background:#101a26;padding:9px;border-radius:8px}textarea{min-height:70px}.axiscontrol{display:grid;grid-template-columns:32px 1fr 90px 1fr;align-items:center;gap:7px;margin:6px 0}.axiscontrol output{text-align:center;font-variant-numeric:tabular-nums}.warn{color:#ffda91}#picked{font-size:13px;overflow-wrap:anywhere;background:#22394c;padding:9px;border-radius:8px}a{color:#a9ddfb}details{margin:8px 0}summary{cursor:pointer;font-weight:bold}@media(max-width:760px){main{display:flex;flex-direction:column}#view{position:sticky;top:0;z-index:9;height:41dvh;min-height:235px;box-shadow:0 8px 18px #0009}aside{overflow:visible;max-height:none}#workspaceTabs{top:max(41dvh,235px);z-index:8;margin-top:-14px;padding-top:9px;padding-bottom:9px}}
 #hitMarker{position:absolute;z-index:4;display:none;pointer-events:none;left:0;top:0;transform:translate(-50%,-50%);border:3px solid #121b25;background:#ffe16b;color:#101925;min-width:28px;height:28px;border-radius:50%;box-shadow:0 0 0 3px white,0 0 12px #000c;font-size:13px;line-height:22px;text-align:center;font-weight:900}#slots button[aria-pressed="true"]{outline:3px solid #ffffff;outline-offset:-6px}#importResult{display:none;margin-top:9px;padding:12px;border:2px solid #72f9a3;border-radius:9px;background:#123f39;color:#d6ffeb;line-height:1.5;font-size:15px;overflow-wrap:anywhere}
 #importResult.error{border-color:#ff9d59;background:#4b3029;color:#ffe4d8}
@@ -6,10 +6,30 @@
 #viewNotice.error{background:#4b3029ef;border-color:#ff9d59}
 #autoConnected{width:24px;min-height:24px;height:24px;vertical-align:middle;accent-color:#49d9ff;margin-right:8px}
 
-[hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
+[hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px}
+#vectorEditorScroll{overflow:auto;max-height:480px;border:1px solid #57798e;border-radius:9px;background:#182737}
+#vectorEditor{display:block;width:100%;height:auto;max-width:none;aspect-ratio:1;touch-action:none;cursor:crosshair}
+#vectorPaintPanel button{min-height:42px}
+#vectorPaintPanel label{margin-top:8px}
+#vectorStatus{min-height:44px;padding:9px;background:#223d4c;border-radius:9px}
+ .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
 #directorPanel{background:#223a4c;border-color:#72cdb7}#directorPanel summary{padding:5px 0}#directorPanel h3{color:#a7ecdf}#directorPanel p{line-height:1.45}.directorFlow{margin:11px 0;padding:10px 12px;background:#122635;border:1px solid #476d7c;border-radius:10px}#directorPanel input[type=range]{padding:5px;min-height:32px;accent-color:#77e4cc}#directorPanel input[type=color]{padding:4px}#directorPanel output{font-variant-numeric:tabular-nums;color:#9af1d7}#directorPanel button:disabled{opacity:.4}#allSkeletonPoints{border-color:#6689a3;background:#20384c}#allSkeletonPoints input[type=search]{min-height:40px}#allSkeletonPoints p{line-height:1.45}
-#artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);max-height:62%;background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}#artReferencePin img{display:block;width:100%;max-height:calc(41dvh - 93px);object-fit:contain}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
-</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
+#artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);height:180px;max-height:calc(100% - 65px);background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}
+#artReferencePin img{display:block;width:100%;height:100%;max-height:none;object-fit:fill}
+#artReferencePin .refResizeHandle{position:absolute;z-index:2;display:grid;place-items:center;padding:0;width:29px;height:29px;min-width:29px;min-height:29px;border:2px solid #132632;border-radius:8px;background:#e2faf4;color:#112834;box-shadow:0 1px 5px #0009;font-size:17px;font-weight:900;pointer-events:auto;touch-action:none;user-select:none}
+#artReferencePin .refResizeHandle.width{left:0;top:calc(50% - 14px);cursor:ew-resize}
+#artReferencePin .refResizeHandle.height{left:calc(50% - 14px);bottom:0;cursor:ns-resize}
+#artReferencePin .refResizeHandle.corner{left:0;bottom:0;cursor:nesw-resize}
+#artReferencePin[hidden]{display:none!important}#artReferencePin.sampling{pointer-events:auto;cursor:crosshair;outline:3px solid #ffe16b}#artReferencePin.sampling img{cursor:crosshair;touch-action:manipulation}#artReferencePreview.sampling{cursor:crosshair;outline:3px solid #ffe16b;touch-action:manipulation}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
+#aiPaintPanel textarea{width:100%;min-height:90px;font-size:15px}
+#aiPaintPanel button{min-height:44px}
+#aiPaintPanel #aiPaintStatus{padding:10px;border:1px solid #548a9a;background:#1c3444;border-radius:8px;line-height:1.45}
+#aiPaintPreview{display:block;width:min(100%,340px);height:auto;aspect-ratio:1;border:2px solid #7bd3ca;background:#fff}
+#aiPaintPreview[hidden]{display:none}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Advanced Workshop v0.13 · unified</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison">
+<button class="refResizeHandle width" id="artRefResizeWidth" type="button" aria-label="Drag left or right to resize pinned image width" title="Resize width; drag left to expand">↔</button>
+<button class="refResizeHandle height" id="artRefResizeHeight" type="button" aria-label="Drag up or down to resize pinned image height" title="Resize height; drag down to expand">↕</button>
+<button class="refResizeHandle corner" id="artRefResizeCorner" type="button" aria-label="Drag diagonally to resize pinned reference width and height" title="Drag diagonally to resize">⤢</button></div></div><aside>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
 <button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
 <button type="button" id="tabButtonPaint" role="tab" aria-selected="false" aria-controls="tabPaint" data-tab="paint">🖌<span>Paint</span></button>
@@ -19,10 +39,13 @@
 </nav>
 
 <p class="hint" style="margin:3px 0 12px"><a href="https://mre369.github.io/foxfriend-motion-studio/colab/agent-guide.html" style="color:#91f0d8" target="_blank" rel="noopener">📷 New to collaborating with an AI agent? See our screenshot-first guide ↗</a></p>
-<label>1 · Load any GLB</label><input id="file" type="file" accept=".glb,.fbx,model/gltf-binary,application/octet-stream">
-<button id="fileBrowseAll" type="button">📁 Android: Browse all files for original GLB</button>
-<input id="fileUnfiltered" type="file" hidden aria-label="Browse Android files to choose original GLB without type filtering">
-<p class="hint">If an extracted GLB is greyed out in Android's picker, use Browse all files above. Only genuine GLB models are loaded; ZIPs must be extracted first.</p><button type="button" id="sendToUnified">Send current model to Unified Studio</button><p class="hint">When opened inside Unified Studio, this sends an editable GLB copy back after confirmation. Originals stay untouched. Animation clips may need separate reimport.</p><div id="status" role="status">Choose a GLB to inspect.</div><div id="stats">No model loaded.</div>
+<label>1 · Load GLB or FBX</label><input id="file" type="file" accept=".glb,.fbx,model/gltf-binary,application/octet-stream">
+<button id="fileBrowseAll" type="button">📁 Android: Browse all model files</button>
+<input id="fileUnfiltered" type="file" hidden aria-label="Browse Android files to choose GLB or FBX without type filtering">
+<p class="hint">If an extracted GLB is greyed out in Android's picker, use Browse all files above. Load extracted GLB or FBX models; ZIPs must be extracted first.</p><div class="subpanel" id="unifiedStudioReturn" style="padding:9px;border-color:#548b96">
+ <div class="row"><a href="./" style="color:#a7f2e7;font-weight:bold;min-height:40px;display:flex;align-items:center">← Unified Studio home</a><button id="sendToUnified" type="button">Send model to Studio</button></div>
+ <p class="hint">This workshop is part of your installed CoLab app. Send a GLB copy to Studio for review. Editor-only selections and undo stay separate; export backups before switching.</p>
+</div><div id="status" role="status">Choose a GLB or FBX to inspect.</div><div id="stats">No model loaded.</div>
 
 <details id="directorPanel" class="subpanel" open aria-label="Director's Desk">
  <summary>🎬 Director's Desk · describe, preview, collaborate</summary>
@@ -160,6 +183,15 @@
 <img id="artReferencePreview" alt="Loaded concept art" hidden>
 <p id="artReferenceSummary" role="status">No reference loaded. Your artwork stays on this device until you choose to share it.</p>
 <div class="row"><button id="artReferenceToggle" type="button" disabled>Pin image over viewer</button><button id="artReferenceRemove" type="button" disabled>Remove reference</button></div>
+<label for="artReferenceScale">Pinned width: <output id="artReferenceScaleValue">34%</output> of viewer</label>
+<input id="artReferenceScale" type="range" min="15" max="95" step="1" value="34" disabled aria-label="Resize pinned reference width">
+<label for="artReferenceHeight">Pinned height: <output id="artReferenceHeightValue">35%</output> of viewer</label>
+<input id="artReferenceHeight" type="range" min="12" max="95" step="1" value="35" disabled aria-label="Resize pinned reference height">
+<label style="display:flex;align-items:center;gap:8px"><input id="artReferenceLockAspect" type="checkbox" style="width:auto" disabled> Keep original image proportions (optional)</label>
+<p class="hint">Drag ↔ on the left edge, ↕ on the bottom edge, or ⤢ in the lower-left corner of the pinned picture. Unchecked lets you stretch width and height independently; check the box to preserve the original proportions. Neither changes the source image.</p>
+<button id="artReferenceEyedropper" type="button" disabled>🎯 Pick brush color from reference</button>
+<p class="hint" id="artReferenceSampleStatus" role="status">Choose Pick brush color, then tap the pinned image or the preview above. Painting on the character will stay unchanged.</p>
+
 <p class="hint">Reference art is visual guidance; it does not automatically repaint the model or send the image to Aster. Screenshots from your phone can show us both the drawing and 3D result.</p>
 </div>
 <div id="firstPaintGuide">
@@ -170,17 +202,61 @@
 </div>
 <label for="paintTarget">Selected surface · advanced mesh choice</label><select id="paintTarget"><option value="">Load a model</option></select>
 <div class="row"><button id="paintNavigate" class="active">✋ Navigate</button><button id="paintStart">🖌 Paint</button></div>
+<div class="row"><button id="paintWireToggle" type="button" aria-pressed="false">▦ Shaded + wire guide</button><button id="paintUvToggle" type="button" aria-pressed="false">▤ Show UV lines</button></div>
+<p class="hint" id="paintWireHelp">Show dark or light mesh edges directly over the textured model while painting. The guide is visual only and never becomes part of your exported texture. Leave the separate UV-lines preview off for better performance.</p>
+<div class="row"><label for="paintWireOpacity" style="flex:2">Guide visibility <output id="paintWireOpacityValue">45%</output><input id="paintWireOpacity" type="range" min="10" max="90" value="45" step="5"></label><label for="paintWireTone" style="flex:1">Line color<select id="paintWireTone"><option value="dark">Dark</option><option value="light">Light</option></select></label></div>
 <label for="paintColor">Brush color</label><div class="row"><input type="color" id="paintColor" value="#e78b9c" aria-label="Brush color"><button id="paintEyedropper" type="button">🎯 Eyedropper · tap model</button></div>
 <p class="hint" id="paintSampleStatus" role="status">Sample a color from the model's texture without applying paint.</p>
 <label for="paintSize">Brush size: <output id="paintSizeValue">16</output> texture pixels</label><input id="paintSize" type="range" min="1" max="110" value="16">
 <label for="paintOpacity">Opacity: <output id="paintOpacityValue">35%</output></label><input id="paintOpacity" type="range" min="5" max="100" value="35">
-<label for="paintResolution">Texture resolution</label><select id="paintResolution"><option value="1024">1024 × 1024 (phone-friendly)</option><option value="2048">2048 × 2048 (more detail)</option></select>
+<label for="paintResolution">Texture resolution · can resize existing painting</label><select id="paintResolution"><option value="1024">1024 × 1024 (lower memory)</option><option value="2048">2048 × 2048 (sharper details)</option></select>
+<p class="hint">You can now change the resolution after painting. CoLab will ask before resizing existing artwork. The vector forms stay editable; raster shading is resampled and previous stroke undo history is cleared. Export a Paint Project JSON backup first.</p>
 <div class="row"><button id="paintUndo">↶ Undo stroke</button><button id="paintClear">Reset paint</button></div>
 <label>Painted UV texture</label><canvas id="paintPreview" width="1024" height="1024"></canvas>
 <div class="row"><button id="paintPNG">⬇ PNG</button><button id="paintGLB">⬇ Test GLB</button></div>
 <p class="hint" id="paintQualityNote" role="status">The paint canvas is phone-friendly. Larger original textures may lose detail in a test export; CoLab will warn you before that happens.</p>
 <button id="paintJSON">⬇ Paint Project JSON</button><label for="paintImport">Restore Paint Project JSON</label><input id="paintImport" type="file" accept=".json,application/json">
 <p class="hint" id="paintStatus">Painting requires UV coordinates. Paint JSON includes sampled 3D hit positions; textured GLB is a new export, never an overwrite. A brush stroke can affect overlapping UV islands.</p>
+<details id="vectorPaintPanel" class="subpanel" aria-label="Vector painting experimental tools">
+ <summary>✒ Vector Forms · precise outline and fill (experiment)</summary>
+ <p class="hint">Draw precise, editable outlines on the 3D character or enlarged UV canvas. Close a form to fill it with flat color. Add more forms for hard-edged shadows. The regular brush paints on top as raster shading.</p>
+ <div class="row"><button id="vectorNew" type="button">＋ New outline</button><button id="vectorTrace" type="button" aria-pressed="false">Trace points on 3D model</button></div>
+ <p class="hint">Tap corners or hold and drag directly on the 3D character to trace continuously. Your yellow outline and control points appear on the model as you draw; green dashes preview the closing edge. Navigate rotates the model without changing the outline. UV seams may require separate forms.</p>
+ <div class="row"><button id="vectorClose" type="button">✓ Close outline & fill</button><button id="vectorUndoPoint" type="button">↶ Remove last point</button></div>
+ <label for="vectorShapeSelect">Select an editable vector form</label><select id="vectorShapeSelect"><option value="-1">New outline / unselected</option></select>
+ <div class="row"><label for="vectorColor">Fill color <input id="vectorColor" type="color" value="#587f67"></label><button type="button" id="vectorUseBrushColor">Use current brush color</button></div>
+ <div class="row"><label for="vectorBakeQuality" style="flex:1">Vector bake precision
+<select id="vectorBakeQuality"><option value="1">Fast · 1×</option><option value="2" selected>Crisp · 2×</option><option value="4">Detailed · 4×</option></select></label>
+<label for="vectorEdgeMode" style="flex:1">Edge rendering
+<select id="vectorEdgeMode"><option value="crisp">Crisp antialias</option><option value="hard">Hard pixel cutoff</option></select></label></div>
+<p class="hint">Vector edges are calculated at higher precision in cropped regions, then baked into your texture. For the cleanest result choose 2048 × 2048 above with Crisp · 2×. Hard pixel cutoff intentionally removes soft edge pixels and may look more jagged when enlarged. CoLab limits temporary memory for dense forms.</p>
+<label for="vectorOpacity">Form opacity: <output id="vectorOpacityValue">100%</output></label>
+ <input id="vectorOpacity" type="range" min="5" max="100" value="100" step="5">
+ <div class="row"><label for="vectorCurve" style="flex:1">Outline style<select id="vectorCurve"><option value="corners">Straight / hard edge</option><option value="smooth">Smooth Bézier curve</option></select></label>
+ <label for="vectorOutline" style="flex:1">Line thickness (px)<select id="vectorOutline"><option value="0">No outline</option><option value="1">1</option><option value="3">3</option><option value="6">6</option><option value="10">10</option></select></label></div>
+ <div class="row"><button id="vectorUndo" type="button">↶ Undo vector edit</button><button id="vectorDelete" type="button">Delete selected form</button></div>
+ <div class="row"><button id="vectorLower" type="button">↓ Move form backward</button><button id="vectorRaise" type="button">↑ Move form forward</button></div>
+ <label for="vectorZoom">UV editor zoom: <output id="vectorZoomValue">100%</output></label><input id="vectorZoom" type="range" min="100" max="300" step="25" value="100">
+ <p class="hint">Tap the UV editor to place exact corners. Select a saved form and drag its cyan handles to correct the outline. Zoom for precision. Lines here are guides, not paint.</p>
+ <div id="vectorEditorScroll"><canvas id="vectorEditor" width="1024" height="1024" aria-label="Editable vector outlines on UV texture"></canvas></div>
+ <div class="row"><button id="vectorExport" type="button">⬇ Export vector paths JSON</button><label style="flex:1">⬆ Import vector paths JSON<input id="vectorImport" type="file" accept=".json,application/json"></label></div>
+<p class="hint">For Codex-assisted painting, the paths-only JSON keeps vector points editable and validates the model fingerprint and selected mesh before applying anything.</p>
+<p id="vectorStatus" role="status">Select a UV-ready mesh and choose New outline to begin. Work stays local and can be exported as an editable Paint Project JSON.</p>
+</details>
+<details id="aiPaintPanel" class="subpanel">
+ <summary>🤖 Codex Paint Bridge · headless recipe test</summary>
+ <p class="hint"><strong>No clicking around the model by Codex.</strong> CoLab exports a model and task to a folder you choose. Codex runs independently and writes a paint-recipe JSON there. CoLab checks it every 3 seconds, previews it, and paints only after you approve. CoLab itself uses no AI API key or cloud upload; Codex separately processes the files through its own authenticated service. There are no automatic paint commits.</p>
+ <label for="aiPaintInstruction">Tell Codex which form to paint</label>
+ <textarea id="aiPaintInstruction" rows="3">Start with ONE small flat-color panel on Sylvara's clothing, matching the supplied reference. Avoid face, skin, and hair. Do not fill any other surface. UV overlap may cause color spill, so use a small test shape.</textarea>
+ <div class="row"><button id="aiPaintConnect" type="button">📁 Connect local folder (Chrome)</button><button id="aiPaintExport" type="button">⬇ Export paint task</button></div>
+ <p class="hint">Codex reads <code>colab-paint-task.json</code>, <code>colab-model.glb</code>, <code>colab-codex-instructions.txt</code>, and the optional <code>colab-reference.png</code>. It writes <code>colab-paint-recipe.json</code> into that folder. To launch Codex headlessly, open a terminal in the chosen folder and run: <code>codex exec --sandbox workspace-write "Read colab-codex-instructions.txt and produce the recipe."</code> CoLab detects the reply without needing Codex to click anything.</p>
+ <div class="row"><button id="aiPaintCheck" type="button">↻ Check for recipe</button><label style="flex:1">Or import JSON<input id="aiPaintRecipeFile" type="file" accept=".json,application/json"></label></div>
+ <p class="hint" id="aiPaintTaskId">No task exported yet.</p>
+ <p class="hint">A recipe can only add up to 32 editable UV polygon fills on the selected mesh. An approximate UV overlap check rejects detected conflicts. It cannot prove all UV islands are unique; always inspect the full character. This experiment doesn't support unattended whole-character painting yet.</p>
+ <label>Codex recipe preview — UV texture, not committed</label><canvas id="aiPaintPreview" width="512" height="512" hidden aria-label="Codex recipe preview on UV texture"></canvas>
+ <div class="row"><button id="aiPaintApprove" type="button" disabled>✓ Approve &amp; apply paint</button><button id="aiPaintReject" type="button">Discard recipe</button></div>
+ <p id="aiPaintStatus" role="status">Load a model, select one UV-ready surface, and connect a local folder to try headless Codex painting. Your current work will not be cleared.</p>
+</details>
 </section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
 <p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
 <div id="allSkeletonPoints" class="subpanel" aria-label="Grab every skeleton joint">
@@ -324,6 +400,9 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import {installVectorPaintStudio} from './vector-paint.js';
+import {createVectorOutlinePreview} from './vector-outline-preview.js';
+import {installHeadlessPaintBridge} from './ai-paint-bridge.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {relaxSelectedSurface} from './director-tools.js';
 import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
@@ -531,16 +610,22 @@ $('exportMoves').onclick=()=>{if(!root)return status('Load GLB first');const pay
 updateMoveUI();
 function hashBuffer(buffer){return crypto.subtle.digest('SHA-256',buffer).then(arr=>[...new Uint8Array(arr)].map(v=>v.toString(16).padStart(2,'0')).join(''))}
 async function loadGLBFile(f,fromRecovery=false){if(!f)return false;
- if(!fromRecovery&&/\.fbx$/i.test(f.name)){
+ if(!fromRecovery && /\.fbx$/i.test(f.name)){
   try{
-   status('Converting FBX for editing…');
+   status('Importing FBX '+f.name+' (converting to editable GLB)…');
    const bytes=await f.arrayBuffer();
    const model=new FBXLoader().parse(bytes,'');
-   const clips=model.animations||[];
-   const binary=await new GLTFExporter().parseAsync(model,{binary:true,animations:clips,onlyVisible:false});
-   const converted=new File([binary],f.name.replace(/\.fbx$/i,'.glb'),{type:'model/gltf-binary'});
+   let glb;
+   try{
+    glb=await new GLTFExporter().parseAsync(model,{binary:true,animations:model.animations||[],onlyVisible:false});
+   }catch(animatedError){
+    // Import the geometry even if an unsupported FBX animation track cannot be exported.
+    glb=await new GLTFExporter().parseAsync(model,{binary:true,onlyVisible:false});
+    status('FBX animation conversion was not supported; importing mesh and rig without animation clips.');
+   }
+   const converted=new File([glb],f.name.replace(/\.fbx$/i,'.glb'),{type:'model/gltf-binary'});
    const loaded=await loadGLBFile(converted,false);
-   if(loaded)status('FBX imported as editable GLB. Export GLB to keep your changes; the original FBX is untouched.');
+   if(loaded)status('FBX imported for editing. Export your edits as GLB; the original FBX remains unchanged.');
    return loaded;
   }catch(err){status('FBX import failed: '+err.message);return false}
  }
@@ -562,6 +647,7 @@ if(!fromRecovery)await recoveryReady;dismissImportNotice();$('importResult').sty
  // unrestricted picker uses the SAME model loader with a file signature check.
 async function verifyGLBFile(f){
  if(!f)throw Error('No file selected.');
+ if(/\.fbx$/i.test(f.name)){if(f.size<32)throw Error('FBX file is unusually small or empty.');return true;}
  const header=await f.slice(0,12).arrayBuffer();
  if(header.byteLength<12)throw Error('The selected file is too short to be a GLB.');
  const h=new DataView(header);
@@ -609,6 +695,9 @@ const WORKSPACES={inspect:'Six-color Geometry Inspector · tested B3.3 foundatio
 let assemblyLab=null;
 let workspace='inspect';
 let inspectorDisplay={style:'solid',context:0,visibility:'all',isolateAlpha:20};
+let paintWireEnabled=false,paintUvEnabled=false;
+const paintWireCache=new Map(); // Extra draw-pass geometry is shared, never modified or exported.
+
 function rememberInspectDisplay(){
  inspectorDisplay={style:viewStyle,context:Number($('context').value),visibility:visibilityMode,isolateAlpha:Number($('isolateAlpha').value)};
 }
@@ -632,6 +721,7 @@ function showWorkspace(name){
 
   if(name!=='review'&&candidateVisible)showCandidate(false);
   workspace=name;
+  vectorOutlinePreview?.refresh();
   for(const key of Object.keys(WORKSPACES)){
     $('tab'+key[0].toUpperCase()+key.slice(1)).hidden=key!==name;
     const b=$('tabButton'+key[0].toUpperCase()+key.slice(1));
@@ -639,6 +729,7 @@ function showWorkspace(name){
   }
   $('workspaceHint').textContent=WORKSPACES[name];
   if(root){renderMarks();} // restores model visibility and tab-specific preview without touching the saved selections.
+  syncPaintWireOverlay();
   if(name==='assemble'){
     assemblyLab?.setActive(true);
     markGroup.visible=false;moveGroup.visible=false;previewGroup.visible=false;
@@ -662,18 +753,143 @@ for(const b of document.querySelectorAll('#workspaceTabs [data-tab]'))b.addEvent
 // PAINT: independent 2D canvases for each UV-mapped, single-material mesh.
 // The Paint Studio's v0.1.3 stroke and JSON conventions are retained.
 const paintSessions=new Map();
+let vectorPaint=null,vectorOutlinePreview=null,aiPaintBridge=null;
 let paintTarget=null,paintDragging=false,paintLast=null,paintBefore=null,paintStroke=null;
 const paintPrev=$('paintPreview'),paintPrevCtx=paintPrev.getContext('2d');
 function paintMessage(text){$('paintStatus').textContent=text;status(text)}
 function downloadRaw(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000)}
 function paintCanvasPreview(){
-  const p=paintSessions.get(paintTarget);if(!p){paintPrevCtx.clearRect(0,0,paintPrev.width,paintPrev.height);return}
-  paintPrev.width=p.canvas.width;paintPrev.height=p.canvas.height;paintPrevCtx.drawImage(p.canvas,0,0);
+ const p=paintSessions.get(paintTarget);
+ if(!p){paintPrevCtx.clearRect(0,0,paintPrev.width,paintPrev.height);return}
+ paintPrev.width=p.canvas.width;paintPrev.height=p.canvas.height;
+ paintPrevCtx.drawImage(p.canvas,0,0);
+ if(paintUvEnabled&&paintTarget?.geometry?.attributes?.uv){
+  const geometry=paintTarget.geometry,uv=geometry.attributes.uv,ix=geometry.index;
+  const triangles=Math.min(150000,Math.floor((ix?ix.count:uv.count)/3));
+  paintPrevCtx.save();paintPrevCtx.strokeStyle='rgba(0,0,0,.8)';paintPrevCtx.lineWidth=Math.max(1,p.canvas.width/1024);
+  paintPrevCtx.beginPath();
+  for(let t=0;t<triangles;t++){
+   for(let v=0;v<3;v++){
+    const n=ix?ix.getX(t*3+v):t*3+v;
+    const x=uv.getX(n)*paintPrev.width,y=(1-uv.getY(n))*paintPrev.height;
+    if(v===0)paintPrevCtx.moveTo(x,y);else paintPrevCtx.lineTo(x,y);
+   }
+   paintPrevCtx.closePath();
+  }
+  paintPrevCtx.stroke();paintPrevCtx.restore();
+ }
 }
-let artReferenceUrl=null,artReferenceName='',artReferencePinned=false;
+let artReferenceUrl=null,artReferenceName='',artReferencePinned=false,artReferenceSampling=false,artReferenceBitmap=null;
+function setReferenceSampling(enabled){
+ artReferenceSampling=!!enabled&&!!artReferenceBitmap;
+ $('artReferencePin').classList.toggle('sampling',artReferenceSampling);
+ $('artReferencePreview').classList.toggle('sampling',artReferenceSampling);
+ $('artReferenceEyedropper').textContent=artReferenceSampling?'Cancel reference eyedropper':'🎯 Pick brush color from reference';
+ if(artReferenceSampling)$('artReferenceSampleStatus').textContent='Tap the image in the viewer, or the full preview above, to choose a brush color.';
+}
+function sampleReferencePixel(event,img){
+ if(!artReferenceSampling||!artReferenceBitmap)return;
+ const picture=artReferenceBitmap;
+ const bounds=img.getBoundingClientRect();
+ // object-fit:contain preserves the entire image and adds letterboxing where needed.
+ // Pinned image can be stretched freely; the standard preview still uses contain.
+ const pinned=img.id==='artReferencePinImage';
+ const scale=pinned?null:Math.min(bounds.width/picture.width,bounds.height/picture.height);
+ const drawnW=pinned?bounds.width:picture.width*scale,drawnH=pinned?bounds.height:picture.height*scale;
+ const left=bounds.left+(bounds.width-drawnW)/2,top=bounds.top+(bounds.height-drawnH)/2;
+ const x=Math.floor((event.clientX-left)/drawnW*picture.width),
+       y=Math.floor((event.clientY-top)/drawnH*picture.height);
+ if(x<0||y<0||x>=picture.width||y>=picture.height){$('artReferenceSampleStatus').textContent='Tap directly on the image to sample a color.';return}
+ try{
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  // The loaded image is a locally selected object URL, not a remote image.
+  ctx.drawImage(picture,x,y,1,1,0,0,1,1);
+  const pixel=ctx.getImageData(0,0,1,1).data;
+  if(pixel[3]===0){$('artReferenceSampleStatus').textContent='That pixel is transparent. Try another color.';return}
+  const hex='#'+[pixel[0],pixel[1],pixel[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+  $('paintColor').value=hex;
+  $('paintSampleStatus').textContent='Brush color '+hex+' picked from reference image. No paint applied.';
+  $('artReferenceSampleStatus').textContent='Selected '+hex+' from reference image. You can now paint with this color.';
+  setReferenceSampling(false);
+  event.preventDefault();event.stopPropagation();
+ }catch(err){$('artReferenceSampleStatus').textContent='Could not sample the image: '+err.message;setReferenceSampling(false)}
+}
+// The pin is anchored at top-right. Left / bottom / lower-left touch handles
+// grow it in the directions artists naturally drag, without touching the model.
+let artRefWidth=0,artRefHeight=0,artRefResize=null;
+function refBounds(){
+ return {width:Math.max(100,view.clientWidth-24),height:Math.max(100,view.clientHeight-70)};
+}
+function applyArtRefSize(width,height,changed='both'){
+ const b=refBounds(),aspect=(artReferenceBitmap?.width||1)/(artReferenceBitmap?.height||1);
+ let w=Math.max(86,Math.min(b.width,width)),h=Math.max(86,Math.min(b.height,height));
+ if($('artReferenceLockAspect').checked){
+  if(changed==='height')w=h*aspect;
+  else if(changed==='corner'){
+   const ratioWidth=(w||1)/(artRefWidth||w),ratioHeight=(h||1)/(artRefHeight||h);
+   if(Math.abs(ratioHeight-1)>Math.abs(ratioWidth-1))w=h*aspect;else h=w/aspect;
+  }else h=w/aspect;
+  if(w>b.width){w=b.width;h=w/aspect}
+  if(h>b.height){h=b.height;w=h*aspect}
+  if(w<86){w=86;h=w/aspect}
+  if(h<86){h=86;w=h*aspect}
+ }
+ artRefWidth=Math.round(w);artRefHeight=Math.round(h);
+ $('artReferencePin').style.width=artRefWidth+'px';
+ $('artReferencePin').style.height=artRefHeight+'px';
+ const wPct=Math.round(artRefWidth/Math.max(1,view.clientWidth)*100),
+       hPct=Math.round(artRefHeight/Math.max(1,view.clientHeight-54)*100);
+ $('artReferenceScale').value=String(Math.min(95,Math.max(15,wPct)));
+ $('artReferenceScaleValue').textContent=wPct+'%';
+ $('artReferenceHeight').value=String(Math.min(95,Math.max(12,hPct)));
+ $('artReferenceHeightValue').textContent=hPct+'%';
+}
+function initializeArtRefSize(){
+ const b=refBounds(),a=(artReferenceBitmap?.width||1)/(artReferenceBitmap?.height||1);
+ const w=Math.min(b.width*0.34,Math.max(115,Math.min(230,b.width*0.34)));
+ applyArtRefSize(w,Math.min(b.height,w/a),'width');
+}
+$('artReferenceScale').oninput=e=>{
+ const w=view.clientWidth*Number(e.target.value)/100;
+ applyArtRefSize(w,artRefHeight||130,'width');
+};
+$('artReferenceHeight').oninput=e=>{
+ const h=(view.clientHeight-54)*Number(e.target.value)/100;
+ applyArtRefSize(artRefWidth||150,h,'height');
+};
+$('artReferenceLockAspect').onchange=()=>applyArtRefSize(artRefWidth||155,artRefHeight||155,'width');
+for(const [id,axis] of [['artRefResizeWidth','width'],['artRefResizeHeight','height'],['artRefResizeCorner','corner']]){
+ const handle=$(id);
+ handle.addEventListener('pointerdown',e=>{
+  if(!artReferencePinned||!artReferenceBitmap)return;
+  artRefResize={axis,id:e.pointerId,x:e.clientX,y:e.clientY,w:artRefWidth,h:artRefHeight};
+  handle.setPointerCapture(e.pointerId);
+  e.preventDefault();e.stopPropagation();
+ });
+ handle.addEventListener('pointermove',e=>{
+  if(!artRefResize||artRefResize.id!==e.pointerId)return;
+  const r=artRefResize;
+  const w=r.w-(e.clientX-r.x),h=r.h+(e.clientY-r.y);
+  applyArtRefSize(axis==='height'?r.w:w,axis==='width'?r.h:h,axis);
+  e.preventDefault();e.stopPropagation();
+ });
+ const end=e=>{
+  if(artRefResize?.id===e.pointerId)artRefResize=null;
+  e.stopPropagation();
+ };
+ handle.addEventListener('pointerup',end);
+ handle.addEventListener('pointercancel',end);
+}
+$('artReferenceEyedropper').onclick=()=>setReferenceSampling(!artReferenceSampling);
+for(const id of ['artReferencePinImage','artReferencePreview']){
+ $(id).addEventListener('pointerdown',e=>sampleReferencePixel(e,$(id)));
+}
+
 function updateArtReferenceDisplay(){
  const has=!!artReferenceUrl,visible=has&&artReferencePinned&&workspace==='paint';
  $('artReferenceToggle').disabled=!has;$('artReferenceRemove').disabled=!has;
+ $('artReferenceScale').disabled=!has;$('artReferenceHeight').disabled=!has;$('artReferenceLockAspect').disabled=!has;$('artReferenceEyedropper').disabled=!has;
  $('artReferenceToggle').textContent=artReferencePinned?'Hide image from viewer':'Pin image over viewer';
  $('artReferencePin').hidden=!visible;
  $('artReferencePreview').hidden=!has;
@@ -690,7 +906,8 @@ function chooseArtReference(e){
  img.onload=()=>{
   if(img.width>12000||img.height>12000){URL.revokeObjectURL(nextUrl);$('artReferenceSummary').textContent='Image dimensions too large for this phone-friendly preview.';return}
   if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl);
-  artReferenceUrl=nextUrl;artReferenceName=file.name;artReferencePinned=true;
+  artReferenceUrl=nextUrl;artReferenceName=file.name;artReferencePinned=true;artReferenceBitmap=img;setReferenceSampling(false);
+  initializeArtRefSize();
   $('artReferenceSummary').textContent='Local reference: '+file.name+' · '+img.width+'×'+img.height+'. Not uploaded. Share this image separately with your AI partner.';
   updateArtReferenceDisplay();
  };
@@ -699,10 +916,10 @@ function chooseArtReference(e){
 }
 $('artReferenceFile').onchange=chooseArtReference;
 $('artReferenceBrowse').onchange=chooseArtReference;
-$('artReferenceToggle').onclick=()=>{artReferencePinned=!artReferencePinned;updateArtReferenceDisplay()};
+$('artReferenceToggle').onclick=()=>{artReferencePinned=!artReferencePinned;if(!artReferencePinned)setReferenceSampling(false);updateArtReferenceDisplay()};
 $('artReferenceRemove').onclick=()=>{
  if(artReferenceUrl)URL.revokeObjectURL(artReferenceUrl);
- artReferenceUrl=null;artReferenceName='';artReferencePinned=false;
+ artReferenceUrl=null;artReferenceName='';artReferencePinned=false;artReferenceBitmap=null;setReferenceSampling(false);
  $('artReferenceFile').value='';$('artReferenceBrowse').value='';$('artReferencePreview').removeAttribute('src');
  $('artReferencePinImage').removeAttribute('src');
  $('artReferenceSummary').textContent='Reference removed from this page. Your original image file was not deleted.';
@@ -725,6 +942,55 @@ function paintTargetNotice(){
   ?'Texture resolution warning: source '+original.width+'×'+original.height+'; paint canvas '+resolution+'×'+resolution+'. Painting and exporting may reduce detail. CoLab will ask first. Keep your original GLB.'
   :'Texture check: paint canvas '+resolution+'×'+resolution+'. Export a separate test GLB and compare against the original.';
 }
+// A shaded Tripo-like mesh guide: a single read-only wire rendering pass for
+// the selected paint surface. No UV-outline redraw; no extra exported geometry.
+function clearPaintWireOverlays(){
+ for(const layer of paintWireCache.values()){
+  scene.remove(layer);layer.material?.dispose();
+ }
+ paintWireCache.clear();
+}
+function syncPaintWireOverlay(){
+ const target=workspace==='paint'&&paintWireEnabled&&root?paintTarget:null;
+ for(const [mesh,layer] of paintWireCache)layer.visible=mesh===target;
+ if(!target||paintWireCache.has(target)||!target.geometry)return;
+ const mat=new THREE.MeshBasicMaterial({
+  color:$('paintWireTone').value==='light'?0xf1f7ff:0x162331,
+  wireframe:true,transparent:true,opacity:Number($('paintWireOpacity').value)/100,
+  depthTest:true,depthWrite:false,side:THREE.DoubleSide
+ });
+ let guide;
+ if(target.isSkinnedMesh){
+  guide=new THREE.SkinnedMesh(target.geometry,mat);
+  guide.bindMode=target.bindMode;
+  guide.bind(target.skeleton,target.bindMatrix.clone());
+  guide.bindMatrixInverse.copy(target.bindMatrixInverse);
+ }else guide=new THREE.Mesh(target.geometry,mat);
+ if(target.morphTargetInfluences){
+  guide.morphTargetInfluences=target.morphTargetInfluences;
+  guide.morphTargetDictionary=target.morphTargetDictionary;
+ }
+ guide.matrixAutoUpdate=false;
+ guide.frustumCulled=false;
+ guide.renderOrder=target.renderOrder+1;
+ guide.raycast=()=>{}; // Do not intercept artist's clicks on the paint surface.
+ guide.name='Paint wire guide (not part of model)';
+ guide.userData.coLabDisplayOnly=true;
+ scene.add(guide); // Keep OUTSIDE root so GLB exports don't contain the overlay.
+ paintWireCache.set(target,guide);
+ const n=target.geometry.index?.count??target.geometry.attributes.position?.count??0;
+ if(n/3>250000)$('paintWireHelp').textContent='High polygon count: wire guide may reduce FPS on this laptop. Toggle it off while painting if needed.';
+}
+function updatePaintWireMatrices(){
+ if(workspace!=='paint'||!paintWireEnabled)return;
+ for(const [mesh,guide] of paintWireCache){
+  if(!guide.visible)continue;
+  mesh.updateWorldMatrix(true,false);
+  guide.matrix.copy(mesh.matrixWorld);
+  guide.matrixWorldNeedsUpdate=true;
+ }
+}
+
 function startPaintSession(m,sz){
   if(!paintEligible(m))throw Error('This mesh needs UV coordinates and one material for paint v0.1.');
   let p=paintSessions.get(m);if(p)return p;
@@ -748,9 +1014,25 @@ function startPaintSession(m,sz){
   baseCanvas.getContext('2d').drawImage(canvas,0,0);
   const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
   tex.flipY=true;tex.wrapS=THREE.ClampToEdgeWrapping;tex.wrapT=THREE.ClampToEdgeWrapping;
-  const material=base.clone();material.map=tex;material.side=THREE.DoubleSide;
+  // An untextured FBX often carries a dark material tint, vertex colors,
+  // or nonstandard shading. All three can conceal a correctly painted UV canvas.
+  // Use a neutral white, texture-capable paint material for that case only.
+  // Textured assets retain their original material and texture treatment.
+  const material=base.map?base.clone():new THREE.MeshStandardMaterial({
+    color:0xffffff,roughness:1,metalness:0,side:THREE.DoubleSide
+  });
+  material.map=tex;material.side=THREE.DoubleSide;
+  if(!base.map){
+    material.color.set(0xffffff);
+    material.vertexColors=false;
+    material.opacity=1;
+    material.transparent=false;
+    material.depthWrite=true;
+  }
+  material.needsUpdate=true;
   // B3.3's solid / X-ray / wire view rebuilds materials from this baseline.
   baseMaterials.set(m,[material]);applyStyle();
+  if(!base.map)paintMessage('Blank UV texture initialized on a neutral white model material. Brush colors should now appear on the character.');
   p={canvas,ctx,tex,material,baseCanvas,undo:[],strokes:[],painted:false};paintSessions.set(m,p);
   return p;
 }
@@ -760,8 +1042,10 @@ function updatePaintUI(){
  $('paintPickTarget').disabled=!root;
  $('paintEyedropper').disabled=!root;
  paintCanvasPreview();
+ syncPaintWireOverlay();
+ vectorPaint?.sync();
  const current=paintSessions.get(paintTarget);
- $('paintResolution').disabled=!!current;
+ $('paintResolution').disabled=!enabled;
  if(current)$('paintResolution').value=String(current.canvas.width);
  $('paintSizeValue').textContent=$('paintSize').value;
  $('paintOpacityValue').textContent=$('paintOpacity').value+'%';
@@ -775,7 +1059,27 @@ function refreshPaintTargets(){
 }
 $('paintTarget').onchange=()=>{if(paintDragging)finishPaint();const m=meshes[Number($('paintTarget').value)];paintTarget=paintEligible(m)?m:null;selectMode(false);updatePaintUI();paintTargetNotice()};
 $('paintSize').oninput=updatePaintUI;$('paintOpacity').oninput=updatePaintUI;
-$('paintResolution').onchange=paintTargetNotice;
+$('paintResolution').onchange=()=>{
+ const desired=Number($('paintResolution').value),p=paintSessions.get(paintTarget);
+ if(!p){paintTargetNotice();return}
+ const previous=p.canvas.width;
+ if(desired===previous)return;
+ if(![1024,2048].includes(desired)){$('paintResolution').value=String(previous);return}
+ finishPaint();
+ const warning='Resize this texture from '+previous+'×'+previous+' to '+desired+'×'+desired+'?\n\n'+
+  'Your editable vector outlines will be rebaked, and raster brushwork will be resampled. The previous stroke and vector-undo history will be cleared.\n\n'+
+  'Please export your Paint Project JSON backup before continuing. Continue?';
+ if(!confirm(warning)){$('paintResolution').value=String(previous);return}
+ try{
+  vectorPaint.resizePaint(p,desired);
+  p.tex.needsUpdate=true;
+  paintCanvasPreview();updatePaintUI();paintTargetNotice();scheduleAutosave();
+  paintMessage('Texture resized to '+desired+'×'+desired+'. Vector paths preserved and rebaked. Raster shading resampled. Save your Paint Project JSON.');
+ }catch(err){
+  $('paintResolution').value=String(p.canvas.width);
+  paintMessage('Resize failed: '+err.message+'. Export your Paint Project JSON as a backup.');
+ }
+};
 $('paintPickTarget').onclick=()=>{
  if(!root)return paintMessage('Load Finn or Sylvara first.');
  finishPaint();selectMode(false);mode='paintPick';controls.enabled=false;
@@ -849,7 +1153,7 @@ function setPaintMode(on){
  if(!root||!paintTarget)return paintMessage('Load a UV-mapped model and select a paint target.');
  if(on){
    if(visibilityMode!=='all')setVisibility('all');
-   if(viewStyle!=='solid'){$('solid').click()}
+   if(viewStyle!=='solid'){viewStyle='solid';applyStyle()}
    const size=Number($('paintResolution').value),original=originalTextureSize(paintTarget);
    if(!paintSessions.has(paintTarget)&&(original.width>size||original.height>size)&&
       !confirm('Texture quality warning: original is '+original.width+'×'+original.height+
@@ -862,13 +1166,33 @@ function setPaintMode(on){
  $('paintStart').classList.toggle('active',on);$('paintNavigate').classList.toggle('active',!on);
  paintMessage(on?'Paint active: make ONE small stroke, then inspect. Undo is ready.':'Navigate: rotate or zoom your character.');updatePaintUI();paintTargetNotice();
 }
+$('paintWireToggle').onclick=()=>{
+ paintWireEnabled=!paintWireEnabled;
+ $('paintWireToggle').textContent=paintWireEnabled?'▦ Hide wire guide':'▦ Shaded + wire guide';
+ $('paintWireToggle').setAttribute('aria-pressed',String(paintWireEnabled));
+ syncPaintWireOverlay();
+};
+$('paintWireOpacity').oninput=()=>{
+ $('paintWireOpacityValue').textContent=$('paintWireOpacity').value+'%';
+ for(const layer of paintWireCache.values())layer.material.opacity=Number($('paintWireOpacity').value)/100;
+};
+$('paintWireTone').onchange=()=>{
+ const color=$('paintWireTone').value==='light'?0xf1f7ff:0x162331;
+ for(const layer of paintWireCache.values())layer.material.color.setHex(color);
+};
+$('paintUvToggle').onclick=()=>{
+ paintUvEnabled=!paintUvEnabled;
+ $('paintUvToggle').textContent=paintUvEnabled?'▤ Hide UV lines':'▤ Show UV lines';
+ $('paintUvToggle').setAttribute('aria-pressed',String(paintUvEnabled));
+ paintCanvasPreview();
+};
 $('paintStart').onclick=()=>setPaintMode(true);$('paintNavigate').onclick=()=>setPaintMode(false);
 function hitForPaint(e){
  if(!paintTarget||!root)return null;
  const r=overlay.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));ray.setFromCamera(pointer,camera);root.updateMatrixWorld(true);
  return ray.intersectObject(paintTarget,false).find(h=>h.uv && Number.isFinite(h.faceIndex))||null;
 }
-function paintDot(p,x,y){const ctx=p.ctx;ctx.fillStyle=$('paintColor').value;ctx.globalAlpha=Number($('paintOpacity').value)/100;ctx.beginPath();ctx.arc(x,y,Number($('paintSize').value)/2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1}
+function paintDot(p,x,y){const color=$('paintColor').value,size=Number($('paintSize').value),alpha=Number($('paintOpacity').value)/100;const ctx=p.ctx;ctx.fillStyle=color;ctx.globalAlpha=alpha;ctx.beginPath();ctx.arc(x,y,size/2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;vectorPaint?.brushDot(p,x,y,size,color,alpha)}
 function paintSample(h){
  const p=paintSessions.get(paintTarget);if(!p||!h?.uv)return;
  const x=h.uv.x*p.canvas.width,y=(1-h.uv.y)*p.canvas.height;
@@ -884,6 +1208,7 @@ overlay.addEventListener('pointerdown',e=>{
  const p=paintSessions.get(paintTarget);if(!p)return;
  overlay.setPointerCapture(e.pointerId);paintDragging=true;
  paintBefore=p.ctx.getImageData(0,0,p.canvas.width,p.canvas.height);
+ vectorPaint?.strokeStart(p);
  paintStroke={startedAt:new Date().toISOString(),meshName:paintTarget.name||'',meshIndex:meshes.indexOf(paintTarget),brush:{color:$('paintColor').value,sizePx:Number($('paintSize').value),opacity:Number($('paintOpacity').value)/100},samples:[]};
  paintLast=null;paintSample(hit);e.preventDefault();
 });
@@ -892,15 +1217,16 @@ function finishPaint(){
  if(!paintDragging)return;paintDragging=false;paintLast=null;
  const p=paintSessions.get(paintTarget);
  if(p&&paintBefore){p.undo.push(paintBefore);if(p.undo.length>8)p.undo.shift();if(paintStroke?.samples.length)p.strokes.push(paintStroke)}
+ vectorPaint?.strokeEnd(p,!!paintStroke?.samples?.length);
  paintBefore=null;paintStroke=null;paintCanvasPreview();paintMessage('Stroke completed; local recovery will save it automatically. You can also export JSON.');scheduleAutosave();
 }
 overlay.addEventListener('pointerup',finishPaint);overlay.addEventListener('pointercancel',finishPaint);
-$('paintUndo').onclick=()=>{finishPaint();const p=paintSessions.get(paintTarget);if(!p?.undo.length)return paintMessage('No recent stroke to undo.');p.ctx.putImageData(p.undo.pop(),0,0);p.tex.needsUpdate=true;p.strokes.pop();paintCanvasPreview();paintMessage('Paint stroke undone.')};
-$('paintClear').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return;if(!confirm('Clear paint on the selected mesh? Original GLB is unchanged.'))return;p.ctx.globalAlpha=1;p.ctx.globalCompositeOperation='source-over';p.ctx.clearRect(0,0,p.canvas.width,p.canvas.height);p.ctx.drawImage(p.baseCanvas,0,0);p.tex.needsUpdate=true;p.strokes=[];p.undo=[];paintCanvasPreview();paintMessage('Paint on active mesh cleared.')};
+$('paintUndo').onclick=()=>{finishPaint();const p=paintSessions.get(paintTarget);const vUndo=vectorPaint?.brushUndo(p);if(vUndo==='undone'){paintCanvasPreview();paintMessage('Last raster shading stroke undone.');return}if(vUndo==='blocked')return;if(!p?.undo.length)return paintMessage('No recent stroke to undo.');p.ctx.putImageData(p.undo.pop(),0,0);p.tex.needsUpdate=true;p.strokes.pop();paintCanvasPreview();paintMessage('Paint stroke undone.')};
+$('paintClear').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return;if(!confirm('Clear paint on the selected mesh? Original GLB is unchanged.'))return;p.ctx.globalAlpha=1;p.ctx.globalCompositeOperation='source-over';p.ctx.clearRect(0,0,p.canvas.width,p.canvas.height);p.ctx.drawImage(p.baseCanvas,0,0);p.tex.needsUpdate=true;p.strokes=[];p.undo=[];vectorPaint?.reset(p);paintCanvasPreview();paintMessage('Paint on active mesh cleared.')};
 $('paintPNG').onclick=()=>{const p=paintSessions.get(paintTarget);if(!p)return paintMessage('Paint on the mesh first.');p.canvas.toBlob(b=>b?downloadRaw(b,originalName.replace(/\.glb$/i,'')+'_paint.png'):paintMessage('PNG could not be exported.'),'image/png')};
 $('paintJSON').onclick=()=>{
  finishPaint();const p=paintSessions.get(paintTarget);if(!p)return paintMessage('Start painting first.');
- const project={format:'better-together-3d-colab-paint-v0.1.3',app:'Better Together 3D CoLab',createdAt:new Date().toISOString(),modelFile:originalName,source:{sha256:fingerprint,sizeBytes:glbFileSize},meshIndex:meshes.indexOf(paintTarget),meshName:paintTarget.name||'',texture:{width:p.canvas.width,height:p.canvas.height,mimeType:'image/png',dataUrl:p.canvas.toDataURL('image/png')},brush:{color:$('paintColor').value,sizePx:Number($('paintSize').value),opacity:Number($('paintOpacity').value)/100},paintTracking:{strokeCount:p.strokes.length,strokes:p.strokes},notes:'Source geometry is not included. Original model is never overwritten.'};
+ const project={format:'better-together-3d-colab-paint-v0.1.3',app:'Better Together 3D CoLab',createdAt:new Date().toISOString(),modelFile:originalName,source:{sha256:fingerprint,sizeBytes:glbFileSize},meshIndex:meshes.indexOf(paintTarget),meshName:paintTarget.name||'',texture:{width:p.canvas.width,height:p.canvas.height,mimeType:'image/png',dataUrl:p.canvas.toDataURL('image/png')},brush:{color:$('paintColor').value,sizePx:Number($('paintSize').value),opacity:Number($('paintOpacity').value)/100},paintTracking:{strokeCount:p.strokes.length,strokes:p.strokes},vectorLayers:vectorPaint?.asJSON(p)||undefined,notes:'Source geometry is not included. Original model is never overwritten.'};
  download(originalName.replace(/\.glb$/i,'')+'_colab_paint.json',project);paintMessage('Paint JSON saved with the texture and 3D stroke tracking.');
 };
 function decodePaintPng(dataUrl){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('Saved PNG could not be read.'));img.src=dataUrl})}
@@ -923,6 +1249,7 @@ $('paintImport').onchange=async e=>{
   if(!p)p=startPaintSession(paintTarget,tex.width);
   if(p.canvas.width!==tex.width){p.canvas.width=p.canvas.height=tex.width;$('paintResolution').value=String(tex.width)}
   p.ctx.clearRect(0,0,tex.width,tex.height);p.ctx.drawImage(img,0,0);p.tex.needsUpdate=true;p.strokes=d.paintTracking.strokes;p.undo=[];p.painted=true;
+  if(d.vectorLayers)await vectorPaint?.restore(p,d.vectorLayers,'url');else vectorPaint?.reset(p);
   if(/^#[0-9a-f]{6}$/i.test(d.brush?.color||''))$('paintColor').value=d.brush.color;
   if(Number.isFinite(d.brush?.sizePx)&&d.brush.sizePx>=1&&d.brush.sizePx<=110)$('paintSize').value=String(d.brush.sizePx);
   if(Number.isFinite(d.brush?.opacity)&&d.brush.opacity>=.05&&d.brush.opacity<=1)$('paintOpacity').value=String(Math.round(d.brush.opacity*100));
@@ -943,6 +1270,23 @@ $('paintGLB').onclick=async()=>{
   downloadRaw(new Blob([bytes],{type:'model/gltf-binary'}),originalName.replace(/\.glb$/i,'')+'_painted.glb');paintMessage('Textured GLB exported separately. Reopen it in a viewer to verify textures and UV seams.');
  }catch(err){paintMessage('GLB export failed: '+err.message)}finally{for(const item of previous){item.m.material=item.material;item.m.visible=item.visible}}
 };
+vectorOutlinePreview=createVectorOutlinePreview({
+ THREE,camera,view,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getWorkspace:()=>workspace,getPanelOpen:()=>$('vectorPaintPanel').open
+});
+vectorPaint=installVectorPaintStudio({
+ $,getTarget:()=>paintTarget,getSession:m=>paintSessions.get(m),getModelName:()=>originalName,getModelHash:()=>fingerprint,getMeshIndex:()=>meshes.indexOf(paintTarget),
+ startSession:startPaintSession,finishPaint,selectMode,
+ setMode:v=>{mode=v},getMode:()=>mode,controls,overlay,hitForPaint,
+ preview:paintCanvasPreview,save:scheduleAutosave,notice:paintMessage,outlinePreview:vectorOutlinePreview
+});
+aiPaintBridge=installHeadlessPaintBridge({
+ $,getTarget:()=>paintTarget,getMeshIndex:()=>meshes.indexOf(paintTarget),
+ getModelHash:()=>fingerprint,getModelName:()=>originalName,getModelBlob:()=>currentModelBlob,
+ getSession:m=>paintSessions.get(m),getResolution:()=>Number($('paintResolution').value),
+ getReferenceBlob:async()=>artReferenceUrl?await (await fetch(artReferenceUrl)).blob():null,
+ vectorPaint:()=>vectorPaint,save:scheduleAutosave,finishPaint
+});
+
 // MOTION: keyframes and basic skeletal posing built from the working Motion Check grammar.
 let animBones=[],animInitial=[],animInitialPositions=[],animFrames=[],animPositionFrames=[],animChosen=0,animFrame=-1,animPlaying=false,animTime=0,animStarted=0,animMixer=null,animAction=null,animClips=[];
 const POSE_SEGMENT=1.5;
@@ -1384,7 +1728,9 @@ function clearUnifiedBeforeLoad(){
  directorRepairReady=false;directorRepairClips=[];$('directorExportRepair').disabled=true;
  directorValidRecipe=null;$('agentPreview').disabled=true;$('agentRecipeStatus').textContent='Load the matching asset and validate the AI recipe again.';
  paintDragging=false;paintTarget=null;paintStroke=null;paintLast=null;paintBefore=null;
- for(const p of paintSessions.values())p.tex.dispose();paintSessions.clear();
+ vectorPaint?.clearDisplay();
+ clearPaintWireOverlays();
+ for(const p of paintSessions.values())p.tex.dispose();paintSessions.clear();vectorPaint?.sync();
  animPlaying=false;if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=[];
  if(candidateRoot)scene.remove(candidateRoot);candidateRoot=null;candidateVisible=false;candidateName='';
  releaseReviewChangeGeometry();reviewChangeEnabled=false;
@@ -1453,7 +1799,7 @@ async function captureSession(){
   brush:{color:$('paintColor').value,size:Number($('paintSize').value),opacity:Number($('paintOpacity').value),resolution:Number($('paintResolution').value),targetIndex:paintTarget?meshes.indexOf(paintTarget):null},
   painting:[],
   motion:{boneNames:animBones.map(b=>b.name),frames:animFrames.map(frame=>frame.map(q=>q.slice())),positionFrames:animPositionFrames.map(frame=>frame.map(p=>p.slice())),positions:animBones.length?posePositions().map(p=>p.slice()):[],pose:animBones.length?poseData().map(q=>q.slice()):[],chosen:animChosen,frame:animFrame,time:animTime,clip:$('animClip').value||''}};
- for(const [m,p] of paintSessions){const index=meshes.indexOf(m);if(index<0)continue;data.painting.push({meshIndex:index,meshName:m.name||'',width:p.canvas.width,texture:await canvasBlob(p.canvas),strokes:p.strokes});}
+ for(const [m,p] of paintSessions){const index=meshes.indexOf(m);if(index<0)continue;data.painting.push({meshIndex:index,meshName:m.name||'',width:p.canvas.width,texture:await canvasBlob(p.canvas),strokes:p.strokes,vector:await vectorPaint?.forRecovery(p)||null});}
  return data;
 }
 function scheduleAutosave(){
@@ -1521,6 +1867,7 @@ async function applyRecoveredSession(s){
   if(bitmap.width!==item.width||bitmap.height!==item.width){bitmap.close();throw Error('Saved texture resolution is invalid.')}
   p.ctx.clearRect(0,0,item.width,item.width);p.ctx.drawImage(bitmap,0,0);bitmap.close();p.tex.needsUpdate=true;
   p.strokes=item.strokes;p.undo=[];p.painted=true;
+  if(item.vector)await vectorPaint?.restore(p,item.vector,'blob');
  }
  const brush=s.brush||{};
  if(/^#[a-f0-9]{6}$/i.test(brush.color||''))$('paintColor').value=brush.color;
@@ -2343,21 +2690,29 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
 const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal:()=>root,getHit:()=>lastHit});
-// Explicit same-origin handoff when embedded in Unified Studio.
+// Unified Studio same-origin GLB bridge. Both editors still have separate scene state.
 window.addEventListener('message',async event=>{
- if(event.origin!==location.origin||event.source!==window.parent||event.data?.kind!=='coLab-model-transfer-v1')return;
- if(root&&!confirm('Unified Studio is sending a model. Replace the current Director Lab model? Export your edits first.'))return;
- try{await loadGLBFile(new File([event.data.bytes],event.data.name||'unified-transfer.glb',{type:'model/gltf-binary'}))}
- catch(err){status('Transfer failed: '+err.message)}
+ if(event.origin!==location.origin||event.source!==window.parent||
+    event.data?.kind!=='coLab-model-transfer-v1')return;
+ if(!(event.data.bytes instanceof ArrayBuffer)||event.data.bytes.byteLength>64*1024*1024){
+  status('Model transfer rejected: invalid or oversized GLB.');return;
+ }
+ if(root&&!confirm('Replace the current Advanced Workshop model with the model sent from Unified Studio? Export current work first.'))return;
+ try{
+  const loaded=await loadGLBFile(new File([event.data.bytes],event.data.name||'unified-transfer.glb',{type:'model/gltf-binary'}));
+  if(!loaded)status('Transferred model was not loaded.');
+ }catch(err){status('Transfer failed: '+err.message)}
 });
 $('sendToUnified').onclick=async()=>{
- if(window.parent===window){status('Open Director Lab inside Unified Studio to send a model back.');return}
+ if(window.parent===window){status('Open this workshop inside Unified Studio to send the model back. You can also export a GLB manually.');return}
  if(!root){status('Load a model first.');return}
  try{
   const bytes=await new GLTFExporter().parseAsync(root,{binary:true,onlyVisible:false});
+  if(!(bytes instanceof ArrayBuffer))throw Error('Exporter returned no binary GLB.');
   window.parent.postMessage({kind:'coLab-model-transfer-v1',name:(originalName||'director').replace(/\.(fbx|glb)$/i,'')+'.glb',bytes},location.origin,[bytes]);
-  status('Model sent to Unified Studio for review.');
+  status('Sent model to Unified Studio for review.');
  }catch(err){status('Transfer failed: '+err.message)}
 };
-function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();renderer.render(scene,camera)}animate();
+
+function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();updatePaintWireMatrices();vectorOutlinePreview?.updateMatrices();renderer.render(scene,camera)}animate();
 </script></body></html>

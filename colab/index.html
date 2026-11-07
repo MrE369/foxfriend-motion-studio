@@ -60,6 +60,10 @@
 <button id="paintJSON">⬇ Paint Project JSON</button><label for="paintImport">Restore Paint Project JSON</label><input id="paintImport" type="file" accept=".json,application/json">
 <p class="hint" id="paintStatus">Painting requires UV coordinates. Paint JSON includes sampled 3D hit positions; textured GLB is a new export, never an overwrite. A brush stroke can affect overlapping UV islands.</p>
 </section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
+ <div class="subpanel">
+ <button type="button" id="openReferenceMotionStudio">🦴 Open Reference Motion Studio</button>
+ <p class="hint">Animate your existing 26-joint humanoid rig, view a clean skeleton, and play its idle and gentle-wave clips in the Advanced Workshop. This opens inside the same installed Unified Studio app.</p>
+ </div>
 <p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
 <div id="motionRigControls"><label for="animBone">Joint</label><select id="animBone"><option>Load a rigged model</option></select><div id="animAxes"></div>
 <div class="row"><button id="animReset">Reset joint</button><button id="animResetAll">Reset pose</button></div>
@@ -939,6 +943,7 @@ $('directorEmbedClose').addEventListener('click',()=>{
  $('directorEmbedFrame').removeAttribute('src');
 });
 $('advancedToolsButton').addEventListener('click',()=>$('directorEmbedOpen').click());
+$('openReferenceMotionStudio').addEventListener('click',()=>{const frame=$('directorEmbedFrame');frame.src='./director.html#motion';$('directorEmbedOpen').click();});
 $('directorOverlayClose').addEventListener('click',()=>$('directorEmbedClose').click());
 // Explicit, same-origin model handoff. No automatic overwrites of either editor.
 $('directorSend').onclick=async()=>{

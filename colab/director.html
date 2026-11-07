@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finn & Sylvara CoLab · Unified Advanced Workshop v0.13.2 preview</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finn & Sylvara CoLab · Unified Advanced Workshop v0.13.3</title><style>
 *{box-sizing:border-box}body{margin:0;background:#101925;color:#eff7fc;font:15px system-ui}header{padding:11px 15px;background:#1b2a3b}h1{font-size:20px;margin:0 0 4px}small,.hint{color:#bacddd}.hint{font-size:13px;line-height:1.45;margin:6px 0 10px}main{display:grid;grid-template-columns:minmax(0,1fr) 350px}#view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#view{height:calc(100dvh - 76px);min-height:350px;position:relative;background:#263648;overflow:hidden}#touch{position:absolute;inset:0;touch-action:none;pointer-events:none;z-index:2}#hud{position:absolute;top:8px;left:8px;pointer-events:none;background:#101925d9;border-radius:8px;padding:8px;font-size:12px;z-index:3}#hud{animation:colabHudFade 1.2s ease-in 10s forwards}@keyframes colabHudFade{to{opacity:0;visibility:hidden}}aside{background:#182536;padding:14px;max-height:calc(100dvh - 76px);overflow:auto}label{display:block;margin:12px 0 5px;font-weight:650}button,input,select,textarea{font:inherit;background:#2b4256;border:1px solid #71899b;color:#fff;border-radius:9px;min-height:43px;padding:10px;width:100%}button{cursor:pointer;margin:3px 0}.row{display:flex;gap:7px}.row>*{flex:1;min-width:0}.active{background:#186e67;border-color:#83f1d1}#status{background:#254052;color:#b8f0d1;border-radius:8px;padding:9px;margin:8px 0}#stats{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:#c8daea;background:#101a26;padding:9px;border-radius:8px}textarea{min-height:70px}.axiscontrol{display:grid;grid-template-columns:32px 1fr 90px 1fr;align-items:center;gap:7px;margin:6px 0}.axiscontrol output{text-align:center;font-variant-numeric:tabular-nums}.warn{color:#ffda91}#picked{font-size:13px;overflow-wrap:anywhere;background:#22394c;padding:9px;border-radius:8px}a{color:#a9ddfb}details{margin:8px 0}summary{cursor:pointer;font-weight:bold}@media(max-width:760px){main{display:flex;flex-direction:column}#view{position:sticky;top:0;z-index:9;height:41dvh;min-height:235px;box-shadow:0 8px 18px #0009}aside{overflow:visible;max-height:none}#workspaceTabs{top:max(41dvh,235px);z-index:8;margin-top:-14px;padding-top:9px;padding-bottom:9px}}
 #hitMarker{position:absolute;z-index:4;display:none;pointer-events:none;left:0;top:0;transform:translate(-50%,-50%);border:3px solid #121b25;background:#ffe16b;color:#101925;min-width:28px;height:28px;border-radius:50%;box-shadow:0 0 0 3px white,0 0 12px #000c;font-size:13px;line-height:22px;text-align:center;font-weight:900}#slots button[aria-pressed="true"]{outline:3px solid #ffffff;outline-offset:-6px}#importResult{display:none;margin-top:9px;padding:12px;border:2px solid #72f9a3;border-radius:9px;background:#123f39;color:#d6ffeb;line-height:1.5;font-size:15px;overflow-wrap:anywhere}
 #importResult.error{border-color:#ff9d59;background:#4b3029;color:#ffe4d8}
@@ -279,6 +279,9 @@
  <p class="hint">Choose Pose to drag any blue dot or touch a body part. The camera stays locked while posing. Choose Orbit when you want to rotate the model. Every detected joint can also be chosen by name.</p>
  <div class="row"><button id="jointPoseMode" type="button" class="active">✋ Pose · move body parts</button><button id="jointOrbitMode" type="button">↻ Orbit · rotate camera</button></div>
 <p id="jointModeHint" class="hint">Pose: camera locked. Orbit: move the camera, including while animation plays. Play automatically switches to Orbit.</p>
+ <label style="margin:10px 0 4px">How much of the body moves</label>
+ <div class="row" role="group" aria-label="Pose chain reach"><button id="jointReachLocal" type="button" class="active" aria-pressed="true">Local · default</button><button id="jointReachFull" type="button" aria-pressed="false">Full reach</button></div>
+ <p id="jointReachHint" class="hint" role="status">Local keeps hand and foot dragging within nearby arm/leg joints. Full reach uses the previous longer chains.</p>
 <div class="row"><button id="jointDotToggle" type="button">🔵 Show all joint dots · On</button><button id="jointCapturePose" type="button">Capture pose</button></div>
  <label for="jointSearch">Find a joint (optional)</label><input id="jointSearch" type="search" placeholder="Head, spine, tripo, arm, leg…">
  <label for="jointSelect">All detected skeleton joints</label>
@@ -298,9 +301,9 @@
  </div>
  <button id="jointExportReport" type="button">⬇ Pose diagnostic JSON · send to your AI partner</button>
  <p id="jointStatus" class="hint" role="status">Load a rigged GLB, then tap any blue dot.</p>
- <p class="hint">Local experimental IK: nearest connected parent joints rotate to follow your drag. Skeleton roots move as a whole. This does not enforce anatomical limits or keep every foot planted yet.</p>
+ <p class="hint">Experimental touch IK: Local moves nearby parent joints; Full reach can include more of the body. To rotate one joint without moving its parents, select it and use the joint X/Y/Z controls below. Neither mode enforces anatomical limits or planted feet.</p>
  </div>
-<div id="motionRigControls"><label for="animBone">Joint</label><select id="animBone"><option>Load a rigged model</option></select><div id="animAxes"></div>
+<div id="motionRigControls"><p class="hint">Individual joint rotation: choose the joint and use its X/Y/Z controls here. Touch dragging above solves a parent chain instead.</p><label for="animBone">Joint</label><select id="animBone"><option>Load a rigged model</option></select><div id="animAxes"></div>
 <div class="row"><button id="animReset">Reset joint</button><button id="animResetAll">Reset pose</button></div>
 <details class="subpanel" id="animIkPanel"><summary>IK · Move a paw, hand or foot (experimental)</summary>
 <p class="hint">Select three connected bones from the loaded rig: upper joint, middle joint, and end joint. Choose the end joint first, then use Auto-chain. Move its target using model-local X/Y/Z. Capture keyframe saves the resulting pose. No mesh or original file is overwritten.</p>
@@ -421,7 +424,7 @@ import {createVectorOutlinePreview} from './vector-outline-preview.js';
 import {installHeadlessPaintBridge} from './ai-paint-bridge.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {relaxSelectedSurface} from './director-tools.js';
-import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
+import {poseSkeletonPoint, skeletonAncestors, poseReachLimit} from './skeleton-points.js';
 import {installAssemblyLab} from './assembly-tools.js';
 import {installGeometryWorkshop} from './geometry-workshop.js';
 const $=id=>document.getElementById(id),view=$('view'),scene=new THREE.Scene();scene.background=new THREE.Color('#263648');
@@ -1608,7 +1611,7 @@ function setupMotion(gltf){
  $('animClip').replaceChildren();$('animClip').add(new Option('Captured keyframes',''));
  animClips.forEach((clip,i)=>$('animClip').add(new Option(clip.name||'Animation '+(i+1),String(i))));
  if(animClips.length)animMixer=new THREE.AnimationMixer(root);
- drawPoseFrames();syncJoint();updateAnimationUI();setupJointPoints();
+ jointReachMode='local';drawPoseFrames();syncJoint();updateAnimationUI();setupJointPoints();
  const diagnosis=humanoidReferenceView.setRig(root,animBones);
  const humanoidSample=diagnosis.supported&&/(?:finn[_ -]?sylvara[_ -]?humanoid[_ -]?rig|humanoid[_ -]?rig)/i.test(originalName);
  humanoidReferenceView.setMode(humanoidSample?'mannequin':'original');
@@ -1870,7 +1873,7 @@ async function captureSession(){
   review:{showProposal,moveStep:$('moveStep').value,moveHistory:moveHistory.map(h=>({regionIndex:h.regionIndex,offset:h.offset.slice()}))},
   brush:{color:$('paintColor').value,size:Number($('paintSize').value),opacity:Number($('paintOpacity').value),resolution:Number($('paintResolution').value),targetIndex:paintTarget?meshes.indexOf(paintTarget):null},
   painting:[],
-  motion:{displayMode:humanoidReferenceView.mode,translucent:humanoidReferenceView.status().translucent,boneNames:animBones.map(b=>b.name),frames:animFrames.map(frame=>frame.map(q=>q.slice())),positionFrames:animPositionFrames.map(frame=>frame.map(p=>p.slice())),positions:animBones.length?posePositions().map(p=>p.slice()):[],pose:animBones.length?poseData().map(q=>q.slice()):[],chosen:animChosen,frame:animFrame,time:animTime,clip:$('animClip').value||''}};
+  motion:{displayMode:humanoidReferenceView.mode,reachMode:jointReachMode,translucent:humanoidReferenceView.status().translucent,boneNames:animBones.map(b=>b.name),frames:animFrames.map(frame=>frame.map(q=>q.slice())),positionFrames:animPositionFrames.map(frame=>frame.map(p=>p.slice())),positions:animBones.length?posePositions().map(p=>p.slice()):[],pose:animBones.length?poseData().map(q=>q.slice()):[],chosen:animChosen,frame:animFrame,time:animTime,clip:$('animClip').value||''}};
  for(const [m,p] of paintSessions){const index=meshes.indexOf(m);if(index<0)continue;data.painting.push({meshIndex:index,meshName:m.name||'',width:p.canvas.width,texture:await canvasBlob(p.canvas),strokes:p.strokes,vector:await vectorPaint?.forRecovery(p)||null});}
  return data;
 }
@@ -1952,6 +1955,8 @@ async function applyRecoveredSession(s){
  animPlaying=false;animTime=Number.isFinite(pose?.time)?Math.max(0,pose.time):0;
  if(['original','skeleton','mannequin','combined'].includes(pose?.displayMode))humanoidReferenceView.setMode(pose.displayMode);
  humanoidReferenceView.setTranslucent(!!pose?.translucent);
+ jointReachMode=pose?.reachMode==='full'?'full':'local';
+ syncJointReachUI();
  syncHumanoidFigureUI();drawPoseFrames();syncJoint();updateAnimationUI();
  const chosenPaint=Number.isInteger(brush.targetIndex)?brush.targetIndex:null;
  refreshPaintTargets();if(chosenPaint!==null&&paintEligible(meshes[chosenPaint])){paintTarget=meshes[chosenPaint];$('paintTarget').value=String(chosenPaint)}updatePaintUI();
@@ -2351,10 +2356,36 @@ const jointDotBlue=new THREE.MeshBasicMaterial({color:0x72e3fa,depthTest:false,d
 const jointDotYellow=new THREE.MeshBasicMaterial({color:0xffdc64,depthTest:false,depthWrite:false});
 let jointMarkers=[],jointDotsOn=true,jointSelected=-1,jointPointer=null;
 let jointInteractionMode='pose',jointSurfacePin=false,lastJointDrag=null;
+let jointReachMode='local';
 const jointInputTelemetry={pointerDown:0,pointerMove:0,touchStart:0,touchMove:0,lastEvent:null,lastReject:null};
 const jointModeBanner=document.createElement('div');
 jointModeBanner.style.cssText='position:absolute;left:8px;bottom:9px;z-index:5;pointer-events:none;border-radius:8px;padding:6px 10px;background:#123c3bef;color:#d1ffee;font-size:12px;border:1px solid #63ae9a;display:none';
 view.append(jointModeBanner);
+function syncJointReachUI(){
+ const local=jointReachMode==='local';
+ for(const [id,selected] of [['jointReachLocal',local],['jointReachFull',!local]]){
+  const button=$(id);button.classList.toggle('active',selected);
+  button.setAttribute('aria-pressed',String(selected));
+ }
+ const bone=animBones[jointSelected];
+ const ancestors=bone?skeletonAncestors(bone,poseReachLimit(bone,jointReachMode)):[];
+ const summary=local
+  ?'Local: hands/feet affect at most two nearby parent joints. Larger body motion is restricted.'
+  :'Full reach: up to three parent joints can rotate, including shoulders or hips.';
+ $('jointReachHint').textContent=summary+(bone?' Selected '+(bone.name||'joint')+': '+(ancestors.map(b=>b.name||'unnamed').join(' → ')||'move root')+'.':'');
+}
+function setJointReachMode(next){
+ if(next!=='local'&&next!=='full')return;
+ if(jointPointer)endJointDrag(null,true);
+ jointReachMode=next;
+ syncJointReachUI();
+ $('jointStatus').textContent=next==='local'
+  ?'Local reach selected. Drag a hand or foot to move nearby joints without the farther shoulder or hip.'
+  :'Full reach selected. The longer legacy parent chains are enabled for larger poses.';
+ scheduleAutosave();
+}
+$('jointReachLocal').onclick=()=>setJointReachMode('local');
+$('jointReachFull').onclick=()=>setJointReachMode('full');
 function syncJointInteraction(){
  const isActive=workspace==='animate'&&!!root&&animBones.length>0&&!candidateVisible;
  const posing=isActive&&jointInteractionMode==='pose';
@@ -2374,6 +2405,7 @@ function syncJointInteraction(){
  $('jointModeHint').textContent=posing?'POSE · Camera locked. Drag any dot or body part. Select an exact joint by name if needed.':'ORBIT · Drag to rotate the camera. Switch back to Pose to move joints.';
  jointModeBanner.style.display=isActive?'block':'none';
  jointModeBanner.textContent=posing?'✋ POSE · Move joints':'↻ ORBIT · Rotate camera';
+ syncJointReachUI();
 }
 function setJointInteraction(which){
  if(which!=='pose'&&which!=='orbit')return;
@@ -2459,7 +2491,7 @@ function selectSkeletonJoint(index){
  $('jointSearch').value='';
  refreshJointList();$('jointSelect').value=String(index);
  const bone=animBones[index];
- const parents=skeletonAncestors(bone,/(?:head|neck)/i.test(bone.name||'')?1:3);
+ const parents=skeletonAncestors(bone,poseReachLimit(bone,jointReachMode));
  $('jointStatus').textContent=(bone.name||'Unnamed joint '+(index+1))
   +(parents.length?' · moving '+parents.length+' connected parent joint(s)':' · skeleton root: movable body anchor')
   +'. Drag the yellow dot. Blue dots are other available joints.';
@@ -2503,7 +2535,7 @@ $('jointExportReport').onclick=()=>{
   app:'CoLab Director Lab · skeleton touch test',
   source:{filename:originalName,sha256:fingerprint,sizeBytes:glbFileSize},
   recordedAt:new Date().toISOString(),
-  interaction:{mode:jointInteractionMode,dotsOn:jointDotsOn,
+  interaction:{mode:jointInteractionMode,reachMode:jointReachMode,dotsOn:jointDotsOn,
     jointSelected,jointName:animBones[jointSelected]?.name||null,
     jointSurfacePin,pointerSession:lastJointDrag,rawTouchEvents:{...jointInputTelemetry}},
   rig:{boneCount:animBones.length,bones:animBones.map((bone,index)=>({
@@ -2541,7 +2573,7 @@ function nudgeSelectedJoint(direction){
   if(!Number.isFinite(step)||step<=0||step>.05)throw Error('Invalid movement step.');
   animationPause();
   const target=before.clone().addScaledVector(d,step);
-  const result=poseSkeletonPoint(THREE,bone,target,{maxParents:/(?:head|neck)/i.test(bone.name||'')?1:3,
+  const result=poseSkeletonPoint(THREE,bone,target,{maxParents:poseReachLimit(bone,jointReachMode),
    iterations:20,maxStep:.3,tolerance:.00025,allowCoincidentTranslation:true,maxTranslate:step});
   const after=bone.getWorldPosition(new THREE.Vector3()),moved=before.distanceTo(after);
   lastJointDrag={status:moved>.00002?'button-moved':'button-no-motion',
@@ -2690,7 +2722,7 @@ function jointGestureMove(event){
  if(delta.length()>state.maxMove)goal.copy(state.start).add(delta.setLength(state.maxMove));
  try{
   const result=poseSkeletonPoint(THREE,state.bone,goal,
-   {maxParents:/(?:head|neck)/i.test(state.bone.name||'')?1:3,iterations:12,maxStep:.24,
+   {maxParents:poseReachLimit(state.bone,jointReachMode),iterations:12,maxStep:.24,
     tolerance:Math.max(.001,state.maxMove*.002),allowCoincidentTranslation:true,maxTranslate:state.maxMove});
   state.moves++;
   if(lastJointDrag){lastJointDrag.moveEvents=state.moves;lastJointDrag.reachError=result.error;lastJointDrag.mode=result.mode;lastJointDrag.endWorld=state.bone.getWorldPosition(new THREE.Vector3()).toArray();}

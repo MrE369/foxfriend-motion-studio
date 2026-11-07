@@ -2,7 +2,7 @@
  * CoLab Skeleton Point Pilot 0.1
  * Point-driven pose operations for ANY detected Three.js Bone, independent of
  * Tripo/VRM naming conventions. Safe scope: local, reversible pose transforms.
- * Root bones translate; other joints use nearest-parent CCD (up to 3 parents).
+ * Root bones translate; other joints use a selectable short/long parent-chain CCD.
  * This is NOT anatomically constrained IK and does not preserve planted feet.
  */
 export function skeletonAncestors(bone, maxParents=3){
@@ -10,6 +10,20 @@ export function skeletonAncestors(bone, maxParents=3){
  let p=bone?.parent;
  while(p?.isBone&&result.length<maxParents){result.push(p);p=p.parent;}
  return result;
+}
+/**
+ * Reach policy for touch posing. Local humanoid hands/feet use nearby limb
+ * parents; Full Reach restores three-parent legacy behavior. Unknown rigs
+ * use two local parents. Does not modify the skeleton or animation clips.
+ */
+export function poseReachLimit(bone,mode='local'){
+ const name=String(bone?.name||'');
+ // Preserve the v0.13.2 short head/neck chain in both reach modes.
+ if(/(?:head|neck)$/i.test(name))return 1;
+ if(mode==='full')return 3;
+ if(/(?:hand|foot|finger|toes?)$/i.test(name))return 2;
+ if(/(?:shoulder|upperarm|lowerarm|upperleg|lowerleg)$/i.test(name))return 1;
+ return 2;
 }
 export function poseSkeletonPoint(THREE,bone,goal,opts={}){
  if(!bone?.isBone||!goal||!Number.isFinite(goal.x)||!Number.isFinite(goal.y)||!Number.isFinite(goal.z))

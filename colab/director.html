@@ -258,7 +258,22 @@
  <p id="aiPaintStatus" role="status">Load a model, select one UV-ready surface, and connect a local folder to try headless Codex painting. Your current work will not be cleared.</p>
 </details>
 </section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
-<p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
+<p class="hint">Pose and animate the existing imported skeleton. Finished character skin is optional when reference guides are present; existing IK, keyframes and animated GLB exports still work.</p>
+<details class="subpanel" id="referenceSkeletonPanel" open aria-label="Reference skeleton and motion">
+ <summary>🦴 Reference Skeleton · use existing rig</summary>
+ <p class="hint">Use <b>Load GLB or FBX</b> above to choose your rig, including Finn_Sylvara_Humanoid_Rig_v01.glb. CoLab uses its real joints and clips—no new skeleton is generated and nothing is uploaded.</p>
+ <div class="row">
+  <button type="button" id="refSkeletonToggle">Show clean skeleton view</button>
+  <button type="button" id="refSkeletonFrame">Frame skeleton</button>
+ </div>
+ <p class="hint">Clean view temporarily hides imported visual-guide meshes and draws colored bone links. It does not change the original GLB or its animation clips.</p>
+ <div class="row">
+  <button type="button" id="refSkeletonIdle">▶ Quiet idle</button>
+  <button type="button" id="refSkeletonWave">▶ Gentle wave</button>
+  <button type="button" id="refSkeletonRest">Reset to rest pose</button>
+ </div>
+ <p id="refSkeletonStatus" class="hint" role="status" aria-live="polite">Load your existing rig to inspect bones and animation clips.</p>
+</details>
 <div id="allSkeletonPoints" class="subpanel" aria-label="Grab every skeleton joint">
  <h3>🔵 Pose every joint</h3>
  <p class="hint">Choose Pose to drag any blue dot or touch a body part. The camera stays locked while posing. Choose Orbit when you want to rotate the model. Every detected joint can also be chosen by name.</p>
@@ -398,6 +413,7 @@
 </section></aside></main><script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {createReferenceSkeletonGuides} from './reference-skeleton-guides.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
 import {installVectorPaintStudio} from './vector-paint.js';
@@ -409,6 +425,7 @@ import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
 import {installAssemblyLab} from './assembly-tools.js';
 import {installGeometryWorkshop} from './geometry-workshop.js';
 const $=id=>document.getElementById(id),view=$('view'),scene=new THREE.Scene();scene.background=new THREE.Color('#263648');
+const referenceSkeletonGuides=createReferenceSkeletonGuides(THREE,scene);
 const camera=new THREE.PerspectiveCamera(35,1,.001,1e5),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.domElement.style.touchAction='none';view.append(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;scene.add(new THREE.HemisphereLight(0xffffff,0x74869c,2.5));for(const [x,y,z,k] of [[3,5,6,2.1],[-4,2,-3,1.1]]){let l=new THREE.DirectionalLight(0xffffff,k);l.position.set(x,y,z);scene.add(l)}
 const overlay=$('touch'),ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),markGroup=new THREE.Group();scene.add(markGroup);
@@ -1529,6 +1546,45 @@ renderer.domElement.addEventListener('pointermove',e=>{
 for(const event of ['pointerup','pointercancel','lostpointercapture']){
  renderer.domElement.addEventListener(event,e=>{if(e.pointerId===ikDragPointer){ikDragPointer=null;ikDragPlane=null;ikDragOffset=null}},true);
 }
+function refreshReferenceMotionUI(){
+ const count=animBones.length;
+ const idle=animClips.findIndex(clip=>/quiet[_ -]?idle/i.test(clip.name||''));
+ const wave=animClips.findIndex(clip=>/gentle[_ -]?wave/i.test(clip.name||''));
+ $('refSkeletonToggle').disabled=!count;
+ $('refSkeletonFrame').disabled=!count;
+ $('refSkeletonRest').disabled=!count;
+ $('refSkeletonIdle').disabled=idle<0;
+ $('refSkeletonWave').disabled=wave<0;
+ $('refSkeletonToggle').textContent=referenceSkeletonGuides.enabled?'🦴 Clean skeleton view · On':'🦴 Clean skeleton view · Off';
+ $('refSkeletonStatus').textContent=count
+  ?count+' joints · '+animClips.length+' imported clips · clean view '+(referenceSkeletonGuides.enabled?'ON':'OFF')+'. Drag joints in Pose mode or choose Orbit to review.'
+  :'No bones detected in the loaded model.';
+}
+$('refSkeletonToggle').onclick=()=>{
+ if(!animBones.length)return;
+ referenceSkeletonGuides.setEnabled(!referenceSkeletonGuides.enabled);
+ referenceSkeletonGuides.update(workspace==='animate'&&!candidateVisible);
+ refreshReferenceMotionUI();
+};
+$('refSkeletonFrame').onclick=()=>{const bounds=referenceSkeletonGuides.bounds();if(bounds)frameBounds(bounds);};
+$('refSkeletonRest').onclick=()=>{
+ if(!animBones.length)return;
+ animationPause();
+ $('animClip').value='';
+ $('animClip').dispatchEvent(new Event('change'));
+ $('animResetAll').click();
+ referenceSkeletonGuides.update(workspace==='animate'&&!candidateVisible);
+ refreshReferenceMotionUI();
+};
+function previewReferenceClip(pattern){
+ const index=animClips.findIndex(clip=>pattern.test(clip.name||''));
+ if(index<0)return status('That example animation is not present in the imported rig.');
+ $('animClip').value=String(index);
+ $('animClip').dispatchEvent(new Event('change'));
+ $('animPlay').click();
+}
+$('refSkeletonIdle').onclick=()=>previewReferenceClip(/quiet[_ -]?idle/i);
+$('refSkeletonWave').onclick=()=>previewReferenceClip(/gentle[_ -]?wave/i);
 function setupMotion(gltf){
  ikDragStop();animPlaying=false;animBones=[];animInitial=[];animInitialPositions=[];animFrames=[];animPositionFrames=[];animFrame=-1;animTime=0;
  if(animMixer)animMixer.stopAllAction();animMixer=null;animAction=null;animClips=gltf.animations||[];
@@ -1543,6 +1599,9 @@ function setupMotion(gltf){
  animClips.forEach((clip,i)=>$('animClip').add(new Option(clip.name||'Animation '+(i+1),String(i))));
  if(animClips.length)animMixer=new THREE.AnimationMixer(root);
  drawPoseFrames();syncJoint();updateAnimationUI();setupJointPoints();
+ referenceSkeletonGuides.setSkeleton(root,animBones);
+ if(/(?:skeleton|humanoid[_ -]?rig)/i.test(originalName))referenceSkeletonGuides.setEnabled(true);
+ refreshReferenceMotionUI();
 }
 function updateAnimation(){
  if(animPlaying){const duration=animateDuration();if(!duration){animPlaying=false;return}const time=((performance.now()-animStarted)/1000)%duration;animationAt(time)}
@@ -1725,6 +1784,7 @@ function clearUnifiedBeforeLoad(){
  facePatchState.mesh=null;facePatchState.triangles=[];facePatchState.center=null;
  $('facePatchStatus').textContent='Start by selecting a facial surface in Inspect.';
  clearJointPoints();
+ referenceSkeletonGuides.clear();
  directorRepairReady=false;directorRepairClips=[];$('directorExportRepair').disabled=true;
  directorValidRecipe=null;$('agentPreview').disabled=true;$('agentRecipeStatus').textContent='Load the matching asset and validate the AI recipe again.';
  paintDragging=false;paintTarget=null;paintStroke=null;paintLast=null;paintBefore=null;
@@ -2715,5 +2775,5 @@ $('sendToUnified').onclick=async()=>{
  }catch(err){status('Transfer failed: '+err.message)}
 };
 
-function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();updatePaintWireMatrices();vectorOutlinePreview?.updateMatrices();renderer.render(scene,camera)}animate();
+function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();referenceSkeletonGuides.update(workspace==='animate'&&!candidateVisible);updatePaintWireMatrices();vectorOutlinePreview?.updateMatrices();renderer.render(scene,camera)}animate();
 </script></body></html>

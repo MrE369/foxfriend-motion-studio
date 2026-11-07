@@ -1,7 +1,7 @@
 // Finn & Sylvara CoLab Unified Studio v0.13 PWA.
 // NEVER discard local IndexedDB project/recovery data. NEVER reload an editing session
 // until the artist taps Save & update in Unified Studio.
-const CACHE='bt3d-colab-v013-unified-1';
+const CACHE='bt3d-colab-v0131-workshop-navigation-1';
 const PREFIX='bt3d-colab-';
 const SHELL=[
  './','./index.html','./director.html','./manifest.webmanifest',

@@ -2789,5 +2789,6 @@ $('sendToUnified').onclick=async()=>{
  }catch(err){status('Transfer failed: '+err.message)}
 };
 
+if(location.hash==='#motion')showWorkspace('animate');
 function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();referenceSkeletonGuides.update(workspace==='animate'&&!candidateVisible);updatePaintWireMatrices();vectorOutlinePreview?.updateMatrices();renderer.render(scene,camera)}animate();
 </script></body></html>

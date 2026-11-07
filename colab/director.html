@@ -2618,7 +2618,11 @@ function jointGestureDown(event){
  let entry=jointDotsOn?jointPointHit(event):null,hitMethod=entry?'joint dot':'';
  if(!entry){
   const ray=jointPointerRay(event);
-  const hit=ray.intersectObjects(meshes,true).find(item=>item.object.visible&&item.object.isMesh);
+  // Clean mannequin is a display-only scene overlay, not in the imported
+  // mesh array. Include it as a touch target so artists can tap a limb,
+  // not just tiny joint dots, while keeping source geometry untouched.
+  const poseTargets=[...meshes,...humanoidReferenceView.pickableMeshes()];
+  const hit=ray.intersectObjects(poseTargets,true).find(item=>item.object.visible&&item.object.isMesh);
   if(hit){
    if(jointSurfacePin&&jointSelected>=0){entry=jointMarkers[jointSelected];hitMethod='pinned joint';}
    else{

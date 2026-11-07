@@ -1404,6 +1404,8 @@ $('animExportGlb').onclick=async()=>{
  if(!root||animBones.length===0||animFrames.length<2)return status('Load a rigged GLB and capture at least two poses before exporting.');
  if(animPlaying)animationPause();
  const button=$('animExportGlb'),label=button.textContent,previous=poseData(),selected=$('animClip').value;
+ const cleanGuideWasEnabled=referenceSkeletonGuides.enabled;
+ if(cleanGuideWasEnabled)referenceSkeletonGuides.setEnabled(false); // Export the unchanged rig geometry and animation.
  button.disabled=true;button.textContent='Preparing animated GLB…';
  try{
   // Bone tracks use names that GLTFExporter resolves to actual skeleton nodes.
@@ -1440,7 +1442,7 @@ $('animExportGlb').onclick=async()=>{
    status('Animated GLB exported with '+all.length+' clips. Reimport it to verify the new clip.');
   }finally{for(const o of hidden)o.visible=false}
  }catch(err){status('Animation export failed: '+err.message)}
- finally{restorePose(previous);$('animClip').value=selected;button.disabled=false;button.textContent=label}
+ finally{restorePose(previous);referenceSkeletonGuides.setEnabled(cleanGuideWasEnabled);$('animClip').value=selected;button.disabled=false;button.textContent=label}
 };
 // Explicit-chain CCD IK pilot; isolated to Motion Studio.
 let ikEnd=null,ikMiddle=null,ikUpper=null,ikPoint=null;

@@ -9,6 +9,16 @@
 [hidden]{display:none!important} #workspaceTabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:7;padding:7px 0;background:#182536;border-bottom:1px solid #4b6478} #workspaceTabs button{min-width:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;min-height:57px;line-height:1.2}#workspaceTabs button span{font-size:12px} .workspace h2{font-size:19px;margin:12px 0 6px}.workspace h3{font-size:16px;margin:0 0 8px} .workspace{padding-bottom:80px}.subpanel{border:1px solid #5e758a;padding:12px;border-radius:12px;margin:16px 0}.smallFileLabel{font-size:13px;border:1px solid #71899b;background:#2b4256;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:8px;min-height:43px;position:relative;overflow:hidden}.smallFileLabel input{position:absolute;opacity:0;inset:0;cursor:pointer}#paintPreview{width:100%;max-height:170px;object-fit:contain;background:white;border:1px solid #708699;border-radius:9px}#paintColor{padding:2px} .framebuttons{display:flex;gap:5px;overflow-x:auto}.framebuttons button{min-width:85px;width:auto;flex:none}.animAxis{display:flex;align-items:center;gap:4px}.animAxis button{width:48px;flex:none}.animAxis input{min-width:0;flex:1}.animAxis output{width:49px;flex:none;font-size:12px;text-align:right}#animStatus,#paintStatus,#candidateStatus{background:#20364a;border-radius:8px;padding:9px} #recoveryPanel,#appUpdates{margin:8px 0;padding:7px 10px}#recoveryPanel summary,#appUpdates summary{cursor:pointer;font-weight:700;padding:7px 2px;list-style:disclosure-closed} #recoveryPanel .row button{font-size:14px} #appUpdates strong{white-space:nowrap} #appUpdates button{font-size:13px} #updateReady{border-top:1px solid #506f83;padding-top:8px} #saveStatus{min-height:1.5em} @media(max-width:760px){#workspaceTabs{top:41dvh}#workspaceTabs button{min-height:53px}#workspaceTabs button span{font-size:12px}}
 #directorPanel{background:#223a4c;border-color:#72cdb7}#directorPanel summary{padding:5px 0}#directorPanel h3{color:#a7ecdf}#directorPanel p{line-height:1.45}.directorFlow{margin:11px 0;padding:10px 12px;background:#122635;border:1px solid #476d7c;border-radius:10px}#directorPanel input[type=range]{padding:5px;min-height:32px;accent-color:#77e4cc}#directorPanel input[type=color]{padding:4px}#directorPanel output{font-variant-numeric:tabular-nums;color:#9af1d7}#directorPanel button:disabled{opacity:.4}#allSkeletonPoints{border-color:#6689a3;background:#20384c}#allSkeletonPoints input[type=search]{min-height:40px}#allSkeletonPoints p{line-height:1.45}
 #artReferencePin{position:absolute;top:54px;right:8px;z-index:5;width:min(34%,185px);max-height:calc(100% - 65px);background:#101925e8;border:2px solid #87d6cc;border-radius:12px;padding:3px;pointer-events:none;overflow:hidden;box-shadow:0 5px 16px #000a}#artReferencePin img{display:block;width:100%;max-height:calc(41dvh - 93px);object-fit:contain}#artReferencePin.sampling{pointer-events:auto;cursor:crosshair;outline:3px solid #ffe16b}#artReferencePin.sampling img{cursor:crosshair;touch-action:manipulation}#artReferencePreview.sampling{cursor:crosshair;outline:3px solid #ffe16b;touch-action:manipulation}#artReferencePreview{display:block;width:100%;max-height:240px;object-fit:contain;background:#0e1a27;border:1px solid #56768c;border-radius:10px}#artReferenceSummary{font-size:13px;color:#c1e9e2;overflow-wrap:anywhere}#firstPaintGuide{margin:9px 0;background:#1d3443;border:1px solid #528e88;border-radius:12px;padding:12px}#paintQualityNote{padding:9px;background:#253440;border:1px solid #627d8e;border-radius:9px}#artReferencePanel .row{margin:7px 0}
+
+#markDialog{width:min(94vw,780px);max-height:94dvh;overflow:auto;color:#eff7fc;background:#182536;border:1px solid #83a3b9;border-radius:13px;padding:15px}
+#markDialog::backdrop{background:#09121adc}
+#markDialog h2{font-size:21px;margin:0}
+#markDialog button{min-height:46px}
+#markDialog button:disabled{opacity:.55}
+#markStage{display:flex;justify-content:center;background:#101925;border-radius:8px}
+#markCanvas{display:block;max-width:100%;height:auto;touch-action:none;cursor:crosshair}
+#markNote{min-height:55px;resize:vertical}
+#markStatus{min-height:1.5em}
 </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
 <button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
@@ -242,8 +252,13 @@
 <div class="row"><label for="animExportName">New animation clip name<input id="animExportName" type="text" value="CoLab_Sit" maxlength="64" autocomplete="off"></label></div>
 <button id="animExportGlb" type="button">⬇ Export Animated GLB · Experimental</button>
 <p class="hint">Exports a new GLB with your captured poses as an embedded clip, alongside the model's imported clips. Your original GLB and saved session remain unchanged. Reimport the download to verify.</p>
+<button id="markFromMotion" type="button">Freeze &amp; mark this frame</button>
+<p id="markMotionHint" class="hint" role="status">Save the view and the exact point in the motion without editing it.</p>
 <p class="hint" id="animStatus">Load a rigged GLB to enable posing. Animated GLBs with clips can be previewed without manual keyframe capture.</p>
 </section><section id="tabReview" class="workspace" role="tabpanel" aria-labelledby="tabButtonReview" hidden><h2>Repair Review <small>· experimental</small></h2>
+<div class="subpanel"><h3>Mark &amp; Share</h3>
+<button id="markFromReview" type="button">Mark this view</button>
+<p id="markReviewHint" class="hint" role="status">Circle a spot on a frozen view of the original model, add a note, and save it to share.</p></div>
 <p class="hint">Existing six-region movement-preview controls remain intact. They show detached geometry proposals, not a repaired or watertight mesh.</p><label>6 · Non-destructive region movement preview</label>
 <p class="hint">Choose one of the six color regions, then move its selected triangles in model-local X/Y/Z. Original geometry is never changed. This is a visual proposal, NOT a stitched mesh repair or a final facial expression.</p>
 <div class="row"><button id="previewOriginal" class="active">Original</button><button id="previewAdjusted">Proposed preview</button></div>
@@ -327,7 +342,17 @@
 <button id="asInspect" type="button" disabled>🔎 Save assembly backup + Send to Inspect</button>
 <p class="hint">Makes a local GLB backup before opening a copy in Inspect. Head and body remain independent inside the model and in Assemble. Verify textures and rigging before further editing.</p>
 <p class="hint" id="asStatus" role="status">Add a body and head GLB. Source meshes remain independent in the exported assembly; they are not welded or rigged. Reimport exports to verify textures and animation tracks.</p>
-</section></aside></main><script type="module">
+</section></aside></main>
+<dialog id="markDialog" aria-labelledby="markHeading">
+<h2 id="markHeading">Mark &amp; Share</h2>
+<p class="hint" id="markStatus" role="status"></p>
+<div id="markStage"><canvas id="markCanvas" width="1" height="1" aria-label="Frozen model view. Draw a circle on the area to review."></canvas></div>
+<label for="markNote">What should I look at?</label>
+<textarea id="markNote" maxlength="2000" rows="2" placeholder="This sleeve pinches when the arm comes forward."></textarea>
+<div class="row"><button id="markUndo" type="button">Undo last mark</button><button id="markClose" type="button">Close</button></div>
+<div class="row"><button id="markPNG" type="button">Save marked PNG</button><button id="markJSON" type="button">Save review file</button></div>
+</dialog>
+<script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -336,6 +361,7 @@ import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {relaxSelectedSurface} from './director-tools.js';
 import {poseSkeletonPoint, skeletonAncestors} from './skeleton-points.js';
 import {installAssemblyLab} from './assembly-tools.js';
+import {installMarkShare} from './mark-share.js';
 import {installGeometryWorkshop} from './geometry-workshop.js';
 const $=id=>document.getElementById(id),view=$('view'),scene=new THREE.Scene();scene.background=new THREE.Color('#263648');
 const camera=new THREE.PerspectiveCamera(35,1,.001,1e5),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.domElement.style.touchAction='none';view.append(renderer.domElement);
@@ -2509,5 +2535,27 @@ for(const name of ['touchend','touchcancel'])view.addEventListener(name,e=>{
 
 assemblyLab=installAssemblyLab({THREE,GLTFLoader,GLTFExporter,scene,camera,renderer,controls,getOriginal:()=>root,getCandidate:()=>candidateRoot,onInspectGLB:file=>loadGLBFile(file)});
 const geometryWorkshop=installGeometryWorkshop({THREE,GLTFExporter,scene,camera,renderer,overlay,getOriginal:()=>root,getHit:()=>lastHit});
+
+installMarkShare({capture:()=>{
+ if(!root||!fingerprint) throw Error('Load your original GLB first, then try again.');
+ if(candidateVisible||showProposal&&moveGroup.visible) throw Error('Switch to Original to mark this review.');
+ animationPause();
+ controls.update();
+ renderer.render(scene,camera);
+ const raw=renderer.domElement,scale=Math.min(1,1440/Math.max(raw.width,raw.height));
+ const image=document.createElement('canvas');
+ image.width=Math.max(1,Math.round(raw.width*scale));image.height=Math.max(1,Math.round(raw.height*scale));
+ image.getContext('2d').drawImage(raw,0,0,image.width,image.height);
+ const clip=animAction?.getClip();
+ return {image,capturedAt:new Date().toISOString(),replay:{
+  source:{filename:originalName,sha256:fingerprint,sizeBytes:glbFileSize},
+  camera:{...cameraData(),fov:camera.fov,aspect:camera.aspect,zoom:camera.zoom},
+  motion:{
+   clip:clip?{name:clip.name,index:animClips.indexOf(clip)}:null,
+   frameSeconds:clip?animAction.time:animTime,
+   pose:animBones.map((bone,i)=>({index:i,name:bone.name,rotation:bone.quaternion.toArray(),position:bone.position.toArray(),scale:bone.scale.toArray()}))
+  }
+ }};
+}});
 function animate(){requestAnimationFrame(animate);updateAnimation();controls.update();updatePickMarker();refreshJointDots();updatePaintWireMatrices();renderer.render(scene,camera)}animate();
 </script></body></html>

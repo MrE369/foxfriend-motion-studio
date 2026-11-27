@@ -19,7 +19,30 @@
 #markCanvas{display:block;max-width:100%;height:auto;touch-action:none;cursor:crosshair}
 #markNote{min-height:55px;resize:vertical}
 #markStatus{min-height:1.5em}
-</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>Better Together 3D CoLab <small>· Director Lab v0.12 · experimental</small></h1><small>Inspect one GLB or assemble several · Local first · Originals untouched</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
+
+:root{--mobile-view:clamp(200px,36dvh,340px)}
+#workspaceTabs button{gap:3px;min-height:52px;font-size:16px}
+#workspaceTabs button span{font-size:12px;font-weight:650}
+#workspaceTabs button:focus-visible,.globalActions button:focus-visible,.toolFold summary:focus-visible{outline:2px solid #fff06e;outline-offset:-2px}
+.globalActions{margin:7px 0}
+.globalActions button{font-size:14px;min-height:46px}
+#openModelAction,.primaryTool button[id^=markFrom]{background:#186e67;border-color:#83f1d1}
+#modelTools{padding:0 10px 4px;border:1px solid #60798c;border-radius:9px;background:#101f2e}
+#status{font-size:13px;margin:7px 0;padding:7px 9px}
+#workspaceHint{display:none}
+.workspace{padding-top:2px}
+.workspace h2{margin:5px 0 6px;font-size:22px}
+.toolFold summary{min-height:34px;padding:6px 1px;line-height:1.3}
+.primaryTool{background:#20384b;border-color:#6fa4a5}
+@media(max-width:760px){
+ #view{height:var(--mobile-view);min-height:0}
+ #workspaceTabs{top:var(--mobile-view);gap:3px}
+ #workspaceTabs button{min-height:50px;padding:5px 0}
+ #workspaceTabs button span{font-size:12px}
+ aside{padding-inline:10px;overflow:visible;max-height:none}
+ #artReferencePin img{max-height:calc(var(--mobile-view) - 93px)}
+}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script><meta name="theme-color" content="#101925"></head><body><header><h1>CoLab <small>· Director Lab</small></h1><small>Better Together · Models stay on this device</small></header><main><div id="view"><canvas id="touch"></canvas><div id="hitMarker" aria-hidden="true"></div><div id="viewNotice" role="status" aria-live="polite" title="Tap to dismiss"></div><div id="hud">Navigate: drag to rotate · pinch to zoom<br>Select: tap a triangle</div><div id="artReferencePin" hidden aria-label="Local concept-art reference"><img id="artReferencePinImage" alt="Concept art for comparison"></div></div><aside>
 <nav id="workspaceTabs" role="tablist" aria-label="CoLab workspaces">
 <button type="button" class="active" id="tabButtonInspect" role="tab" aria-selected="true" aria-controls="tabInspect" data-tab="inspect">◈<span>Inspect</span></button>
 <button type="button" id="tabButtonPaint" role="tab" aria-selected="false" aria-controls="tabPaint" data-tab="paint">🖌<span>Paint</span></button>
@@ -27,17 +50,216 @@
 <button type="button" id="tabButtonReview" role="tab" aria-selected="false" aria-controls="tabReview" data-tab="review">◫<span>Review</span></button>
 <button type="button" id="tabButtonAssemble" role="tab" aria-selected="false" aria-controls="tabAssemble" data-tab="assemble">🧩<span>Assemble</span></button>
 </nav>
+<div class="row globalActions"><button id="openModelAction" type="button">Open model</button><button id="savedWorkAction" type="button" aria-expanded="false" aria-controls="modelTools">Model &amp; saves</button></div>
 
-<p class="hint" style="margin:3px 0 12px"><a href="https://mre369.github.io/foxfriend-motion-studio/colab/agent-guide.html" style="color:#91f0d8" target="_blank" rel="noopener">📷 New to collaborating with an AI agent? See our screenshot-first guide ↗</a></p>
-<label>1 · Load GLB or FBX</label><input id="file" type="file" accept=".glb,.fbx,model/gltf-binary,application/octet-stream">
+<div id="modelTools" hidden>
+<details class="subpanel" id="recoveryPanel" aria-label="Local session recovery"><summary id="recoverySummary">Local recovery</summary>
+ <p id="saveStatus" class="hint" aria-live="polite">Checking this device for a saved session…</p>
+ <div class="row"><button id="saveSession" disabled>Save now</button><button id="restoreSession" disabled>Restore last session</button></div>
+ <button id="forgetSession" disabled>Delete saved local copy</button>
+ <p class="hint">Private to this browser on this device. CoLab stores the original GLB, selections, paint, and poses locally when space allows. Nothing is uploaded. JSON exports remain your portable backup; previous paint undo history and comparison GLBs are not restored.</p>
+</details>
+<label for="file">Choose a GLB or FBX</label><input id="file" type="file" accept=".glb,.fbx,model/gltf-binary,application/octet-stream">
 <button id="fileBrowseAll" type="button">📁 Android: Browse all model files</button>
 <input id="fileUnfiltered" type="file" hidden aria-label="Browse Android files to choose GLB or FBX without type filtering">
-<p class="hint">If an extracted GLB is greyed out in Android's picker, use Browse all files above. Load extracted GLB or FBX models; ZIPs must be extracted first.</p><div id="status" role="status">Choose a GLB or FBX to inspect.</div><div id="stats">No model loaded.</div>
+<p class="hint">If a model is greyed out on Android, use Browse all model files. Extract ZIPs before loading a model.</p><div id="stats">No model loaded.</div>
 
-<details id="directorPanel" class="subpanel" open aria-label="Director's Desk">
- <summary>🎬 Director's Desk · describe, preview, collaborate</summary>
+<p class="hint">To get an update, save your work and reopen CoLab from your home screen.</p>
+<p class="hint" style="margin:3px 0 12px"><a href="https://mre369.github.io/foxfriend-motion-studio/colab/agent-guide.html" style="color:#91f0d8" target="_blank" rel="noopener">📷 New to collaborating with an AI agent? See our screenshot-first guide ↗</a></p>
+</div>
+<div hidden><details class="subpanel" id="appUpdates" aria-label="App updates"><summary>App updates · version 0.11</summary>
+ <button id="checkUpdates">Check for updates</button>
+ <div id="updateReady" hidden><p class="hint">An approved update is ready. Save your project before restarting the app.</p><div class="row"><button id="applyUpdate">Save &amp; update</button><button id="laterUpdate">Later</button></div></div>
+ <p id="updateStatus" class="hint" aria-live="polite">Updates never interrupt active work automatically.</p>
+</details>
+</div>
+<div id="status" role="status">Choose a GLB or FBX to inspect.</div><p class="hint workspaceIntro" id="workspaceHint">Pick a part of a model and look closer.</p><section id="tabInspect" class="workspace" role="tabpanel" aria-labelledby="tabButtonInspect"><h2>Inspect a model</h2><p class="hint">Choose Select, then tap a part of the model.</p><div class="row"><button id="nav" class="active">✋ Navigate</button><button id="select">◈ Select</button></div><div class="row"><button id="one">Triangle</button><button id="connected">Connected part</button><button id="mesh">Whole mesh</button></div><div class="row"><button id="clear">Clear selection</button><button id="frame">Frame selection</button></div><div id="picked">Tap a visible surface in Select mode.</div>
+<label style="font-weight:500;display:flex;align-items:center;gap:4px"><input id="autoConnected" type="checkbox" checked> Auto-select connected part when tapping</label><p class="hint">Uncheck for individual triangles. A numbered, color-coded marker shows the exact surface tap even if a tiny triangle is hard to see. Use Connected part to expand the active region again.</p>
+<label>Selection colors</label><div id="slots" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div><label for="regionName">Active region name</label><input id="regionName" maxlength="100"><button id="clearAllRegions">Clear ALL six regions</button><p class="hint">Pick a color for each part you want to keep selected. Give each selection a name if it helps.</p><label>What to show</label><div class="row"><button id="showAll" class="active">Show all</button><button id="isolate">Isolate selected</button></div><div class="row"><button id="hideSelected">Hide selected</button><button id="contextOnly">Context + selected</button></div>
+<label for="isolateAlpha">Surrounding geometry visibility <output id="isolateAlphaValue">20%</output></label><input id="isolateAlpha" type="range" min="0" max="100" step="5" value="20">
+<p class="hint">Isolate shows selected triangles, optionally with faded surroundings. Hide selected shows all other triangles. Restore all to select another surface. Selection and original geometry remain intact.</p>
+<details class="subpanel toolFold" ><summary>Camera and display</summary>
+<label for="context">Unselected geometry transparency <output id="contextValue">0%</output></label><input id="context" type="range" min="0" max="85" value="0" step="5"><div class="row"><button id="solid" class="active">Solid</button><button id="wire">Wireframe</button><button id="xray">X-ray</button></div><div class="row"><button id="front">Front</button><button id="back">Back</button><button id="left">Left</button></div><div class="row"><button id="right">Right</button><button id="top">Top</button><button id="bottom">Bottom</button></div><button id="resetView">Reset camera</button>
+</details>
+<details class="subpanel toolFold" ><summary>Export or restore a selection</summary>
+
+<details style="margin:10px 0;padding:9px 12px;border:1px solid #4d7184;border-radius:10px;background:#21384b">
+<summary style="cursor:pointer;font-weight:650">📷 Work with your AI agent · screenshots can prevent wasted rebuilds</summary>
+<p class="hint">Try the model, share a screenshot of what happened and describe what looks wrong in ordinary words. Your agent can compare before/after images, repair a small reusable script, and ask you to retest instead of repeatedly rebuilding or regenerating the whole asset.</p>
+<p class="hint">This can reduce unnecessary paid AI calls or generations, but savings depend on your tools and usage; image analysis may also be metered. <a style="color:#91f0d8" href="https://mre369.github.io/foxfriend-motion-studio/colab/agent-guide.html" target="_blank" rel="noopener">Read our screenshot-first workflow and example prompt ↗</a></p>
+</details>
+<label for="label">Selection label</label><input id="label" placeholder="e.g. suspected upper eyelid"><label for="note">Instructions / observations</label><textarea id="note" placeholder="What is this surface? Is there geometry behind it?"></textarea><button id="export">⬇ Export selection JSON</button><label for="import">Restore selection JSON</label><label style="font-weight:400"><input id="mergeImport" type="checkbox" style="width:auto;min-height:0;margin-right:8px">Add to current selection instead of replacing (matching GLB only)</label><input id="import" type="file" accept=".json,application/json"><div id="importResult" role="status" aria-live="polite"></div><p class="hint">Handoff records a SHA-256 fingerprint of the original GLB, a mesh path, triangle indices, UVs when present, and 3D hit location. Import refuses a different file fingerprint. Original model data is never rewritten.</p>
+<details><summary>Scope and limitations</summary><p class="hint">Milestone A includes universal inspection, triangle selection, connected-component selection using shared geometric edges, mesh selection, display modes, camera presets, and JSON save/restore. Large selections may be slow on phones. Connected parts are determined by matching position edges within a small tolerance, so near-coincident seams may connect or stay separate depending on geometry. This test hides or isolates selected source triangles in the viewer without editing GLB geometry; previews are rebuilt as lightweight meshes and may not follow animated/skinned deformation. Painting and geometry edits remain future milestones.</p></details>
+</details>
+<details class="subpanel" id="facePatchPanel">
+ <summary>🧑 Face repair lab · prepare a local patch for Aster</summary>
+ <p class="hint">For Finn's rigged mesh. This does NOT repair the face automatically. It marks a small, controllable 3D patch for investigation without touching the original geometry, UVs or skin weights.</p>
+ <p class="hint">Tap <strong>Select</strong>, uncheck Auto-select connected part, and touch Finn's cheek or forehead. Then tap <strong>Mark face patch</strong>.</p>
+ <label for="facePatchRadius">Patch radius around last touched point · <output id="facePatchRadiusValue">0.06</output> model units</label>
+ <input id="facePatchRadius" type="range" min="0.01" max="0.18" value="0.06" step="0.005">
+ <div class="row"><button id="facePatchMark" type="button">Mark face patch</button><button id="facePatchExport" type="button">⬇ Patch diagnostic JSON</button></div>
+ <p id="facePatchStatus" class="hint" role="status">Start by selecting a small facial surface in Inspect.</p>
+ <p class="hint">Exports only the selected mesh patch's positions, normals, UVs and skinning weights, plus the matching GLB fingerprint. It does not upload the model or make a sculpt automatically. Send this JSON and a close-up screenshot for a proposal.</p>
+</details>
+<details id="geometryWorkshop" class="subpanel" aria-label="Geometry Workshop">
+<summary>🧩 Geometry Workshop · experimental draft tools</summary>
+<p class="hint">Add and shape separate geometry without changing the loaded model. Tap a surface in Inspect Select mode, then use it as a placement or brush reference. Preview and Undo before exporting.</p>
+<h3>1 · Add geometry</h3>
+<label for="gwPrimitive">Shape</label><select id="gwPrimitive"><option value="cylinder">Cylinder</option><option value="sphere">Sphere</option><option value="box">Box</option></select>
+<div class="row"><label>Radius / width <input id="gwRadius" type="number" min="0.002" max="2" step="0.005" value="0.035"></label><label>Height <input id="gwHeight" type="number" min="0.002" max="4" step="0.005" value="0.07"></label></div>
+<button type="button" id="gwAdd">＋ Add draft geometry</button>
+<label for="gwMeshes">Active draft piece</label><select id="gwMeshes"></select><p id="gwCount" class="hint">0 draft meshes</p>
+<div class="row"><label>X <input id="gwX" type="number" step="0.001" value="0"></label><label>Y <input id="gwY" type="number" step="0.001" value="0"></label><label>Z <input id="gwZ" type="number" step="0.001" value="0"></label><label>Scale <input id="gwScale" type="number" min="0.02" max="20" step="0.01" value="1"></label></div>
+<button type="button" id="gwApply">Apply draft position / scale</button>
+<div class="subpanel" aria-label="Touch-friendly draft transforms">
+<h3>Touch transforms · live sliders</h3>
+<p class="hint">Move draft pieces only. Sliders change them immediately; use Undo to reverse a gesture. Drag mode lets you touch and move a draft shape in the viewer without altering Finn.</p>
+<label for="gwRangeX">X · <output id="gwValueX">—</output></label><input id="gwRangeX" type="range" min="-3" max="3" step="0.005" value="0" style="width:100%;min-height:38px" aria-label="Draft X slider">
+<label for="gwRangeY">Y · <output id="gwValueY">—</output></label><input id="gwRangeY" type="range" min="-3" max="3" step="0.005" value="0" style="width:100%;min-height:38px" aria-label="Draft Y slider">
+<label for="gwRangeZ">Z · <output id="gwValueZ">—</output></label><input id="gwRangeZ" type="range" min="-3" max="3" step="0.005" value="0" style="width:100%;min-height:38px" aria-label="Draft Z slider">
+<label for="gwRangeScale">Scale · <output id="gwValueScale">—</output></label><input id="gwRangeScale" type="range" min="0.05" max="3" step="0.01" value="1" style="width:100%;min-height:38px" aria-label="Draft Scale slider">
+<label for="gwStep">Nudge step (model units)</label><input id="gwStep" type="number" min="0.0001" max="0.5" step="0.001" value="0.005">
+<div class="row"><button type="button" data-gw-nudge="x:-1">X −</button><button type="button" data-gw-nudge="x:1">X +</button><button type="button" data-gw-nudge="y:-1">Y −</button><button type="button" data-gw-nudge="y:1">Y +</button></div>
+<div class="row"><button type="button" data-gw-nudge="z:-1">Z −</button><button type="button" data-gw-nudge="z:1">Z +</button><button type="button" id="gwDrag" aria-pressed="false">✋ Drag piece: OFF</button></div>
+</div>
+<h3>2 · Shape draft geometry</h3>
+<p class="hint">Select a surface in Inspect as the brush center. The brush changes only the active draft piece; source geometry is never sculpted in place.</p>
+<div class="row"><label>Brush radius <input id="gwBrushRadius" type="number" min="0.002" max="2" step="0.005" value="0.08"></label><label>Push / pull <input id="gwBrushStrength" type="number" min="-0.25" max="0.25" step="0.005" value="0.015"></label></div>
+<button type="button" id="gwShape">Shape draft near selected point</button>
+<h3>3 · Bridge surfaces (sleeve preview)</h3>
+<p class="hint">Tap a head surface in Select mode, save A; tap a body surface, save B. Create an adjustable bridging sleeve. This is not a welded seam and it has no bone weights yet.</p>
+<div class="row"><button type="button" id="gwPickA">Use current hit as A</button><button type="button" id="gwPickB">Use current hit as B</button></div>
+<p class="hint"><span id="gwA">A · not chosen</span> · <span id="gwB">B · not chosen</span></p>
+<div class="row"><label>A radius <input id="gwRingA" type="number" min="0.002" max="1" step="0.005" value="0.035"></label><label>B radius <input id="gwRingB" type="number" min="0.002" max="1" step="0.005" value="0.045"></label></div>
+<button type="button" id="gwBridge">Bridge A → B (preview)</button>
+<div class="row"><button type="button" id="gwUndo">↶ Undo draft</button><button type="button" id="gwDelete">Delete active piece</button><button type="button" id="gwClear">Clear draft</button></div>
+<div class="row"><button type="button" id="gwExport">⬇ Export patch only GLB</button><button type="button" id="gwExportCombined">⬇ Export combined candidate GLB</button></div>
+<p class="hint" role="status" id="gwStatus">Local draft only. Original model, textures, rig, and Assembly Lab stay unchanged. Reimport any exported candidate and visually test it.</p>
+</details></section><section id="tabPaint" class="workspace" role="tabpanel" aria-labelledby="tabButtonPaint" hidden><h2>Paint a model</h2>
+<p class="hint">Choose a surface, pick a color, and paint in the 3D view. Your original file stays untouched.</p>
+<div id="firstPaintGuide">
+<strong>Start here</strong>
+<p class="hint">Tap the part you want to paint, pick a brush color, then tap Start painting.</p>
+<button id="paintPickTarget" type="button">Pick a surface in the viewer</button>
+<p id="paintPickStatus" class="hint" role="status">Load Finn or Sylvara first. You don't need to know the names of their meshes.</p>
+</div>
+<label for="paintTarget">Selected surface</label><select id="paintTarget"><option value="">Load a model</option></select>
+<div class="row"><button id="paintNavigate" class="active">✋ Navigate</button><button id="paintStart">Start painting</button></div>
+<label for="paintColor">Brush color</label><div class="row"><input type="color" id="paintColor" value="#e78b9c" aria-label="Brush color"><button id="paintEyedropper" type="button">🎯 Eyedropper · tap model</button></div>
+<p class="hint" id="paintSampleStatus" role="status">Sample a color from the model's texture without applying paint.</p>
+<label for="paintSize">Brush size: <output id="paintSizeValue">16</output> texture pixels</label><input id="paintSize" type="range" min="1" max="110" value="16">
+<label for="paintOpacity">Opacity: <output id="paintOpacityValue">35%</output></label><input id="paintOpacity" type="range" min="5" max="100" value="35">
+<div class="row"><button id="paintUndo">↶ Undo stroke</button><button id="paintClear">Reset paint</button></div>
+<details class="subpanel toolFold" id="artReferencePanel"><summary>Add reference art</summary>
+<p class="hint">Add your original drawing as a local visual reference. You can pin it to the 3D viewer without uploading it to anyone. To collaborate with an AI partner, share the art image in your conversation along with a CoLab screenshot and JSON.</p>
+<label for="artReferenceFile">Add concept art (PNG, JPEG or WebP)</label>
+<div class="row"><label class="smallFileLabel" style="margin:3px 0;flex:1;text-align:center">🖼 Choose from Photos<input id="artReferenceFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
+<button type="button" id="artReferenceBrowseButton" style="flex:1">📁 Browse Files / Drive</button></div>
+<input id="artReferenceBrowse" type="file" hidden aria-label="Choose a concept image through Android Files">
+<p class="hint">Photos opens the Android gallery. Browse Files / Drive requests the general document browser, where Drive may be offered. If not, download the image from Drive and select it from Downloads.</p>
+<img id="artReferencePreview" alt="Loaded concept art" hidden>
+<p id="artReferenceSummary" role="status">No reference loaded. Your artwork stays on this device until you choose to share it.</p>
+<div class="row"><button id="artReferenceToggle" type="button" disabled>Pin image over viewer</button><button id="artReferenceRemove" type="button" disabled>Remove reference</button></div>
+<label for="artReferenceScale">Pinned reference size: <output id="artReferenceScaleValue">34%</output> of viewer width</label>
+<input id="artReferenceScale" type="range" min="15" max="90" step="1" value="34" disabled aria-label="Resize pinned reference image">
+<button id="artReferenceEyedropper" type="button" disabled>🎯 Pick brush color from reference</button>
+<p class="hint" id="artReferenceSampleStatus" role="status">Choose Pick brush color, then tap the pinned image or the preview above. Painting on the character will stay unchanged.</p>
+
+<p class="hint">Reference art is visual guidance; it does not automatically repaint the model or send the image to Aster. Screenshots from your phone can show us both the drawing and 3D result.</p>
+</details>
+<details class="subpanel toolFold" ><summary>Brush guides and texture size</summary>
+<div class="row"><button id="paintWireToggle" type="button" aria-pressed="false">▦ Shaded + wire guide</button><button id="paintUvToggle" type="button" aria-pressed="false">▤ Show UV lines</button></div>
+<p class="hint" id="paintWireHelp">Show dark or light mesh edges directly over the textured model while painting. The guide is visual only and never becomes part of your exported texture. Leave the separate UV-lines preview off for better performance.</p>
+<div class="row"><label for="paintWireOpacity" style="flex:2">Guide visibility <output id="paintWireOpacityValue">45%</output><input id="paintWireOpacity" type="range" min="10" max="90" value="45" step="5"></label><label for="paintWireTone" style="flex:1">Line color<select id="paintWireTone"><option value="dark">Dark</option><option value="light">Light</option></select></label></div>
+<label for="paintResolution">Texture resolution</label><select id="paintResolution"><option value="1024">1024 × 1024 (phone-friendly)</option><option value="2048">2048 × 2048 (more detail)</option></select>
+</details>
+<details class="subpanel toolFold" ><summary>Save or restore paint work</summary>
+<label>Painted UV texture</label><canvas id="paintPreview" width="1024" height="1024"></canvas>
+<div class="row"><button id="paintPNG">⬇ PNG</button><button id="paintGLB">⬇ Test GLB</button></div>
+<p class="hint" id="paintQualityNote" role="status">The paint canvas is phone-friendly. Larger original textures may lose detail in a test export; CoLab will warn you before that happens.</p>
+<button id="paintJSON">⬇ Paint Project JSON</button><label for="paintImport">Restore Paint Project JSON</label><input id="paintImport" type="file" accept=".json,application/json">
+<p class="hint" id="paintStatus">Painting requires UV coordinates. Paint JSON includes sampled 3D hit positions; textured GLB is a new export, never an overwrite. A brush stroke can affect overlapping UV islands.</p>
+</details>
+</section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Animate a model</h2>
+<p class="hint">Play an existing clip or make a pose on a rigged model.</p>
+<div class="subpanel primaryTool"><h3>Preview a clip</h3><label for="animClip">Animation clip</label><select id="animClip"><option value="">Captured keyframes</option></select>
+<div class="row"><button id="animPlay">▶ Play</button><button id="animPause">⏸ Pause</button></div>
+<label for="animTimeline">Motion timeline · <output id="animTime">0.00 / 0.00 s</output></label><input id="animTimeline" type="range" min="0" max="1000" value="0" disabled>
+<div class="row"><button id="animPrev">◀ Step</button><button id="animNext">Step ▶</button></div>
+<button id="markFromMotion" type="button">Freeze &amp; mark this frame</button>
+<p id="markMotionHint" class="hint" role="status">Save the view and the exact point in the motion without editing it.</p>
+<p class="hint" id="animStatus">Load a rigged GLB to enable posing. Animated GLBs with clips can be previewed without manual keyframe capture.</p>
+</div>
+<div id="allSkeletonPoints" class="subpanel" aria-label="Grab every skeleton joint">
+ <h3>🔵 Pose every joint</h3>
+ <p class="hint">Choose Pose to drag any blue dot or touch a body part. The camera stays locked while posing. Choose Orbit when you want to rotate the model. Every detected joint can also be chosen by name.</p>
+ <div class="row"><button id="jointPoseMode" type="button" class="active">✋ Pose · move body parts</button><button id="jointOrbitMode" type="button">↻ Orbit · rotate camera</button></div>
+<p id="jointModeHint" class="hint">Pose: camera locked. Orbit: move the camera, including while animation plays. Play automatically switches to Orbit.</p>
+<div class="row"><button id="jointDotToggle" type="button">🔵 Show all joint dots · On</button><button id="jointCapturePose" type="button">Capture pose</button></div>
+ <label for="jointSearch">Find a joint (optional)</label><input id="jointSearch" type="search" placeholder="Head, spine, tripo, arm, leg…">
+ <label for="jointSelect">All detected skeleton joints</label>
+ <select id="jointSelect" aria-label="Every detected skeleton joint"><option value="">Load a rigged GLB</option></select>
+ <div class="row"><button id="jointPick" type="button">Select highlighted joint</button><button id="jointResetPose" type="button">Reset whole pose</button></div>
+ <div class="subpanel" style="background:#142f40;border-color:#55918b" id="jointNudgePanel">
+ <h3>Move selected joint · backup touch controls</h3>
+ <p class="hint">If dragging isn't responding, choose the hoof joint above (or tap its yellow dot), then tap an arrow. This moves the joint locally without rotating the camera.</p>
+ <label for="jointMoveStep">Movement per tap</label>
+ <select id="jointMoveStep"><option value="0.01">Tiny · 0.01 units</option><option value="0.025" selected>Small · 0.025 units</option><option value="0.05">Medium · 0.05 units</option></select>
+ <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px">
+ <span></span><button type="button" data-joint-move="up">↑ Up</button><span></span>
+ <button type="button" data-joint-move="left">← Left</button><button type="button" data-joint-move="toward">● Toward</button><button type="button" data-joint-move="right">Right →</button>
+ <span></span><button type="button" data-joint-move="down">↓ Down</button><button type="button" data-joint-move="away">○ Away</button>
+ </div>
+ <p class="hint" id="jointMoveFeedback" role="status">Select a joint, then tap an arrow to test whether the bone solver moves it.</p>
+ </div>
+ <button id="jointExportReport" type="button">⬇ Pose diagnostic JSON · send to your AI partner</button>
+ <p id="jointStatus" class="hint" role="status">Load a rigged GLB, then tap any blue dot.</p>
+ <p class="hint">Local experimental IK: nearest connected parent joints rotate to follow your drag. Skeleton roots move as a whole. This does not enforce anatomical limits or keep every foot planted yet.</p>
+ </div>
+<details class="subpanel toolFold" ><summary>Fine joint controls and keyframes</summary>
+<div id="motionRigControls"><label for="animBone">Joint</label><select id="animBone"><option>Load a rigged model</option></select><div id="animAxes"></div>
+<div class="row"><button id="animReset">Reset joint</button><button id="animResetAll">Reset pose</button></div>
+<details class="subpanel" id="animIkPanel"><summary>IK · Move a paw, hand or foot (experimental)</summary>
+<p class="hint">Select three connected bones from the loaded rig: upper joint, middle joint, and end joint. Choose the end joint first, then use Auto-chain. Move its target using model-local X/Y/Z. Capture keyframe saves the resulting pose. No mesh or original file is overwritten.</p>
+<label>End joint (paw / hand / foot)<select id="animIkEnd"></select></label>
+<button id="animIkAuto">Find parent chain</button>
+<p class="hint" id="animIkChain">Choose a rigged model and an end joint.</p>
+<div class="row"><button id="animIkTarget">Use current position</button><button id="animIkSolve">Solve IK target</button></div>
+<button id="animIkDrag" type="button">✋ Drag IK target · Off</button>
+<p class="hint">Turn on Drag IK, then drag the colored target directly in the 3D view. The target moves parallel to your screen; use the coordinate controls for depth adjustments. Turn off to rotate the camera normally.</p>
+<div id="animIkCoords"></div>
+<p class="hint" id="animIkStatus">Experimental 2-joint IK. Not all skeletons are compatible.</p>
+</details>
+<button id="animCapture">Capture keyframe</button><div id="animFrames" class="framebuttons"></div>
+<div class="row"><button id="animReplace">Replace keyframe</button><button id="animDelete">Delete keyframe</button></div>
+</div>
+</details>
+<details class="subpanel toolFold" ><summary>Save, restore, or inspect a pose</summary>
+<button id="animFreeze">Freeze and inspect pose</button>
+<div class="row"><button id="animSave">⬇ Pose JSON</button><label class="smallFileLabel">↥ Restore<input id="animImport" type="file" accept=".json,application/json"></label></div>
+<div class="row"><label for="animExportName">New animation clip name<input id="animExportName" type="text" value="CoLab_Sit" maxlength="64" autocomplete="off"></label></div>
+<button id="animExportGlb" type="button">⬇ Export Animated GLB · Experimental</button>
+<p class="hint">Exports a new GLB with your captured poses as an embedded clip, alongside the model's imported clips. Your original GLB and saved session remain unchanged. Reimport the download to verify.</p>
+</details>
+</section><section id="tabReview" class="workspace" role="tabpanel" aria-labelledby="tabButtonReview" hidden><h2>Review and share</h2><p class="hint">Show what needs attention, or compare a proposed model with the original.</p>
+<div class="subpanel primaryTool"><h3>Mark &amp; Share</h3>
+<button id="markFromReview" type="button">Mark this view</button>
+<p id="markReviewHint" class="hint" role="status">Circle a spot on a frozen view of the original model, add a note, and save it to share.</p></div>
+<details id="comparePanel" class="subpanel toolFold"><summary>Compare original and candidate</summary>
+<p class="hint">Open a separate proposed GLB and switch Original / Candidate, at the same camera position. This never changes the original model.</p>
+<p class="hint" id="reviewLoadGuide" role="status">For side-by-side comparison, first load the original model using "Open model" near the top of the controls. Then choose the repaired model below. If you only have the repair file, CoLab can still show it by itself.</p>
+<label for="candidateFile">Proposed GLB</label><input id="candidateFile" type="file" accept=".glb,model/gltf-binary">
+<button id="candidateBrowseAll" type="button">📁 Android: Browse all files for repaired GLB</button>
+<input id="candidateUnfiltered" type="file" hidden aria-label="Browse Android files to choose repaired GLB without type filtering">
+<p class="hint">If Finn V3 is greyed out after extracting the ZIP, tap <strong>Browse all files</strong>, open the extracted folder, and select the file ending in <strong>.glb</strong> (not the ZIP or repair report). This button bypasses Android's unreliable file-type filtering.</p>
+<div class="row"><button id="candidateOriginal" class="active">Original</button><button id="candidateView">Candidate</button></div>
+<div class="row"><button id="reviewFaceFocus" type="button">👁 Focus on face</button><button id="reviewChangeDots" type="button" disabled>● Show changed points</button></div>
+<p id="reviewChangeStatus" class="hint" role="status">Load the matching original and candidate GLBs to measure actual geometry differences. For texture-only repairs, use Original / Candidate.</p>
+<button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></details>
+<details id="directorPanel" class="subpanel toolFold" aria-label="Director's Desk">
+ <summary>Director’s Desk · work with Aster</summary>
  <p class="hint">You direct. Your AI collaborator can propose small changes. CoLab runs supported recipes locally and keeps the original GLB untouched. Nothing is automatically sent to an AI service.</p>
- <label for="directorTask">Choose an experience</label>
+ <label for="directorTask">What do you want to change?</label>
  <select id="directorTask"><option value="repair">◈ Repair a surface</option><option value="paint">🖌 Repaint a selected area</option><option value="animate">▶ Block an animation</option></select>
  <label for="directorIntent">Tell your AI partner what you want</label>
  <textarea id="directorIntent" rows="3" placeholder="What should this character or object look like, feel like, or do? Your words are enough."></textarea>
@@ -89,177 +311,7 @@
 </details>
 
 
-<details class="subpanel" id="recoveryPanel" aria-label="Local session recovery"><summary id="recoverySummary">Local recovery</summary>
- <p id="saveStatus" class="hint" aria-live="polite">Checking this device for a saved session…</p>
- <div class="row"><button id="saveSession" disabled>Save now</button><button id="restoreSession" disabled>Restore last session</button></div>
- <button id="forgetSession" disabled>Delete saved local copy</button>
- <p class="hint">Private to this browser on this device. CoLab stores the original GLB, selections, paint, and poses locally when space allows. Nothing is uploaded. JSON exports remain your portable backup; previous paint undo history and comparison GLBs are not restored.</p>
-</details>
-<details class="subpanel" id="appUpdates" aria-label="App updates"><summary>App updates · version 0.11</summary>
- <button id="checkUpdates">Check for updates</button>
- <div id="updateReady" hidden><p class="hint">An approved update is ready. Save your project before restarting the app.</p><div class="row"><button id="applyUpdate">Save &amp; update</button><button id="laterUpdate">Later</button></div></div>
- <p id="updateStatus" class="hint" aria-live="polite">Updates never interrupt active work automatically.</p>
-</details>
-<p class="hint" id="workspaceHint">Six-color geometry selections and agent handoffs · B3.3 preserved</p><section id="tabInspect" class="workspace" role="tabpanel" aria-labelledby="tabButtonInspect"><label>2 · Surface selection</label><div class="row"><button id="nav" class="active">✋ Navigate</button><button id="select">◈ Select</button></div><div class="row"><button id="one">Triangle</button><button id="connected">Connected part</button><button id="mesh">Whole mesh</button></div><div class="row"><button id="clear">Clear selection</button><button id="frame">Frame selection</button></div><div id="picked">Tap a visible surface in Select mode.</div>
-<details class="subpanel" id="facePatchPanel">
- <summary>🧑 Face repair lab · prepare a local patch for Aster</summary>
- <p class="hint">For Finn's rigged mesh. This does NOT repair the face automatically. It marks a small, controllable 3D patch for investigation without touching the original geometry, UVs or skin weights.</p>
- <p class="hint">Tap <strong>Select</strong>, uncheck Auto-select connected part, and touch Finn's cheek or forehead. Then tap <strong>Mark face patch</strong>.</p>
- <label for="facePatchRadius">Patch radius around last touched point · <output id="facePatchRadiusValue">0.06</output> model units</label>
- <input id="facePatchRadius" type="range" min="0.01" max="0.18" value="0.06" step="0.005">
- <div class="row"><button id="facePatchMark" type="button">Mark face patch</button><button id="facePatchExport" type="button">⬇ Patch diagnostic JSON</button></div>
- <p id="facePatchStatus" class="hint" role="status">Start by selecting a small facial surface in Inspect.</p>
- <p class="hint">Exports only the selected mesh patch's positions, normals, UVs and skinning weights, plus the matching GLB fingerprint. It does not upload the model or make a sculpt automatically. Send this JSON and a close-up screenshot for a proposal.</p>
-</details><label style="font-weight:500;display:flex;align-items:center;gap:4px"><input id="autoConnected" type="checkbox" checked> Auto-select connected part when tapping</label><p class="hint">Uncheck for individual triangles. A numbered, color-coded marker shows the exact surface tap even if a tiny triangle is hard to see. Use Connected part to expand the active region again.</p>
-<label>3 · Six independent color selections</label><div id="slots" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div><label for="regionName">Active region name</label><input id="regionName" maxlength="100"><button id="clearAllRegions">Clear ALL six regions</button><p class="hint">Choose a color, tap geometry and expand to Connected part. Select another color to keep both regions visible. You can name each region. This is for inspection, not yet expression editing. B2.1/B3.1: tapping auto-expands connected geometry, and each color slot remembers its hit.</p><label>4 · Selection visibility</label><div class="row"><button id="showAll" class="active">Show all</button><button id="isolate">Isolate selected</button></div><div class="row"><button id="hideSelected">Hide selected</button><button id="contextOnly">Context + selected</button></div>
-<label for="isolateAlpha">Surrounding geometry visibility <output id="isolateAlphaValue">20%</output></label><input id="isolateAlpha" type="range" min="0" max="100" step="5" value="20">
-<p class="hint">Isolate shows selected triangles, optionally with faded surroundings. Hide selected shows all other triangles. Restore all to select another surface. Selection and original geometry remain intact.</p>
-<label>5 · Selection appearance</label><label for="context">Unselected geometry transparency <output id="contextValue">0%</output></label><input id="context" type="range" min="0" max="85" value="0" step="5"><div class="row"><button id="solid" class="active">Solid</button><button id="wire">Wireframe</button><button id="xray">X-ray</button></div><div class="row"><button id="front">Front</button><button id="back">Back</button><button id="left">Left</button></div><div class="row"><button id="right">Right</button><button id="top">Top</button><button id="bottom">Bottom</button></div><button id="resetView">Reset camera</button>
-<label>7 · Agent handoff</label>
-<details style="margin:10px 0;padding:9px 12px;border:1px solid #4d7184;border-radius:10px;background:#21384b">
-<summary style="cursor:pointer;font-weight:650">📷 Work with your AI agent · screenshots can prevent wasted rebuilds</summary>
-<p class="hint">Try the model, share a screenshot of what happened and describe what looks wrong in ordinary words. Your agent can compare before/after images, repair a small reusable script, and ask you to retest instead of repeatedly rebuilding or regenerating the whole asset.</p>
-<p class="hint">This can reduce unnecessary paid AI calls or generations, but savings depend on your tools and usage; image analysis may also be metered. <a style="color:#91f0d8" href="https://mre369.github.io/foxfriend-motion-studio/colab/agent-guide.html" target="_blank" rel="noopener">Read our screenshot-first workflow and example prompt ↗</a></p>
-</details>
-<label for="label">Selection label</label><input id="label" placeholder="e.g. suspected upper eyelid"><label for="note">Instructions / observations</label><textarea id="note" placeholder="What is this surface? Is there geometry behind it?"></textarea><button id="export">⬇ Export selection JSON</button><label for="import">Restore selection JSON</label><label style="font-weight:400"><input id="mergeImport" type="checkbox" style="width:auto;min-height:0;margin-right:8px">Add to current selection instead of replacing (matching GLB only)</label><input id="import" type="file" accept=".json,application/json"><div id="importResult" role="status" aria-live="polite"></div><p class="hint">Handoff records a SHA-256 fingerprint of the original GLB, a mesh path, triangle indices, UVs when present, and 3D hit location. Import refuses a different file fingerprint. Original model data is never rewritten.</p>
-<details><summary>Scope and limitations</summary><p class="hint">Milestone A includes universal inspection, triangle selection, connected-component selection using shared geometric edges, mesh selection, display modes, camera presets, and JSON save/restore. Large selections may be slow on phones. Connected parts are determined by matching position edges within a small tolerance, so near-coincident seams may connect or stay separate depending on geometry. This test hides or isolates selected source triangles in the viewer without editing GLB geometry; previews are rebuilt as lightweight meshes and may not follow animated/skinned deformation. Painting and geometry edits remain future milestones.</p></details>
-<details id="geometryWorkshop" class="subpanel" aria-label="Geometry Workshop">
-<summary>🧩 Geometry Workshop · experimental draft tools</summary>
-<p class="hint">Add and shape separate geometry without changing the loaded model. Tap a surface in Inspect Select mode, then use it as a placement or brush reference. Preview and Undo before exporting.</p>
-<h3>1 · Add geometry</h3>
-<label for="gwPrimitive">Shape</label><select id="gwPrimitive"><option value="cylinder">Cylinder</option><option value="sphere">Sphere</option><option value="box">Box</option></select>
-<div class="row"><label>Radius / width <input id="gwRadius" type="number" min="0.002" max="2" step="0.005" value="0.035"></label><label>Height <input id="gwHeight" type="number" min="0.002" max="4" step="0.005" value="0.07"></label></div>
-<button type="button" id="gwAdd">＋ Add draft geometry</button>
-<label for="gwMeshes">Active draft piece</label><select id="gwMeshes"></select><p id="gwCount" class="hint">0 draft meshes</p>
-<div class="row"><label>X <input id="gwX" type="number" step="0.001" value="0"></label><label>Y <input id="gwY" type="number" step="0.001" value="0"></label><label>Z <input id="gwZ" type="number" step="0.001" value="0"></label><label>Scale <input id="gwScale" type="number" min="0.02" max="20" step="0.01" value="1"></label></div>
-<button type="button" id="gwApply">Apply draft position / scale</button>
-<div class="subpanel" aria-label="Touch-friendly draft transforms">
-<h3>Touch transforms · live sliders</h3>
-<p class="hint">Move draft pieces only. Sliders change them immediately; use Undo to reverse a gesture. Drag mode lets you touch and move a draft shape in the viewer without altering Finn.</p>
-<label for="gwRangeX">X · <output id="gwValueX">—</output></label><input id="gwRangeX" type="range" min="-3" max="3" step="0.005" value="0" style="width:100%;min-height:38px" aria-label="Draft X slider">
-<label for="gwRangeY">Y · <output id="gwValueY">—</output></label><input id="gwRangeY" type="range" min="-3" max="3" step="0.005" value="0" style="width:100%;min-height:38px" aria-label="Draft Y slider">
-<label for="gwRangeZ">Z · <output id="gwValueZ">—</output></label><input id="gwRangeZ" type="range" min="-3" max="3" step="0.005" value="0" style="width:100%;min-height:38px" aria-label="Draft Z slider">
-<label for="gwRangeScale">Scale · <output id="gwValueScale">—</output></label><input id="gwRangeScale" type="range" min="0.05" max="3" step="0.01" value="1" style="width:100%;min-height:38px" aria-label="Draft Scale slider">
-<label for="gwStep">Nudge step (model units)</label><input id="gwStep" type="number" min="0.0001" max="0.5" step="0.001" value="0.005">
-<div class="row"><button type="button" data-gw-nudge="x:-1">X −</button><button type="button" data-gw-nudge="x:1">X +</button><button type="button" data-gw-nudge="y:-1">Y −</button><button type="button" data-gw-nudge="y:1">Y +</button></div>
-<div class="row"><button type="button" data-gw-nudge="z:-1">Z −</button><button type="button" data-gw-nudge="z:1">Z +</button><button type="button" id="gwDrag" aria-pressed="false">✋ Drag piece: OFF</button></div>
-</div>
-<h3>2 · Shape draft geometry</h3>
-<p class="hint">Select a surface in Inspect as the brush center. The brush changes only the active draft piece; source geometry is never sculpted in place.</p>
-<div class="row"><label>Brush radius <input id="gwBrushRadius" type="number" min="0.002" max="2" step="0.005" value="0.08"></label><label>Push / pull <input id="gwBrushStrength" type="number" min="-0.25" max="0.25" step="0.005" value="0.015"></label></div>
-<button type="button" id="gwShape">Shape draft near selected point</button>
-<h3>3 · Bridge surfaces (sleeve preview)</h3>
-<p class="hint">Tap a head surface in Select mode, save A; tap a body surface, save B. Create an adjustable bridging sleeve. This is not a welded seam and it has no bone weights yet.</p>
-<div class="row"><button type="button" id="gwPickA">Use current hit as A</button><button type="button" id="gwPickB">Use current hit as B</button></div>
-<p class="hint"><span id="gwA">A · not chosen</span> · <span id="gwB">B · not chosen</span></p>
-<div class="row"><label>A radius <input id="gwRingA" type="number" min="0.002" max="1" step="0.005" value="0.035"></label><label>B radius <input id="gwRingB" type="number" min="0.002" max="1" step="0.005" value="0.045"></label></div>
-<button type="button" id="gwBridge">Bridge A → B (preview)</button>
-<div class="row"><button type="button" id="gwUndo">↶ Undo draft</button><button type="button" id="gwDelete">Delete active piece</button><button type="button" id="gwClear">Clear draft</button></div>
-<div class="row"><button type="button" id="gwExport">⬇ Export patch only GLB</button><button type="button" id="gwExportCombined">⬇ Export combined candidate GLB</button></div>
-<p class="hint" role="status" id="gwStatus">Local draft only. Original model, textures, rig, and Assembly Lab stay unchanged. Reimport any exported candidate and visually test it.</p>
-</details></section><section id="tabPaint" class="workspace" role="tabpanel" aria-labelledby="tabButtonPaint" hidden><h2>Character Paint Studio <small>· integrated test</small></h2>
-<p class="hint">Experimental local painting. Original GLB remains untouched. Start on a small part of Finn or Sylvara's clothing, inspect the result, and use Undo whenever needed.</p>
-<div class="subpanel" id="artReferencePanel">
-<h3>🖼 Concept art · paint together</h3>
-<p class="hint">Add your original drawing as a local visual reference. You can pin it to the 3D viewer without uploading it to anyone. To collaborate with an AI partner, share the art image in your conversation along with a CoLab screenshot and JSON.</p>
-<label for="artReferenceFile">Add concept art (PNG, JPEG or WebP)</label>
-<div class="row"><label class="smallFileLabel" style="margin:3px 0;flex:1;text-align:center">🖼 Choose from Photos<input id="artReferenceFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
-<button type="button" id="artReferenceBrowseButton" style="flex:1">📁 Browse Files / Drive</button></div>
-<input id="artReferenceBrowse" type="file" hidden aria-label="Choose a concept image through Android Files">
-<p class="hint">Photos opens the Android gallery. Browse Files / Drive requests the general document browser, where Drive may be offered. If not, download the image from Drive and select it from Downloads.</p>
-<img id="artReferencePreview" alt="Loaded concept art" hidden>
-<p id="artReferenceSummary" role="status">No reference loaded. Your artwork stays on this device until you choose to share it.</p>
-<div class="row"><button id="artReferenceToggle" type="button" disabled>Pin image over viewer</button><button id="artReferenceRemove" type="button" disabled>Remove reference</button></div>
-<label for="artReferenceScale">Pinned reference size: <output id="artReferenceScaleValue">34%</output> of viewer width</label>
-<input id="artReferenceScale" type="range" min="15" max="90" step="1" value="34" disabled aria-label="Resize pinned reference image">
-<button id="artReferenceEyedropper" type="button" disabled>🎯 Pick brush color from reference</button>
-<p class="hint" id="artReferenceSampleStatus" role="status">Choose Pick brush color, then tap the pinned image or the preview above. Painting on the character will stay unchanged.</p>
-
-<p class="hint">Reference art is visual guidance; it does not automatically repaint the model or send the image to Aster. Screenshots from your phone can show us both the drawing and 3D result.</p>
-</div>
-<div id="firstPaintGuide">
-<strong>First repaint · simple test</strong>
-<p class="hint">1. Tap a piece of clothing to choose its surface. 2. Pick a color. 3. Start Paint. 4. Make one small stroke. 5. Inspect, Undo, or save your Paint JSON. 6. Export a separate test GLB only when you're happy.</p>
-<button id="paintPickTarget" type="button">👆 Tap a surface to choose where to paint</button>
-<p id="paintPickStatus" class="hint" role="status">Load Finn or Sylvara first. You don't need to know the names of their meshes.</p>
-</div>
-<label for="paintTarget">Selected surface · advanced mesh choice</label><select id="paintTarget"><option value="">Load a model</option></select>
-<div class="row"><button id="paintNavigate" class="active">✋ Navigate</button><button id="paintStart">🖌 Paint</button></div>
-<div class="row"><button id="paintWireToggle" type="button" aria-pressed="false">▦ Shaded + wire guide</button><button id="paintUvToggle" type="button" aria-pressed="false">▤ Show UV lines</button></div>
-<p class="hint" id="paintWireHelp">Show dark or light mesh edges directly over the textured model while painting. The guide is visual only and never becomes part of your exported texture. Leave the separate UV-lines preview off for better performance.</p>
-<div class="row"><label for="paintWireOpacity" style="flex:2">Guide visibility <output id="paintWireOpacityValue">45%</output><input id="paintWireOpacity" type="range" min="10" max="90" value="45" step="5"></label><label for="paintWireTone" style="flex:1">Line color<select id="paintWireTone"><option value="dark">Dark</option><option value="light">Light</option></select></label></div>
-<label for="paintColor">Brush color</label><div class="row"><input type="color" id="paintColor" value="#e78b9c" aria-label="Brush color"><button id="paintEyedropper" type="button">🎯 Eyedropper · tap model</button></div>
-<p class="hint" id="paintSampleStatus" role="status">Sample a color from the model's texture without applying paint.</p>
-<label for="paintSize">Brush size: <output id="paintSizeValue">16</output> texture pixels</label><input id="paintSize" type="range" min="1" max="110" value="16">
-<label for="paintOpacity">Opacity: <output id="paintOpacityValue">35%</output></label><input id="paintOpacity" type="range" min="5" max="100" value="35">
-<label for="paintResolution">Texture resolution</label><select id="paintResolution"><option value="1024">1024 × 1024 (phone-friendly)</option><option value="2048">2048 × 2048 (more detail)</option></select>
-<div class="row"><button id="paintUndo">↶ Undo stroke</button><button id="paintClear">Reset paint</button></div>
-<label>Painted UV texture</label><canvas id="paintPreview" width="1024" height="1024"></canvas>
-<div class="row"><button id="paintPNG">⬇ PNG</button><button id="paintGLB">⬇ Test GLB</button></div>
-<p class="hint" id="paintQualityNote" role="status">The paint canvas is phone-friendly. Larger original textures may lose detail in a test export; CoLab will warn you before that happens.</p>
-<button id="paintJSON">⬇ Paint Project JSON</button><label for="paintImport">Restore Paint Project JSON</label><input id="paintImport" type="file" accept=".json,application/json">
-<p class="hint" id="paintStatus">Painting requires UV coordinates. Paint JSON includes sampled 3D hit positions; textured GLB is a new export, never an overwrite. A brush stroke can affect overlapping UV islands.</p>
-</section><section id="tabAnimate" class="workspace" role="tabpanel" aria-labelledby="tabButtonAnimate" hidden><h2>Motion Studio <small>· integrated test</small></h2>
-<p class="hint">The working keyframe and joint controls have been adapted to share this viewer. They activate only when your GLB contains bones. Inbuilt GLB clips can be previewed separately.</p>
-<div id="allSkeletonPoints" class="subpanel" aria-label="Grab every skeleton joint">
- <h3>🔵 Pose every joint</h3>
- <p class="hint">Choose Pose to drag any blue dot or touch a body part. The camera stays locked while posing. Choose Orbit when you want to rotate the model. Every detected joint can also be chosen by name.</p>
- <div class="row"><button id="jointPoseMode" type="button" class="active">✋ Pose · move body parts</button><button id="jointOrbitMode" type="button">↻ Orbit · rotate camera</button></div>
-<p id="jointModeHint" class="hint">Pose: camera locked. Orbit: move the camera, including while animation plays. Play automatically switches to Orbit.</p>
-<div class="row"><button id="jointDotToggle" type="button">🔵 Show all joint dots · On</button><button id="jointCapturePose" type="button">Capture pose</button></div>
- <label for="jointSearch">Find a joint (optional)</label><input id="jointSearch" type="search" placeholder="Head, spine, tripo, arm, leg…">
- <label for="jointSelect">All detected skeleton joints</label>
- <select id="jointSelect" aria-label="Every detected skeleton joint"><option value="">Load a rigged GLB</option></select>
- <div class="row"><button id="jointPick" type="button">Select highlighted joint</button><button id="jointResetPose" type="button">Reset whole pose</button></div>
- <div class="subpanel" style="background:#142f40;border-color:#55918b" id="jointNudgePanel">
- <h3>Move selected joint · backup touch controls</h3>
- <p class="hint">If dragging isn't responding, choose the hoof joint above (or tap its yellow dot), then tap an arrow. This moves the joint locally without rotating the camera.</p>
- <label for="jointMoveStep">Movement per tap</label>
- <select id="jointMoveStep"><option value="0.01">Tiny · 0.01 units</option><option value="0.025" selected>Small · 0.025 units</option><option value="0.05">Medium · 0.05 units</option></select>
- <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px">
- <span></span><button type="button" data-joint-move="up">↑ Up</button><span></span>
- <button type="button" data-joint-move="left">← Left</button><button type="button" data-joint-move="toward">● Toward</button><button type="button" data-joint-move="right">Right →</button>
- <span></span><button type="button" data-joint-move="down">↓ Down</button><button type="button" data-joint-move="away">○ Away</button>
- </div>
- <p class="hint" id="jointMoveFeedback" role="status">Select a joint, then tap an arrow to test whether the bone solver moves it.</p>
- </div>
- <button id="jointExportReport" type="button">⬇ Pose diagnostic JSON · send to your AI partner</button>
- <p id="jointStatus" class="hint" role="status">Load a rigged GLB, then tap any blue dot.</p>
- <p class="hint">Local experimental IK: nearest connected parent joints rotate to follow your drag. Skeleton roots move as a whole. This does not enforce anatomical limits or keep every foot planted yet.</p>
- </div>
-<div id="motionRigControls"><label for="animBone">Joint</label><select id="animBone"><option>Load a rigged model</option></select><div id="animAxes"></div>
-<div class="row"><button id="animReset">Reset joint</button><button id="animResetAll">Reset pose</button></div>
-<details class="subpanel" id="animIkPanel"><summary>IK · Move a paw, hand or foot (experimental)</summary>
-<p class="hint">Select three connected bones from the loaded rig: upper joint, middle joint, and end joint. Choose the end joint first, then use Auto-chain. Move its target using model-local X/Y/Z. Capture keyframe saves the resulting pose. No mesh or original file is overwritten.</p>
-<label>End joint (paw / hand / foot)<select id="animIkEnd"></select></label>
-<button id="animIkAuto">Find parent chain</button>
-<p class="hint" id="animIkChain">Choose a rigged model and an end joint.</p>
-<div class="row"><button id="animIkTarget">Use current position</button><button id="animIkSolve">Solve IK target</button></div>
-<button id="animIkDrag" type="button">✋ Drag IK target · Off</button>
-<p class="hint">Turn on Drag IK, then drag the colored target directly in the 3D view. The target moves parallel to your screen; use the coordinate controls for depth adjustments. Turn off to rotate the camera normally.</p>
-<div id="animIkCoords"></div>
-<p class="hint" id="animIkStatus">Experimental 2-joint IK. Not all skeletons are compatible.</p>
-</details>
-<button id="animCapture">Capture keyframe</button><div id="animFrames" class="framebuttons"></div>
-<div class="row"><button id="animReplace">Replace keyframe</button><button id="animDelete">Delete keyframe</button></div>
-</div>
-<div class="row"><button id="animPlay">▶ Play</button><button id="animPause">⏸ Pause</button></div>
-<label for="animTimeline">Motion timeline · <output id="animTime">0.00 / 0.00 s</output></label><input id="animTimeline" type="range" min="0" max="1000" value="0" disabled>
-<div class="row"><button id="animPrev">◀ Step</button><button id="animNext">Step ▶</button></div>
-<label for="animClip">Embedded GLB animation clips (if present)</label><select id="animClip"><option value="">Captured keyframes</option></select>
-<button id="animFreeze">Freeze and inspect pose</button>
-<div class="row"><button id="animSave">⬇ Pose JSON</button><label class="smallFileLabel">↥ Restore<input id="animImport" type="file" accept=".json,application/json"></label></div>
-<div class="row"><label for="animExportName">New animation clip name<input id="animExportName" type="text" value="CoLab_Sit" maxlength="64" autocomplete="off"></label></div>
-<button id="animExportGlb" type="button">⬇ Export Animated GLB · Experimental</button>
-<p class="hint">Exports a new GLB with your captured poses as an embedded clip, alongside the model's imported clips. Your original GLB and saved session remain unchanged. Reimport the download to verify.</p>
-<button id="markFromMotion" type="button">Freeze &amp; mark this frame</button>
-<p id="markMotionHint" class="hint" role="status">Save the view and the exact point in the motion without editing it.</p>
-<p class="hint" id="animStatus">Load a rigged GLB to enable posing. Animated GLBs with clips can be previewed without manual keyframe capture.</p>
-</section><section id="tabReview" class="workspace" role="tabpanel" aria-labelledby="tabButtonReview" hidden><h2>Repair Review <small>· experimental</small></h2>
-<div class="subpanel"><h3>Mark &amp; Share</h3>
-<button id="markFromReview" type="button">Mark this view</button>
-<p id="markReviewHint" class="hint" role="status">Circle a spot on a frozen view of the original model, add a note, and save it to share.</p></div>
-<p class="hint">Existing six-region movement-preview controls remain intact. They show detached geometry proposals, not a repaired or watertight mesh.</p><label>6 · Non-destructive region movement preview</label>
+<details class="subpanel toolFold" ><summary>Preview moving a selected part</summary>
 <p class="hint">Choose one of the six color regions, then move its selected triangles in model-local X/Y/Z. Original geometry is never changed. This is a visual proposal, NOT a stitched mesh repair or a final facial expression.</p>
 <div class="row"><button id="previewOriginal" class="active">Original</button><button id="previewAdjusted">Proposed preview</button></div>
 <label for="moveStep">Movement step (model units)</label><select id="moveStep"><option value="0.00025">Very fine · 0.00025</option><option value="0.001" selected>Fine · 0.001</option><option value="0.005">Medium · 0.005</option><option value="0.01">Large · 0.01</option></select>
@@ -271,25 +323,22 @@
 <div id="moveSafety" class="hint warn">Select a region to check whether it can move cleanly.</div>
 <button id="exportMoves">⬇ Export movement proposal JSON</button>
 <p class="hint">Movement data is a reversible agent handoff with source fingerprint; there is deliberately no edited GLB export. Connected edges may tear if only some triangles move. Use this preview to decide what should change before engineering a smooth deformation.</p>
-<div class="subpanel"><h3>Compare repaired GLB</h3>
-<p class="hint">Open a separate proposed GLB and switch Original / Candidate, at the same camera position. This never changes the original model.</p>
-<p class="hint" id="reviewLoadGuide" role="status">For side-by-side comparison, first load the ORIGINAL Finn using "Load any GLB" near the top of the controls. Then choose the repaired model below. If you only have the repair file, CoLab can still show it by itself.</p>
-<label for="candidateFile">Proposed GLB</label><input id="candidateFile" type="file" accept=".glb,model/gltf-binary">
-<button id="candidateBrowseAll" type="button">📁 Android: Browse all files for repaired GLB</button>
-<input id="candidateUnfiltered" type="file" hidden aria-label="Browse Android files to choose repaired GLB without type filtering">
-<p class="hint">If Finn V3 is greyed out after extracting the ZIP, tap <strong>Browse all files</strong>, open the extracted folder, and select the file ending in <strong>.glb</strong> (not the ZIP or repair report). This button bypasses Android's unreliable file-type filtering.</p>
-<div class="row"><button id="candidateOriginal" class="active">Original</button><button id="candidateView">Candidate</button></div>
-<div class="row"><button id="reviewFaceFocus" type="button">👁 Focus on face</button><button id="reviewChangeDots" type="button" disabled>● Show changed points</button></div>
-<p id="reviewChangeStatus" class="hint" role="status">Load the matching original and candidate GLBs to measure actual geometry differences. For texture-only repairs, use Original / Candidate.</p>
-<button id="candidateDecision">⬇ Save review decision JSON</button><p class="hint" id="candidateStatus">No proposed GLB loaded.</p></div></section><section id="tabAssemble" class="workspace" role="tabpanel" aria-labelledby="tabButtonAssemble" hidden>
-<h2>🧩 Multi-GLB Assembly <small>· experimental</small></h2>
+</details>
+</section><section id="tabAssemble" class="workspace" role="tabpanel" aria-labelledby="tabButtonAssemble" hidden>
+<h2>Assemble model parts</h2>
 <p class="hint">Add several original GLBs to one 3D scene. Choose a part to move, turn or resize while looking at the result. Nothing is uploaded or overwritten. Inspect, Paint, Animate and Review keep their original files and selections.</p>
-<button id="asAdd" type="button">➕ Add one or several GLBs · Android Browse Files</button>
+<button id="asAdd" type="button">Add model parts (GLB)</button>
 <input id="asFiles" type="file" multiple hidden aria-label="Add GLB files without restrictive Android MIME filtering">
 <p class="hint">On some Android file pickers you may need to add each GLB separately. Tap Add again; previously loaded parts stay in the scene.</p>
 <label for="asList">Loaded components · select one</label><select id="asList" size="4" aria-label="Select model to adjust"></select>
 <p id="asSelected" class="hint" role="status">Add a GLB to begin.</p>
 <label style="display:flex;align-items:center;gap:9px"><input id="asDrag" type="checkbox" style="width:auto;min-height:auto"> ✋ Drag selected part on screen (orbit when tapping empty space)</label>
+<p id="asInfo" class="hint" role="status">0 GLBs loaded</p>
+<div class="row"><button id="asExport" type="button">⬇ Export new combined GLB</button><button id="asRecipe" type="button">⬇ Placements JSON</button></div>
+<button id="asInspect" type="button" disabled>🔎 Save assembly backup + Send to Inspect</button>
+<p class="hint">Makes a local GLB backup before opening a copy in Inspect. Head and body remain independent inside the model and in Assemble. Verify textures and rigging before further editing.</p>
+<p class="hint" id="asStatus" role="status">Add a body and head GLB. Source meshes remain independent in the exported assembly; they are not welded or rigged. Reimport exports to verify textures and animation tracks.</p>
+<details class="subpanel toolFold" ><summary>Precise position and rotation</summary>
 <label for="asStep">Movement per tap · model-local units</label>
 <select id="asStep"><option value="0.002">Extra fine · 0.002</option><option value="0.01" selected>Fine · 0.01</option><option value="0.025">Medium · 0.025</option><option value="0.05">Large · 0.05</option></select>
 <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
@@ -311,13 +360,14 @@
 </div>
 <div class="row"><button id="asUndo" type="button">↶ Undo last move</button><button id="asReset" type="button">Reset selected</button></div>
 <div class="row"><button id="asFrame" type="button">Frame all</button><button id="asRemove" type="button">Remove selected</button></div>
-<div class="subpanel">
-<h3>Finn experiment · optional helper</h3>
+</details>
+<details class="subpanel toolFold" ><summary>Finn’s head and body fit</summary>
+
 <p class="hint">With separate files named <strong>head</strong> and <strong>body</strong>, start with our tested fit: smaller head, slightly back, −8° pitch. Then edit freely. The 5'9" button scales the whole assembled figure, not just his head.</p>
 <button type="button" id="asPreset">Fit Finn head to body · starting point</button>
 <button type="button" id="asHeight">Set overall height to 5'9" (1.753 m)</button>
-</div>
-<details id="sculptPanel" class="subpanel" open>
+</details>
+<details id="sculptPanel" class="subpanel toolFold">
 <summary>🖌 Sculpt selected model · experimental</summary>
 <p class="hint">Fix an almost-right AI mesh directly in the 3D view. Select Finn's <strong>head</strong> from Loaded components. Touch the face to move actual vertices. This does <strong>not</strong> paint textures, add polygons, or automate expressions.</p>
 <div class="row"><button id="sculptToggle" type="button">🖌 Start sculpting selected GLB</button><button id="sculptOrbit" type="button">↻ Orbit camera</button></div>
@@ -337,11 +387,6 @@
 <p id="sculptStatus" class="hint" role="status">Select an unrigged GLB (such as Finn blank head) above, then tap Start sculpting. Orbit is available whenever sculpt is off.</p>
 <p class="hint warn">Safety pilot: static GLB meshes only; rigged/skinned and shape-key meshes are blocked. Existing UVs and textures stay as-is. Export a new combined GLB below; inspect its result before accepting. Sculpting cannot guarantee face likeness or automatically fix broken topology. Undo retains 12 strokes per active session.</p>
 </details>
-<p id="asInfo" class="hint" role="status">0 GLBs loaded</p>
-<div class="row"><button id="asExport" type="button">⬇ Export new combined GLB</button><button id="asRecipe" type="button">⬇ Placements JSON</button></div>
-<button id="asInspect" type="button" disabled>🔎 Save assembly backup + Send to Inspect</button>
-<p class="hint">Makes a local GLB backup before opening a copy in Inspect. Head and body remain independent inside the model and in Assemble. Verify textures and rigging before further editing.</p>
-<p class="hint" id="asStatus" role="status">Add a body and head GLB. Source meshes remain independent in the exported assembly; they are not welded or rigged. Reimport exports to verify textures and animation tracks.</p>
 </section></aside></main>
 <dialog id="markDialog" aria-labelledby="markHeading">
 <h2 id="markHeading">Mark &amp; Share</h2>
@@ -586,7 +631,7 @@ async function loadGLBFile(f,fromRecovery=false){if(!f)return false;
  }
 if(!fromRecovery)await recoveryReady;dismissImportNotice();$('importResult').style.display='none';if(editedSinceSave&&root)await saveSessionNow();status('Loading '+f.name+'…');let url;try{const bytes=await f.arrayBuffer();const hash=await hashBuffer(bytes);url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const gltf=await new GLTFLoader().loadAsync(url);const incoming=[];gltf.scene.traverse(o=>{if(o.isMesh&&o.geometry?.attributes?.position)incoming.push(o)});if(!incoming.length)throw Error('GLB contains no renderable triangle meshes.');clearUnifiedBeforeLoad();if(root){clearPreviews();scene.remove(root);for(const m of meshes){const old=Array.isArray(m.material)?m.material:[m.material];old.forEach(a=>a.dispose());(baseMaterials.get(m)||[]).forEach(a=>a.dispose())}}root=gltf.scene;meshes=incoming;originalName=f.name;fingerprint=hash;glbFileSize=f.size;adjCache.clear();regions.forEach(r=>{r.parts.clear();r.offset=[0,0,0]});moveHistory.length=0;showProposal=false;clearMovePreview();regionIndex=0;triSelections=regions[0].parts;$('regionName').value=regions[0].name;lastHit=null;visibilityMode='all';clearMarks();materialCopies();scene.add(root);modelBounds=new THREE.Box3().setFromObject(root);frameBounds(modelBounds);defaultCamera={position:camera.position.toArray(),target:controls.target.toArray()};const n=meshes.reduce((sum,m)=>sum+triCount(m),0),v=meshes.reduce((sum,m)=>sum+m.geometry.attributes.position.count,0),uvCount=meshes.filter(m=>!!m.geometry.attributes.uv).length,bones=[];root.traverse(o=>{if(o.isBone)bones.push(o)});const materialCount=new Set(meshes.flatMap(m=>{const a=Array.isArray(m.material)?m.material:[m.material];return a.map(z=>z.uuid)})).size;$('stats').textContent=`File: ${f.name}\nSHA-256: ${hash.slice(0,16)}…\nMeshes: ${meshes.length} · vertices: ${v.toLocaleString()} · triangles: ${n.toLocaleString()}\nUV-mapped meshes: ${uvCount}/${meshes.length}\nBones: ${bones.length} · embedded animation clips: ${gltf.animations.length}\nMaterials: ${materialCount} (current rendering copies)\nRigging: ${bones.length?'present':'none — inspector still available'}`;$('import').value='';selectMode(false);
  if(!fromRecovery){inspectorDisplay={style:'solid',context:0,visibility:'all',isolateAlpha:20};workspace='review';}
- renderMarks();initializeUnified(gltf);if(!fromRecovery)showWorkspace('inspect');status('Loaded. Tap Select, then tap any visible triangle.');
+ renderMarks();initializeUnified(gltf);if(!fromRecovery)showWorkspace('inspect');status('Loaded: '+originalName);
  currentModelBlob=new Blob([bytes],{type:'model/gltf-binary'});
  if(!fromRecovery){
   if(hasPriorRecovery){autosaveEnabled=false;recoveryMessage('Existing saved session protected. Restore it, or tap Save now to replace it with the loaded character.');}
@@ -646,7 +691,7 @@ importFeedback((merging?'Merged':'Restored')+' JSON successfully: '+filled+' col
 // Unified CoLab v0.10 workspaces. The inspector remains the baseline scene owner.
 // Separate Paint, Motion, and Review controls share that same loaded GLB and camera.
 // -----------------------------------------------------------------------------
-const WORKSPACES={inspect:'Six-color Geometry Inspector · tested B3.3 foundation',paint:'Direct UV painting · experimental integration',animate:'Rig posing and Motion Check · experimental integration',review:'Non-destructive geometry and GLB comparison',assemble:'Multi-GLB assembly · experimental'};
+const WORKSPACES={inspect:'Choose and inspect parts of one model.',paint:'Change colors without editing the original.',animate:'Play, pose, and review motion.',review:'Mark a view, compare versions, or work with Aster.',assemble:'Position separate models together.'};
 let assemblyLab=null;
 let workspace='inspect';
 let inspectorDisplay={style:'solid',context:0,visibility:'all',isolateAlpha:20};
@@ -658,6 +703,7 @@ function rememberInspectDisplay(){
 }
 function showWorkspace(name){
   if(!WORKSPACES[name])return;
+  const changing=workspace!==name;
   if(workspace==='assemble'&&name!=='assemble'){assemblyLab?.setActive(false);if(root)root.visible=true;previewGroup.visible=true;}
   if(name!=='animate'&&typeof ikDragStop==='function')ikDragStop();
   if(workspace==='inspect'&&name!=='inspect')rememberInspectDisplay();
@@ -682,6 +728,11 @@ function showWorkspace(name){
     b.classList.toggle('active',key===name);b.setAttribute('aria-selected',key===name?'true':'false');
   }
   $('workspaceHint').textContent=WORKSPACES[name];
+  if(changing){
+    if(matchMedia('(max-width:760px)').matches) window.scrollTo({top:0,behavior:'instant'});
+    else document.querySelector('aside').scrollTop=0;
+  }
+  syncTabStops();
   if(root){renderMarks();} // restores model visibility and tab-specific preview without touching the saved selections.
   syncPaintWireOverlay();
   if(name==='assemble'){
@@ -703,7 +754,23 @@ function showWorkspace(name){
   $('paintStart').classList.remove('active');$('paintNavigate').classList.add('active');
   syncJointInteraction();
 }
-for(const b of document.querySelectorAll('#workspaceTabs [data-tab]'))b.addEventListener('click',()=>showWorkspace(b.dataset.tab));
+const workspaceButtons=[...document.querySelectorAll('#workspaceTabs [data-tab]')];
+function syncTabStops(){for(const button of workspaceButtons)button.tabIndex=button.dataset.tab===workspace?0:-1;}
+for(const b of workspaceButtons)b.addEventListener('click',()=>showWorkspace(b.dataset.tab));
+$('workspaceTabs').addEventListener('keydown',event=>{
+ const i=workspaceButtons.indexOf(event.target),n=workspaceButtons.length;
+ if(i<0)return;
+ const next={ArrowLeft:(i+n-1)%n,ArrowRight:(i+1)%n,Home:0,End:n-1}[event.key];
+ if(next===undefined)return;
+ event.preventDefault();workspaceButtons[next].focus();showWorkspace(workspaceButtons[next].dataset.tab);
+});
+syncTabStops();
+$('openModelAction').onclick=()=>$('file').click();
+$('savedWorkAction').onclick=()=>{
+ const box=$('modelTools');box.hidden=!box.hidden;
+ $('savedWorkAction').setAttribute('aria-expanded',String(!box.hidden));
+};
+
 // PAINT: independent 2D canvases for each UV-mapped, single-material mesh.
 // The Paint Studio's v0.1.3 stroke and JSON conventions are retained.
 const paintSessions=new Map();
@@ -1510,19 +1577,20 @@ function syncReviewLoadGuide(){
  $('reviewLoadGuide').textContent=hasOriginal
   ?'Original model loaded: '+originalName+'. Choose the repaired GLB below, then switch Original / Candidate.'
   :hasCandidate
-   ?'Repair model is loaded and can be viewed alone. To compare, load the original Finn with "Load any GLB" near the top of the controls.'
-   :'No original model loaded. First use "Load any GLB" near the top, or choose a proposed GLB below to see it by itself.';
+   ?'Repair model is loaded and can be viewed alone. To compare, load the original model with "Open model" near the top of the controls.'
+   :'No original model loaded. First use "Open model" near the top, or choose a proposed GLB below to see it by itself.';
 }
 function showCandidate(show){
  if(show&&!candidateRoot)return status('Load a proposed GLB first.');
  if(!show&&!root){
   syncReviewLoadGuide();
-  $('candidateStatus').textContent='No ORIGINAL GLB loaded yet. Showing the candidate instead. Load original Finn using "Load any GLB" to compare.';
+  $('candidateStatus').textContent='No ORIGINAL GLB loaded yet. Showing the candidate instead. Load the original model using "Open model" to compare.';
   if(candidateRoot){candidateRoot.visible=true;candidateVisible=true;frameVisibleReviewModel(candidateRoot)}
   $('candidateOriginal').classList.remove('active');$('candidateView').classList.add('active');
   return;
  }
  candidateVisible=show;
+ if(show)$('comparePanel').open=true;
  if(root)root.visible=!show;
  if(candidateRoot)candidateRoot.visible=show;
  if(show){previewGroup.visible=false;markGroup.visible=false;moveGroup.visible=false;hitMarker.style.display='none'}
@@ -1556,7 +1624,7 @@ async function loadCandidateFromPicker(e){
   if(!root){
    showCandidate(true);
    frameVisibleReviewModel(candidateRoot);
-   $('candidateStatus').textContent='Showing '+candidateName+'. Load original Finn using "Load any GLB" for comparison.';
+   $('candidateStatus').textContent='Showing '+candidateName+'. Load the original model using "Open model" for comparison.';
   }else{
    showCandidate(true);
    $('candidateStatus').textContent='Showing proposed Finn · '+candidateName+'. Tap Original to compare.';
